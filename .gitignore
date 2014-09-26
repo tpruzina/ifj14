@@ -1,0 +1,9 @@
+*.swp
+*.toc
+*.dvi
+*.out
+*.log
+*.aux
+
+./ifj2014
+./docs/dokumentace/dokumentace.pdf

@@ -1,0 +1,77 @@
+IFJ interpret projekt
+
+1) Lexikalka
+2) Syntakticky analyzator
+3) Semanticky analyzator
+4) Precedencka
+5) Generovanie kodu + interpretator
+6) Testy
+7) Dokumentace
+
+
+1) LEXIKALKA
+	@vstup:		char
+	@vystup:	struct token
+
+	Interface:
+		extern struct toc	get_toc();
+		
+	Data:
+		// 3.1 zadanie
+
+		struct toc
+		{
+			int type;	// typ tokenu, vid enum TOC_TYPE
+			
+			union data
+			{
+				char*	id;		// nazov premennej
+				int	cint;		// integer
+				double	cdouble;	// fp literal
+				bool	cbool;		// boolean
+			}
+
+		}
+
+		// (struct toc) t.type
+		enum	TOC_TYPE
+		{
+			T_ID,		// 3.1,1
+			T_CINT,		// 3.1,2
+			T_CDOUBLE,	// 3.1,3
+			T_STR,		// 3.1,4
+			T_DT,		// 3.1,5	//datovy typ
+			T_TERM,		// 3.1,6	// ???
+		}
+
+	Implementacia:
+		FLOW
+		a) otvor subor (jedna globalna premenna FILE *fd)
+		b) citaj pomocou get_toc()
+		c) zatvor subor
+			mozno pouzit fciu atexit(3), ktora zavre subor ked
+			bude program koncit
+		
+		KOMENTARE
+			lexikalka ich bude parsovat a rovno ich bude
+			zahadzovat
+
+
+		get_toc()
+		{
+			struct toc inicializacia
+			char c;		
+			while(getc(fd))
+			{
+				switch(c)
+				{
+					case 'a':
+						....;
+						
+				}
+			}
+
+			return toc
+		}
+
+
