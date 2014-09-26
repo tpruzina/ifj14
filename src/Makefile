@@ -1,6 +1,6 @@
 SOURCES=main.c lex.c parser.c interpret.c
 CC=gcc
-CFLAGS=-std=c99 
+CFLAGS=-std=c99
 LDFLAGS=
 DEBUGFLAGS=-D_DEBUG -Wextra -Wall -pedantic-errors
 TESTFLAGS=-D_TEST

@@ -15,14 +15,13 @@ IFJ interpret projekt
 
 	Interface:
 		extern struct toc	get_toc();
-		
+
 	Data:
 		// 3.1 zadanie
 
 		struct toc
 		{
 			int type;	// typ tokenu, vid enum TOC_TYPE
-			
 			union data
 			{
 				char*	id;		// nazov premennej
@@ -44,6 +43,13 @@ IFJ interpret projekt
 			T_TERM,		// 3.1,6	// ???
 		}
 
+		enum STATE
+		{
+			STATE_DEF,	// defaultny stav na zaciatku
+					// parsovania tokenu
+			...
+		}
+
 	Implementacia:
 		FLOW
 		a) otvor subor (jedna globalna premenna FILE *fd)
@@ -51,7 +57,7 @@ IFJ interpret projekt
 		c) zatvor subor
 			mozno pouzit fciu atexit(3), ktora zavre subor ked
 			bude program koncit
-		
+
 		KOMENTARE
 			lexikalka ich bude parsovat a rovno ich bude
 			zahadzovat
@@ -60,14 +66,12 @@ IFJ interpret projekt
 		get_toc()
 		{
 			struct toc inicializacia
-			char c;		
-			while(getc(fd))
-			{
-				switch(c)
+			char c;
+			int state = STATE_DEF;
+			switch(c)
 				{
 					case 'a':
 						....;
-						
 				}
 			}
 
