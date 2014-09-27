@@ -146,7 +146,8 @@ struct gc {
 
 enum errno { lex = 1, synt = 2, sem_prog = 3, sem_komp = 4, sem_else =
 	    5, run_num = 6, run_ninit = 7, run_div = 8, run_else = 9, intern =
-	    99 };
+	    99
+};
 
 /*
 	Vsechny hlavni soucasti 
