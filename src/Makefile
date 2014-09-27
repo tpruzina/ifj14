@@ -11,9 +11,7 @@ all: ifj
 
 ifj: $(SOURCES)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(SOURCES) -o ../ifj2014
-
 test:
-	/bin/true
 
 clean:
-	/bin/true
+	rm -f	../ifj2014
