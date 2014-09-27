@@ -21,11 +21,11 @@
 /*
  * Definice funkci knihovny Log
  */
-void LogError(char*);
-void WriteError(char*);
+void LogError(char *);
+void WriteError(char *);
 
-void LogWarning(char*);
-void WriteWarning(char*);
+void LogWarning(char *);
+void WriteWarning(char *);
 
-void LogDebug(char*);
-void WriteDebug(char*);
+void LogDebug(char *);
+void WriteDebug(char *);

@@ -6,14 +6,12 @@
 #include <assert.h>
 #endif
 
-#include <stdbool.h>
+#include <stdio.h>		// FILE
+#include <stdbool.h>		// true/false
 
-struct global
-{
+struct global {
 	FILE *fd;
 };
-
-
 
 // typy return kodov, chyby su v osobitom enume
 // zadani 2,0

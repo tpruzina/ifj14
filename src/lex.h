@@ -1,12 +1,10 @@
 #ifndef _LEX_H
 #define _LEX_H
 
-struct toc
-{
+struct toc {
 	int type;
-	
-	union data
-	{
+
+	union data {
 		char *id;
 	} d;
 };

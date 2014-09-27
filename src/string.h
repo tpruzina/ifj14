@@ -18,7 +18,7 @@ struct main_all;
  * Allocated 	- obsahuje pocet alokovanych bytu
  */
 struct String {
-	char* Value;
+	char *Value;
 	int Length;
 	int Allocated;
 };
@@ -26,13 +26,13 @@ struct String {
 /*
  *	Definice funkci knihovny String
  */
-struct String* makeNewString(struct main_all**);
-int addChar(struct main_all**,struct String*, char);
-int emptyString(struct main_all**, struct String*);
-int printString(struct String*);
-int freeString(struct main_all**,struct String*);
-int toLower(struct String*);
-int getCharArrayLength(char*);
-int compareString(struct String*, char*);
-int compareStrings(struct String*, struct String*);
+struct String *makeNewString(struct main_all **);
+int addChar(struct main_all **, struct String *, char);
+int emptyString(struct main_all **, struct String *);
+int printString(struct String *);
+int freeString(struct main_all **, struct String *);
+int toLower(struct String *);
+int getCharArrayLength(char *);
+int compareString(struct String *, char *);
+int compareStrings(struct String *, struct String *);
 #endif

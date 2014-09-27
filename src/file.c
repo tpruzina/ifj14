@@ -8,10 +8,7 @@ int mmap_file(char *path)
 	FILE *fd;
 
 	fd = fopen(path, "r");
-	if(!fd)
+	if (!fd)
 		return -1;
-		
 
 }
-
-
