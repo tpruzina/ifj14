@@ -18,7 +18,7 @@ const int TOLOWER = (int)('a' - 'A');
  * Vytvari novou strukturu a vraci ji.
  * TODO: po udelani GC, prepsat malloc na gcmalloc
  */
-struct String* makeNewString(struct main_all**ma){
+struct String* makeNewString(struct mainAll **ma){
 	struct String* str = (struct String*)gcMalloc(ma, sizeof(struct String));
 	if(str == NULL){
 		LogError("String: makeNewString: malloc error");
@@ -35,7 +35,7 @@ struct String* makeNewString(struct main_all**ma){
 /**
  * Pridava na konec stringu znak, zvetsi pole a ulozi.
  */
-int addChar(struct main_all**ma, struct String* s, char c){
+int addChar(struct mainAll **ma, struct String* s, char c){
 	if(s == NULL){
 		// v pripade, ze dostane prazdny string -> zalozi novy a prida znak
 		s = makeNewString(&(*ma));
@@ -73,7 +73,7 @@ int addChar(struct main_all**ma, struct String* s, char c){
 	return false;
 }
 
-int emptyString(struct main_all** ma, struct String* str){
+int emptyString(struct mainAll **ma, struct String* str){
 	if(str == NULL)
 		return false;
 	
@@ -103,7 +103,7 @@ int printString(struct String* s){
  * Uvolni vytvoreny string, vcetne odepsani z GC.
  * Kontroly na spravne predany string.
  */
-int freeString(struct main_all** ma, struct String* s){
+int freeString(struct mainAll **ma, struct String* s){
 	if(s == NULL){
 		LogWarning("String: freeString: predany string je prazdny");
 		return false;
