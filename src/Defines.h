@@ -29,7 +29,7 @@
 
 #include <stdbool.h>	// boolean [true,false]
 #include <stdlib.h>	// todo: delete : malloc
-
+#include <stdio.h>	
 
 #ifdef _DEBUG
 #include <assert.h>

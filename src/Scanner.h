@@ -41,7 +41,76 @@ struct toc
 	} data;
 };
 
+extern int get_toc(struct toc **toc);
 
+void token_init(struct toc **);
+void skip_ws_and_comment();
+
+
+/*
+enum TOC_TYPES
+{
+	T_START,
+	T_BEGIN,
+	T_END,
+	T_FUNC,
+	T_FORTW,
+	T_WHILE,
+	T_RPT,
+	T_UNTIL,
+	T_IF,
+	T_THEN,
+	T_ELSE,
+	T_VAR,
+	T_ID,
+	T_TEXT,
+	T_NMB,
+
+	T_INT,
+	T_REAL,
+	T_BOOL,
+	T_STR,
+	T_ARR,
+
+	T_DO,
+	T_TRUE,
+	T_FALSE,
+	
+	T_FIND,
+	T_SORT,
+	T_RDLN,
+	T_WRT,
+
+	T_ASGN,
+	T_EQV,
+	T_NEQV,
+	T_GRT,
+	T_LSS,
+	T_GEQV,
+	T_LEQV,
+	T_ADD,
+	T_SUB,
+	T_MUL,
+	T_DIV,
+	T_AND,
+	T_OR,
+	T_XOR,
+	T_NOT,
+	
+	T_SCOL,
+	T_COL,
+	T_DOT,
+	T_COM,
+	T_APS,
+	T_LPAR,		// (
+	T_RPAR,		// )
+	T_LBRC,		// [
+	T_RBRC,		// ]
+	T_RCBR,
+	T_DDOT,		// ..
+	T_USC		// _
+};
+*/
 enum KA_STATES
 {
 	KA_ERR = -1,

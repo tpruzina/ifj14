@@ -1,12 +1,12 @@
-CFLAGS=-g
+CFLAGS=-g -std=c99
 
 all: 
 	/bin/true
 
 test: test_build_scanner
 
-test_build_scanner: Scanner.c
-	$(CC) $(CFLAGS) -D_DEBUG -D_TEST $< -o test_scanner
+test_build_scanner: Scanner.c String.c GC.c
+	$(CC) $(CFLAGS) -D_DEBUG -D_TEST GC.c Scanner.c String.c -o test_scanner
 	rm test_scanner
 clean:
 	/bin/true
