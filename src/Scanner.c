@@ -17,27 +17,46 @@
  * 		v (struct toc *) vrati dynamicky alokovanu strukturu s datami
  */
 int
-get_toc(struct toc *toc)
+get_toc(struct toc **toc)
 {
 	int c;		// nacitany aktualny znak
 	int state;	// aktualny stav
-	struct toc *toc;
+	struct toc *tmp;
 
-
+	ASSERT(toc);
 
 	switch(state)
+	{
 
+	}
+
+	return state;
 }
 
 static inline void
 token_init(struct toc **toc)
 {
 	ASSERT(toc);
-	(*toc) = malloc(sizeof(struct toc));
-	//if(!*toc)
+
+	struct toc *tmp = malloc(sizeof(struct toc));
+	if(!tmp)
+		exit(1);	// todo, error kod
+	tmp->type = 0;		// todo: pridat define do headeru?
 	
-	(*toc)->type = 0;	//todo: pridat define do headeru?
-	
+
+	*(toc) = tmp;
 }
+
+
+
+
+#ifdef _TEST
+// cisty compile check
+int main()
+{
+	return 0;
+}
+
+#endif
 
 

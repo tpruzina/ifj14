@@ -27,24 +27,27 @@
 #ifndef __SCANNER_H__
 #define __SCANNER_H__
 
+#include "Defines.h"
+
 struct toc
 {
 	int type;
-	union data
+	union
 	{
-		char *str;
-		double num_
-	}
-}
+		char	*str;
+		double	real;
+		int	integer;
+		bool	boolean;
+	} data;
+};
 
 
 enum KA_STATES
 {
 	KA_ERR = -1,
 	KA_START,	
-}
+};
 
 #endif /* __SCANNER_H__ */
-
 
 

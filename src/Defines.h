@@ -27,20 +27,21 @@
 #ifndef __DEFINES_H__
 #define __DEFINES_H__
 
+#include <stdbool.h>	// boolean [true,false]
+#include <stdlib.h>	// todo: delete : malloc
+
+
 #ifdef _DEBUG
-
-// <ASSERT>
-// (nekompilovat ak nie je definovany _DEBUG, prepinac "gcc -D_DEBUG")
 #include <assert.h>
-#define ASSERT(x) \
-	do { assert(x) } while 0;
-#else
-#define ASSERT(x) do { } while 0;
-#endif
-// </ASSERT>
-
+// (nekompilovat ak nie je definovany _DEBUG, prepinac "gcc -D_DEBUG")
+#define ASSERT(X) \
+	do { assert( (X) ); } while (false)
 #endif // _DEBUG
 
+
+#ifndef _DEBUG	//!(_DEBUG)
+#define ASSERT(X) { } 
+#endif	// !(_DEBUG)
 
 
 #endif /* __DEFINES_H__ */
