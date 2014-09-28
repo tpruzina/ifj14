@@ -6,7 +6,7 @@ all:
 test: test_build_scanner
 
 test_build_scanner: Scanner.c String.c GC.c
-	$(CC) $(CFLAGS) -D_DEBUG -D_TEST GC.c Scanner.c String.c -o test_scanner
+	$(CC) $(CFLAGS) -D_DEBUG -D_TEST Scanner.c -o test_scanner
 	rm test_scanner
 clean:
 	/bin/true

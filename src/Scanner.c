@@ -9,6 +9,8 @@
  *
  ******************************************************************************/
 
+#include <ctype.h> // tolower()
+
 #include "Scanner.h"
 #include "String.h"
 
@@ -25,7 +27,7 @@ get_toc(struct toc **toc)
 	int c;		// nacitany aktualny znak
 	int state;	// aktualny stav
 	struct toc *tmp;
-	struct string str;
+//	struct string str;
 
 	ASSERT(toc);
 	
@@ -43,12 +45,18 @@ get_toc(struct toc **toc)
 		case KA_START:
 			// preskocime commenty a whitespace
 			skip_ws_and_comments();
-		
-			if(isdigit(c)
-		
+			
+			if(isalpha(c))
+			{
+			}
+			else if(isdigit(c))
+			{
+			}
+				
+			break;
 		
 		case KA_ERR:
-		case default:
+		default:
 			break;
 		}
 	}
@@ -77,7 +85,7 @@ void skip_ws_and_comments()
 	{
 		if(c == '{')
 		{
-			while(c != '}' || != EOF )
+			while(c != '}' || c != EOF )
 				c = fgetc(fd);
 		}
 		else if(c != ' ')

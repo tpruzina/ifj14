@@ -1,8 +1,6 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
-#include "String.h"
-
 /*
 	Slouzi pro urceni typu tokenu, ktery lex. analyzator nacte
  */
@@ -122,39 +120,18 @@ char* keywords[37] = {
 */
 
 /*
-	Struktura tokenu, pro uchovani typu a obsahu
- */
-struct token {
-	enum token_type type;
-	struct String* value;
-};
-/*
-	Zastupuje zaznam v seznamu alokovanych prostredku
- */
-struct gc_item
-{
-	void* ptr;
-	struct gc_item* next;
-};
-
-/*
-	Garbage collector ktery v sobe uchovava pocet alokovanych prostredku
- */ 
-struct gc
-{
-	struct gc_item* list;
-	int list_length;
-};
-
 enum errno { lex = 1, synt = 2, sem_prog = 3, sem_komp = 4, sem_else = 5, run_num = 6, run_ninit = 7, run_div = 8, run_else = 9, intern = 99 };
+*/
 
 /*
 	Vsechny hlavni soucasti 
  */
+
+/*
 struct main_all {
 	struct gc* gc;
 	FILE* src;
 	enum errno errno;
 };
-
+*/
 #endif
