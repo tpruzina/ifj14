@@ -10,7 +10,6 @@
  ******************************************************************************/
 
 #include <ctype.h> 	// tolower()
-#include <string.h>	// strcmp()
 #include "Scanner.h"
 #include "String.h"
 
@@ -219,7 +218,7 @@ get_toc()
 					toc->type = 
 			else
 				{
-*/					toc->type = T_IDENTIF;
+*/					toc->type = T_ID;
 					// toto by malo byt v string.c ???
 					//strcpy(toc->str,str);
 					return toc;
