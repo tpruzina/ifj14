@@ -43,9 +43,9 @@ struct toc
 	} data;
 };
 
-extern int get_toc(struct toc **toc);
+struct toc * get_toc();
 
-void token_init(struct toc **);
+void toc_init(struct toc **);
 void skip_ws_and_comments();
 
 
@@ -54,8 +54,6 @@ enum KA_STATES
 	KA_ERR = -1,
 	KA_START,
 	
-	KA_STRING,
-
 	KA_INTEGER,
 	KA_INT_DOT,
 	KA_REAL,
@@ -63,6 +61,8 @@ enum KA_STATES
 	KA_REAL_EXP_PM,
 	KA_REAL_DOT_EXP_PM,
 	KA_REAL_EXP_NUM,
+
+	KA_IDENT,
 };
 
 #endif /* __SCANNER_H__ */

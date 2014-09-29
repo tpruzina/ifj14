@@ -21,14 +21,15 @@ FILE *fd;
  * @vystup:	vraci kod tokenu (vid scanner.h)
  * 		v (struct toc *) vrati dynamicky alokovanu strukturu s datami
  */
-int
-get_toc(struct toc **toc)
+struct toc *
+get_toc()
 {
 	int c;		// nacitany aktualny znak
 	int state;	// aktualny stav
-	struct toc *tmp;
+	struct toc *toc;
 //	struct string str;
-
+	
+	toc_init(&toc);
 	ASSERT(toc);
 	
 	// fd = global->fd;
@@ -46,9 +47,10 @@ get_toc(struct toc **toc)
 			// preskocime commenty a whitespace
 			skip_ws_and_comments();
 			
-			if(isalpha(c))
+			if(isalpha(c) || '_' == c) // asi identifikator
 			{
-				state = KA_STRING;
+				//add2str
+				state = KA_IDENT;
 			}
 			else if(isdigit(c))
 			{
@@ -74,7 +76,12 @@ get_toc(struct toc **toc)
 				state = KA_REAL_EXP;	// 123e
 			}
 			else
-				state = KA_ERR;
+			{
+				//mame integer
+				ungetc(c,fd);
+				//parse
+				return T_NUMBER;
+			}	
 			break;
 
 		case KA_INT_DOT:
@@ -141,17 +148,38 @@ get_toc(struct toc **toc)
 			}
 			break;
 
-		case KA_STRING:
+		case KA_IDENT: // mali sme [_,a-z]
+			if (isalnum (c) || (c == '_'))
+			{
+				//add2str
+			}
+			else
+			{
+				ungetc(c,fd);
+
+				/*
+				*	SEM PRIDAT CHECKY NA VYNIMKY
+				*	BEGIN
+				*	END
+				*	atp.
+				*/
+
+				
+			}
+			
+		
 		case KA_ERR:
 		default:
 			break;
 		}
 	}
-	return state;
+
+	// chyba scanneru, mal by vyletiet inde!!
+	exit(99);
 }
 
 void
-token_init(struct toc **toc)
+toc_init(struct toc **toc)
 {
 	ASSERT(toc);
 
@@ -184,8 +212,29 @@ void skip_ws_and_comments()
 
 #ifdef _TEST
 // cisty compile check
-int main()
+int main(int argc, char **argv)
 {
+	struct toc *tmp;
+	
+	if(argc != 1)
+	{
+		fprintf(stderr, "ocakavany jeden parameter - cesta k souboru\n");
+		return -1;
+	}
+	fd = fopen(argv[1],"r");
+	if(!fd)
+	{
+		fprintf(stderr, "nepodarilo sa otevrit soubor\n");
+		return -1;
+	}
+
+	while (true)
+	{
+		tmp = get_toc();
+		printf("%d\n", tmp->type);
+		free(tmp);
+		tmp = NULL;
+	}
 	return 0;
 }
 
