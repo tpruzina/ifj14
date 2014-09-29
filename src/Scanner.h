@@ -52,7 +52,17 @@ void skip_ws_and_comments();
 enum KA_STATES
 {
 	KA_ERR = -1,
-	KA_START,	
+	KA_START,
+	
+	KA_STRING,
+
+	KA_INTEGER,
+	KA_INT_DOT,
+	KA_REAL,
+	KA_REAL_EXP,
+	KA_REAL_EXP_PM,
+	KA_REAL_DOT_EXP_PM,
+	KA_REAL_EXP_NUM,
 };
 
 #endif /* __SCANNER_H__ */

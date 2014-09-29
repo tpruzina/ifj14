@@ -48,13 +48,100 @@ get_toc(struct toc **toc)
 			
 			if(isalpha(c))
 			{
+				state = KA_STRING;
 			}
 			else if(isdigit(c))
 			{
+				//add2str
+				state = KA_INTEGER;
 			}
-				
 			break;
-		
+
+
+		case KA_INTEGER:
+			if(isdigit(c))
+			{
+				//add2str	// 123
+			}
+			else if ('.' == c)
+			{
+				//add2str
+				state = KA_INT_DOT;	// 123.
+			}
+			else if('e' == c)
+			{
+				//add2str
+				state = KA_REAL_EXP;	// 123e
+			}
+			else
+				state = KA_ERR;
+			break;
+
+		case KA_INT_DOT:
+			if(isdigit(c))	//mame bodku '.', musi byt cislo
+			{
+				//add2str
+				state = KA_REAL;
+			}
+			else
+				state = KA_ERR;
+			break;
+
+		case KA_REAL:		// uz bola '.'
+			if(isdigit(c))
+			{
+				//add2str
+			}
+			else if ('e' == c)
+			{
+				//add2str
+				state = KA_REAL_EXP;
+			}
+			else
+			{
+				// success, mame real cislo!!
+				// parse ++ return
+				return T_REAL;
+			}
+			break;
+			
+		case KA_REAL_EXP:	// mame exponent, moze byt +,- a cislo
+			if(isdigit(c))
+			{
+				//add2str
+				state = KA_REAL_EXP;
+			}
+			else if ('-' == c || '+' == c)
+			{
+				//add2str
+				state = KA_REAL_EXP_PM;
+			}
+			else
+				state = KA_ERR;
+			break;
+
+		case KA_REAL_EXP_PM:	// mali sme +-, dalej je povinne cislo
+			if(isdigit(c))
+			{
+				// add2str
+				state = KA_REAL_EXP_NUM;
+			}
+			else
+				state = KA_ERR;
+			break;
+
+		case KA_REAL_EXP_NUM:	// mame real,exp,cislo, uz mozu byt len cisla	
+			if(isdigit(c))
+			{
+				//add2str
+			}
+			else
+			{	// success
+				return T_REAL;
+			}
+			break;
+
+		case KA_STRING:
 		case KA_ERR:
 		default:
 			break;
