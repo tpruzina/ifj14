@@ -5,12 +5,12 @@
 	Slouzi pro urceni typu tokenu, ktery lex. analyzator nacte
  */
 enum token_type {
-	// klicove slova
 	T_START,	// program
-	T_BEGIN,	// begin
-	T_END,  	// end
-	T_PROC, 	// procedure
-	T_FUNC,		// function
+	// klicove slova
+	T_BEGIN,	// begin	OK
+	T_END,  	// end		OK
+	T_PROC, 	// procedure 	??		
+	T_FUNC,		// function	OK
 	T_WHILE, 	// while
 	T_FOR,		// for
 	T_FOR_TO,	// to
@@ -27,7 +27,13 @@ enum token_type {
 	T_IDENTIF,	// cokoliv odpovidajici identifikatoru
 	T_STRING,	// cokoliv odpovidajici stringu
 	T_NUMBER,	// cokoliv odpovidajici cislu
+	T_BOOLEAN,	// klicove slovo
 	T_CONST,	// const
+	// klicove slova pre datove typy
+	T_KW_BOOLEAN,
+	T_KW_INTEGER,
+	T_KW_REAL,
+	
 	// datove typy
 	T_INT,		// integer
 	T_REAL,		// real
@@ -74,7 +80,8 @@ enum token_type {
 	T_LCBR,		// {
 	T_RCBR,		// }
 	T_DDOT,		// ..
-	T_USC		// _
+	T_USC,		// _
+	T_EOF		// end of file
 };
 
 /*

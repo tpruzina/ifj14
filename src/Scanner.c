@@ -9,8 +9,8 @@
  *
  ******************************************************************************/
 
-#include <ctype.h> // tolower()
-
+#include <ctype.h> 	// tolower()
+#include <string.h>	// strcmp()
 #include "Scanner.h"
 #include "String.h"
 
@@ -57,10 +57,14 @@ get_toc()
 				//add2str
 				state = KA_INTEGER;
 			}
+			else if(EOF == c)
+			{
+				toc->type = T_EOF;
+			}
 			break;
 
 
-		case KA_INTEGER:
+		case KA_INTEGER:	//uz mame cislicu
 			if(isdigit(c))
 			{
 				//add2str	// 123
@@ -75,12 +79,14 @@ get_toc()
 				//add2str
 				state = KA_REAL_EXP;	// 123e
 			}
-			else
+			else	//mame integer
 			{
-				//mame integer
 				ungetc(c,fd);
-				//parse
-				return T_NUMBER;
+				
+				toc->type = T_INTEGER;
+				//toc->data.integer = atoi(str);
+				//free string???
+				return toc;
 			}	
 			break;
 
@@ -94,7 +100,7 @@ get_toc()
 				state = KA_ERR;
 			break;
 
-		case KA_REAL:		// uz bola '.'
+		case KA_REAL:		// uz bola .x
 			if(isdigit(c))
 			{
 				//add2str
@@ -107,8 +113,10 @@ get_toc()
 			else
 			{
 				// success, mame real cislo!!
-				// parse ++ return
-				return T_REAL;
+				ungetc(c,fd);
+				toc->type = T_REAL;
+				//toc->data.real = atof(str);
+				return toc;
 			}
 			break;
 			
@@ -142,9 +150,12 @@ get_toc()
 			{
 				//add2str
 			}
-			else
-			{	// success
-				return T_REAL;
+			else	//mame real
+			{
+				ungetc(c,fd);
+				toc->type = T_REAL;			
+				//toc->data.real = atof(str);
+				return toc;
 			}
 			break;
 
@@ -156,18 +167,64 @@ get_toc()
 			else
 			{
 				ungetc(c,fd);
+/*
+				// klicove slova (zoradena dle zadani) 3.1
+				// tu bude treba davat bacha na rozlisenie tokenov
+				// na klucove slova vztahujuce sa na datove typy
+				// T_KW_REAL vs T_REAL atp.
 
-				/*
-				*	SEM PRIDAT CHECKY NA VYNIMKY
-				*	BEGIN
-				*	END
-				*	atp.
-				*/
-
-				
+				if(!strcmp("begin",str))
+					toc->type = T_BEGIN;
+				else if(!strcmp("boolean",str))
+					toc->type = T_KW_BOOLEAN;
+				else if (!strcmp("do",str))
+					toc->type = T_DO,
+				else if (!strcmp("else",str))
+					toc->type = T_ELSE;
+				else if (!strcmp("end",str))
+					toc->type = T_END;
+				else if (!strcmp("false",str))
+					toc->type = T_FALSE;
+				else if (!strcmp("find",str))
+					toc->type = T_FIND;
+				else if (!strcmp("forward",str))
+					toc->type = T_FORWARD;
+				else if (!strcmp("function",str))
+					toc->type = T_FUNCTION;
+				else if (!strcmp("if",str))
+					toc->type = T_IF;
+				else if (!strcmp("integer",str))
+					toc->type = T_KW_INTEGER;
+				else if (!strcmp("readln",str))
+					toc->type = T_READLN;
+				else if (!strcmp("real",str))
+					toc->type = T_KW_REAL;
+				else if (!strcmp("sort",str))
+					toc->type = T_SORT;
+				else if (!strcmp("string",str))
+					toc->type = T_STRING,
+				else if (!strcmp("then",str))
+					toc->type = T_THEN;
+				else if (!strcmp("true",str))
+					toc->type = T_TRUE;
+				else if (!strcmp("var",str))
+					toc->type = T_VAR;
+				else if (!strcmp("while",str))
+					toc->type = T_WHILE;
+				else if (!strcmp("write",str))
+					toc->type = T_WRITE;
+				else if (!strcmp("",str))
+					toc->type = T_
+				else if (!strcmp("",str))
+					toc->type = 
+			else
+				{
+*/					toc->type = T_IDENTIF;
+					// toto by malo byt v string.c ???
+					//strcpy(toc->str,str);
+					return toc;
+				}
 			}
-			
-		
 		case KA_ERR:
 		default:
 			break;
