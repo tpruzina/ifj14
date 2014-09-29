@@ -17,15 +17,18 @@
 #define COLOR_MAG  "\x1B[35m"
 #define COLOR_CYN  "\x1B[36m"
 #define COLOR_WHT  "\x1B[37m"
+#define COLOR_DGRY "\033[01;30m"
+#define COLOR_LRED "\033[01;31m"
+#define COLOR_LGRN "\033[01;32m"
+#define COLOR_LYEL "\033[01;33m"
+#define COLOR_LBLU "\033[01;34m"
+#define COLOR_LMGN "\033[01;35m"
+#define COLOR_LCYN "\033[01;36m"
 
+enum LogFrom { MAIN, GC, STRING, STACK, AST, SYMTABLE, OTHER };
+enum LogType { DEBUG, ERROR, WARNING };
 /*
  * Definice funkci knihovny Log
  */
-void LogError(char *);
-void WriteError(char *);
+void Log(char*, enum LogType, enum LogFrom);
 
-void LogWarning(char *);
-void WriteWarning(char *);
-
-void LogDebug(char *);
-void WriteDebug(char *);

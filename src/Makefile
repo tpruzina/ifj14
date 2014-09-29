@@ -1,17 +1,9 @@
-SOURCES=main.c lex.c parser.c interpret.c
-CC=gcc
-CFLAGS=-std=c99
-LDFLAGS=
-DEBUGFLAGS=-D_DEBUG -Wextra -Wall -pedantic-errors
-TESTFLAGS=-D_TEST
+MAIN=main
+GCC=gcc
+CFLAGS=-std=c99 -Wall -pedantic -Wextra
 
-ALL: all
-all: ifj
-
-
-ifj: $(SOURCES)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(SOURCES) -o ../ifj2014
-test:
-
+all:
+	$(GCC) $(CFLAGS) GC.c Log.c String.c Stack.c Ast.c SymbolTable.c $(MAIN).c -o $(MAIN)
+	
 clean:
-	rm -f	../ifj2014
+	rm -fv *.o *.gch
