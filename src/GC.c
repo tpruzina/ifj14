@@ -23,7 +23,7 @@ int addNewPtr(struct gc* gc, void* ptr){
 		return True;
 	}
 
-	return false;
+	return False;
 }
 
 void* gcMalloc(struct mainAll** ma, size_t size){
@@ -66,7 +66,7 @@ int gcFree(struct mainAll** ma, void* ptr){
 	// pro jistotu
 	if(item == NULL){
 		Log("item == null\n", DEBUG, GC);
-		return false;
+		return False;
 	}
 
 	// hledani prvku
@@ -85,7 +85,7 @@ int gcFree(struct mainAll** ma, void* ptr){
 		item = item->next;
 	}
 	
-	return false;
+	return False;
 }
 
 void gcPrintState(struct mainAll** ma){

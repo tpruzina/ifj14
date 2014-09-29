@@ -1,54 +1,49 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
+#include "String.h"
+
+/*
+	Konstanty potrebne
+ */
+#define True 1
+#define False 0
+
 /*
 	Slouzi pro urceni typu tokenu, ktery lex. analyzator nacte
  */
-enum token_type {
-	T_START,	// program
+enum tokenType {
 	// klicove slova
-	T_BEGIN,	// begin	OK
-	T_END,  	// end		OK
-	T_PROC, 	// procedure 	??		
-	T_FUNC,		// function	OK
+	T_START,	// program
+	T_BEGIN,	// begin
+	T_END,  	// end
+	T_FUNC,		// function
+	T_FORW,		// forward
 	T_WHILE, 	// while
-	T_FOR,		// for
-	T_FOR_TO,	// to
-	T_FOR_DWNTO,// downto
-	T_REPEAT,	// repeat
+	T_RPT,		// repeat
 	T_UNTIL,	// until
-	T_BREAK,	// break
-	T_CONTINUE,	// continue
-	T_CASE,		// case
 	T_IF,		// if
 	T_ELSE,		// else
 	T_THEN,		// then
 	T_VAR,		// var
-	T_IDENTIF,	// cokoliv odpovidajici identifikatoru
-	T_STRING,	// cokoliv odpovidajici stringu
-	T_NUMBER,	// cokoliv odpovidajici cislu
-	T_BOOLEAN,	// klicove slovo
-	T_CONST,	// const
-	// klicove slova pre datove typy
-	T_KW_BOOLEAN,
-	T_KW_INTEGER,
-	T_KW_REAL,
-	
+	T_ID,		// cokoliv odpovidajici identifikatoru
+	T_TEXT,		// cokoliv odpovidajici stringu
+	T_NMB,		// cokoliv odpovidajici cislu
 	// datove typy
 	T_INT,		// integer
 	T_REAL,		// real
 	T_BOOL,		// boolean
-	T_CHAR,		// char
-	T_TYPE,		// type 
-	T_SET,		// set
-	T_IN,		// in
-	T_REC,		// record
+	T_STR,		// string
 	T_ARR,		// array
-	T_FILE,		// file
 	// obecne
 	T_OF,		// of
-	T_DO,		// do
-	T_NIL,		// nil
+	T_TRUE,		// true
+	T_FALSE,	// false
+	// inline
+	T_FIND,		// find
+	T_SORT,		// sort
+	T_RDLN,		// readln
+	T_WRT,		// write
 	// aritmetika a logika
 	T_ASGN,		// :=
 	T_EQV,   	// =
@@ -60,13 +55,11 @@ enum token_type {
 	T_ADD,		// +
 	T_SUB,		// -
 	T_MUL,		// *
-	T_RDIV,		// /
-	T_IDIV,		// div
+	T_DIV,		// /
 	T_MOD,		// mod
 	T_AND,		// and
 	T_OR,		// or
 	T_NOT,		// not
-	T_DRF,		// ^
 	// specialni znaky
 	T_SCOL,		// ;
 	T_COL,		// :
@@ -80,8 +73,7 @@ enum token_type {
 	T_LCBR,		// {
 	T_RCBR,		// }
 	T_DDOT,		// ..
-	T_USC,		// _
-	T_EOF		// end of file
+	T_USC		// _
 };
 
 /*
@@ -127,18 +119,105 @@ char* keywords[37] = {
 */
 
 /*
-enum errno { lex = 1, synt = 2, sem_prog = 3, sem_komp = 4, sem_else = 5, run_num = 6, run_ninit = 7, run_div = 8, run_else = 9, intern = 99 };
-*/
+	Struktura tokenu, pro uchovani typu a obsahu
+ */
+struct token {
+	enum tokenType type;
+	struct String* value;
+};
+/*
+	Zastupuje zaznam v seznamu alokovanych prostredku
+ */
+struct gcItem
+{
+	void* ptr;
+	struct gcItem* next;
+};
+
+/*
+	Garbage collector ktery v sobe uchovava pocet alokovanych prostredku
+ */ 
+struct gc
+{
+	struct gcItem* list;
+	int listLength;
+};
+/*
+	Chybove kody
+ */
+enum errno { ok = 0, 
+	lex = 1, 		// chybna struktura aktualniho lexemu
+	synt = 2, 		// chybna syntaxe struktury programu
+	sem_prog = 3, 	// nedefinovana promenna/fukce, pokus o redefinici funkce/promenne
+	sem_komp = 4, 
+	sem_else = 5, 
+	run_num = 6, 
+	run_ninit = 7, 
+	run_div = 8, 
+	run_else = 9, 
+	intern = 99 };
 
 /*
 	Vsechny hlavni soucasti 
  */
-
-/*
-struct main_all {
+struct mainAll {
 	struct gc* gc;
 	FILE* src;
 	enum errno errno;
 };
-*/
+
+/*
+	Potrebne typy uzlu do AST
+ */
+enum astNodeType {
+	AST_NONE,
+	AST_START,
+	AST_END,
+	AST_FUNC,
+	AST_FORW,
+	AST_IF,
+	AST_WHILE,
+	AST_REPEAT,
+	AST_ASGN,
+	AST_EQV,
+	AST_NEQV,
+	AST_GRT,
+	AST_LSS,
+	AST_GEQV,
+	AST_LEQV,
+	AST_ADD,
+	AST_SUB,
+	AST_MUL,
+	AST_DIV,
+	AST_AND,
+	AST_OR,
+	AST_XOR,
+	AST_NOT,
+	AST_NUM,
+	AST_STR,
+	AST_ID
+};
+/*
+	Jeden uzel AST
+ */
+struct astNode {
+	enum astNodeType type;
+	
+	struct astNode* left;
+	struct astNode* right;
+	
+	void* value;
+};
+/*
+	Uzel tabulky symbolu
+ */
+struct symbolTableNode {
+	struct String* name;
+	struct String* value;
+	
+	struct symbolTableNode* left;
+	struct symbolTableNode* right;	
+};
+
+
 #endif

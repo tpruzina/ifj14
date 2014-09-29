@@ -16,33 +16,63 @@
 /**
  * Pise chybovou zpravu, cervene
  */
-void LogError(char* msg){
-	if(PRINT)
-		printf("%s%s%s\n", COLOR_RED, msg, COLOR_NRM);
-}
-void WriteError(char* msg){
-	if(PRINT)
-		fprintf(stderr, "%s%s%s\n", COLOR_RED, msg, COLOR_NRM);
-}
-/**
- * Pise upozorneni, zlute
- */
-void LogWarning(char* msg){
-	if(PRINT)
-		printf("%s%s%s\n", COLOR_YEL, msg, COLOR_NRM);
-}
-void WriteWarning(char* msg){
-	if(PRINT)
-		fprintf(stderr, "%s%s%s\n", COLOR_YEL, msg, COLOR_NRM);
-}
-/**
- * Pise debugovaci vypis, modre
- */
-void LogDebug(char* msg){
-	if(PRINT)
-		printf("%s%s%s\n", COLOR_CYN, msg, COLOR_NRM);
-}
-void WriteLog(char* msg){
-	if(PRINT)
-		fprintf(stderr, "%s%s%s\n", COLOR_CYN, msg, COLOR_NRM);
+void Log(char* msg, enum LogType type, enum LogFrom frm){
+	if(!PRINT) return;
+	
+	char* fcol;
+	char from[64];
+	char* mcol;
+	
+	switch(frm){
+		case MAIN: {
+			fcol = COLOR_LGRN;
+			sprintf(from, "MAIN");
+			break;
+		}
+		case GC: {
+			fcol = COLOR_LYEL;
+			sprintf(from, "GC");
+			break;
+		}
+		case STRING: {
+			fcol = COLOR_LCYN;
+			sprintf(from, "STRING");
+			break;
+		}
+		case STACK: {
+			fcol = COLOR_LBLU;
+			sprintf(from, "STACK");
+			break;
+		}
+		case AST: {
+			fcol = COLOR_LMGN;
+			sprintf(from, "AST");
+			break;
+		}
+		case SYMTABLE: {
+			fcol = COLOR_DGRY;
+			sprintf(from, "SYMTABLE");
+			break;
+		}
+		case OTHER: {
+			fcol = COLOR_LRED;
+			sprintf(from, "OTHER");
+			break;
+		}
+	}
+	
+	switch(type){
+		case DEBUG:
+			mcol = COLOR_GRN;
+			break;
+		case ERROR:
+			mcol = COLOR_RED;
+			break;
+		case WARNING:
+			mcol = COLOR_YEL;
+			break;
+	}
+	
+	
+	fprintf(stderr, "%s%s\t%s %s%s%s\n", fcol, from, COLOR_NRM, mcol, msg, COLOR_NRM);
 }

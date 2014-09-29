@@ -9,7 +9,7 @@
 #define _STRINGH_
 
 #include "Structs.h"
-struct main_all;
+struct mainAll;
 
 /**
  * Struktura stringu
@@ -26,13 +26,16 @@ struct String {
 /*
  *	Definice funkci knihovny String
  */
-struct String* makeNewString(struct main_all**);
-int addChar(struct main_all**,struct String*, char);
-int emptyString(struct main_all**, struct String*);
+struct String* makeNewString(struct mainAll**);
+int addChar(struct mainAll**,struct String*, char);
+int emptyString(struct mainAll**, struct String*);
 int printString(struct String*);
-int freeString(struct main_all**,struct String*);
+int freeString(struct mainAll**,struct String*);
 int toLower(struct String*);
 int getCharArrayLength(char*);
+int compareCharArrays(char*, char*);
 int compareString(struct String*, char*);
 int compareStrings(struct String*, struct String*);
+int copyString(struct mainAll**, struct String*, struct String**);
+int copyFromArray(struct mainAll**, char*, struct String**);
 #endif
