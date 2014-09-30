@@ -43,10 +43,10 @@ struct toc
 	} data;
 };
 
-struct toc * get_toc();
+struct toc * getToc();
 
-void toc_init(struct toc **);
-void skip_ws_and_comments();
+void tocInit(struct toc **);
+void skipWSandComments();
 
 
 enum KA_STATES

@@ -17,14 +17,14 @@
  * @vystup:	vraci alokovany token
  */
 struct toc *
-get_toc()
+getToc()
 {
 	int c;		// nacitany aktualny znak
 	int state;	// aktualny stav
 	struct toc *toc;
 	struct String *str;
 		
-	toc_init(&toc);
+	tocInit(&toc);
 	ASSERT(toc);
 	ASSERT(global.src);
 
@@ -43,7 +43,7 @@ get_toc()
 		{
 		case KA_START:
 			// preskocime commenty a whitespace
-			skip_ws_and_comments();
+			skipWSandComments();
 			
 			if(isalpha(c) || '_' == c) // asi identifikator
 			{
@@ -233,7 +233,7 @@ get_toc()
 }
 
 void
-toc_init(struct toc **toc)
+tocInit(struct toc **toc)
 {
 	ASSERT(toc);
 
@@ -245,7 +245,7 @@ toc_init(struct toc **toc)
 	*(toc) = tmp;
 }
 
-void skip_ws_and_comments()
+void skipWSandComments()
 {
 	ASSERT(global.src);
 	int c;
