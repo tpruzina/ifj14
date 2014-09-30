@@ -35,7 +35,7 @@ enum tokenType {
 	T_KW_TRUE,		// true
 	T_KW_VAR,	// var
 	T_KW_WHILE, 	// while
-	T_WRT,		// write
+	T_KW_WRT,		// write
 	// neni v zadani ako klucove slovo - ??? 
 	T_RPT,	// repeat
 	T_UNTIL,	// until

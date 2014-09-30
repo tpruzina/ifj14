@@ -12,8 +12,6 @@
 
 #include "String.h"
 
-FILE *fd;
-
 /* get_toc - cita zo suboru dalsi token
  * @vstup:	otvoreny file descriptor
  * @vystup:	vraci alokovany token
@@ -24,19 +22,22 @@ get_toc()
 	int c;		// nacitany aktualny znak
 	int state;	// aktualny stav
 	struct toc *toc;
-	struct String str;
-	
+	struct String *str;
+		
 	toc_init(&toc);
 	ASSERT(toc);
-	
-	// fd = global->fd;
+	ASSERT(global.src);
+
 	state = KA_START;
+
+	str = makeNewString();
+	ASSERT(str);
 
 	while (true)
 	{
 		// todo: kontrola ci toto je validna, specialne pri vyrazoch
 		// apod
-		c = tolower(fgetc(fd));
+		c = tolower(fgetc(global.src));
 
 		switch(state)
 		{
@@ -46,17 +47,18 @@ get_toc()
 			
 			if(isalpha(c) || '_' == c) // asi identifikator
 			{
-				//add2str
+				addChar(str,c);
 				state = KA_IDENT;
 			}
 			else if(isdigit(c))
 			{
-				//add2str
+				addChar(str,c);
 				state = KA_INTEGER;
 			}
 			else if(EOF == c)
 			{
 				toc->type = T_EOF;
+				return toc;
 			}
 			break;
 
@@ -64,21 +66,21 @@ get_toc()
 		case KA_INTEGER:	//uz mame cislicu
 			if(isdigit(c))
 			{
-				//add2str	// 123
+				addChar(str,c);	// 123
 			}
 			else if ('.' == c)
 			{
-				//add2str
+				addChar(str,c);
 				state = KA_INT_DOT;	// 123.
 			}
 			else if('e' == c)
 			{
-				//add2str
+				addChar(str,c);
 				state = KA_REAL_EXP;	// 123e
 			}
 			else	//mame integer
 			{
-				ungetc(c,fd);
+				ungetc(c,global.src);
 				
 				toc->type = T_INT;
 				//toc->data.integer = atoi(str);
@@ -90,7 +92,7 @@ get_toc()
 		case KA_INT_DOT:
 			if(isdigit(c))	//mame bodku '.', musi byt cislo
 			{
-				//add2str
+				addChar(str,c);
 				state = KA_REAL;
 			}
 			else
@@ -100,17 +102,17 @@ get_toc()
 		case KA_REAL:		// uz bola .x
 			if(isdigit(c))
 			{
-				//add2str
+				addChar(str,c);
 			}
 			else if ('e' == c)
 			{
-				//add2str
+				addChar(str,c);
 				state = KA_REAL_EXP;
 			}
 			else
 			{
 				// success, mame real cislo!!
-				ungetc(c,fd);
+				ungetc(c,global.src);
 				toc->type = T_REAL;
 				//toc->data.real = atof(str);
 				return toc;
@@ -120,12 +122,12 @@ get_toc()
 		case KA_REAL_EXP:	// mame exponent, moze byt +,- a cislo
 			if(isdigit(c))
 			{
-				//add2str
+				addChar(str,c);
 				state = KA_REAL_EXP;
 			}
 			else if ('-' == c || '+' == c)
 			{
-				//add2str
+				addChar(str,c);
 				state = KA_REAL_EXP_PM;
 			}
 			else
@@ -145,11 +147,11 @@ get_toc()
 		case KA_REAL_EXP_NUM:	// mame real,exp,cislo, uz mozu byt len cisla	
 			if(isdigit(c))
 			{
-				//add2str
+				addChar(str,c);
 			}
 			else	//mame real
 			{
-				ungetc(c,fd);
+				ungetc(c,global.src);
 				toc->type = T_REAL;			
 				//toc->data.real = atof(str);
 				return toc;
@@ -159,62 +161,58 @@ get_toc()
 		case KA_IDENT: // mali sme [_,a-z]
 			if (isalnum (c) || (c == '_'))
 			{
-				//add2str
+				addChar(str,c);
 			}
 			else
 			{
-				ungetc(c,fd);
-/*
+				ungetc(c,global.src);
+
 				// klicove slova (zoradena dle zadani) 3.1
 				// tu bude treba davat bacha na rozlisenie tokenov
 				// na klucove slova vztahujuce sa na datove typy
 				// T_KW_REAL vs T_REAL atp.
 
-				if(!strcmp("begin",str))
-					toc->type = T_BEGIN;
-				else if(!strcmp("boolean",str))
+				if(!compareString(str,"begin"))
+					toc->type = T_KW_BEGIN;
+				else if(!compareString(str,"boolean"))
 					toc->type = T_KW_BOOLEAN;
-				else if (!strcmp("do",str))
-					toc->type = T_DO,
-				else if (!strcmp("else",str))
-					toc->type = T_ELSE;
-				else if (!strcmp("end",str))
-					toc->type = T_END;
-				else if (!strcmp("false",str))
-					toc->type = T_FALSE;
-				else if (!strcmp("find",str))
-					toc->type = T_FIND;
-				else if (!strcmp("forward",str))
-					toc->type = T_FORWARD;
-				else if (!strcmp("function",str))
-					toc->type = T_FUNCTION;
-				else if (!strcmp("if",str))
-					toc->type = T_IF;
-				else if (!strcmp("integer",str))
-					toc->type = T_KW_INTEGER;
-				else if (!strcmp("readln",str))
-					toc->type = T_READLN;
-				else if (!strcmp("real",str))
+				else if (!compareString(str,"do"))
+					toc->type = T_KW_DO;
+				else if (!compareString(str,"else"))
+					toc->type = T_KW_ELSE;
+				else if (!compareString(str,"end"))
+					toc->type = T_KW_END;
+				else if (!compareString(str,"false"))
+					toc->type = T_KW_FALSE;
+				else if (!compareString(str,"find"))
+					toc->type = T_KW_FIND;
+				else if (!compareString(str,"forward"))
+					toc->type = T_KW_FORW;
+				else if (!compareString(str,"function"))
+					toc->type = T_KW_FUNC;
+				else if (!compareString(str,"if"))
+					toc->type = T_KW_IF;
+				else if (!compareString(str,"integer"))
+					toc->type = T_KW_INT;
+				else if (!compareString(str,"readln"))
+					toc->type = T_KW_READLN;
+				else if (!compareString(str,"real"))
 					toc->type = T_KW_REAL;
-				else if (!strcmp("sort",str))
-					toc->type = T_SORT;
-				else if (!strcmp("string",str))
-					toc->type = T_STRING,
-				else if (!strcmp("then",str))
-					toc->type = T_THEN;
-				else if (!strcmp("true",str))
-					toc->type = T_TRUE;
-				else if (!strcmp("var",str))
-					toc->type = T_VAR;
-				else if (!strcmp("while",str))
-					toc->type = T_WHILE;
-				else if (!strcmp("write",str))
-					toc->type = T_WRITE;
-				else if (!strcmp("",str))
-					toc->type = T_
-				else if (!strcmp("",str))
-					toc->type = 
-			else */
+				else if (!compareString(str,"sort"))
+					toc->type = T_KW_SORT;
+				else if (!compareString(str,"string"))
+					toc->type = T_KW_STRING;
+				else if (!compareString(str,"then"))
+					toc->type = T_KW_THEN;
+				else if (!compareString(str,"true"))
+					toc->type = T_KW_TRUE;
+				else if (!compareString(str,"var"))
+					toc->type = T_KW_VAR;
+				else if (!compareString(str,"while"))
+					toc->type = T_KW_WHILE;
+				else if (!compareString(str,"write"))
+					toc->type = T_KW_WRT;
+			else
 				{
 					toc->type = T_ID;
 					// toto by malo byt v string.c ???
@@ -249,51 +247,23 @@ toc_init(struct toc **toc)
 
 void skip_ws_and_comments()
 {
-	ASSERT(fd);
+	ASSERT(global.src);
 	int c;
 
-	while(EOF != (c = fgetc(fd)))
+	while(EOF != (c = fgetc(global.src)))
 	{
 		if(c == '{')
 		{
 			while(c != '}' || c != EOF )
-				c = fgetc(fd);
+				c = fgetc(global.src);
 		}
 		else if(!isspace(c))
 			break;
 	}
-	ungetc(c,fd);
+	ungetc(c,global.src);
 }
 
 
-#ifdef _TEST
-// cisty compile check
-int main(int argc, char **argv)
-{
-	struct toc *tmp;
-	
-	if(argc != 1)
-	{
-		fprintf(stderr, "ocakavany jeden parameter - cesta k souboru\n");
-		return -1;
-	}
-	fd = fopen(argv[1],"r");
-	if(!fd)
-	{
-		fprintf(stderr, "nepodarilo sa otevrit soubor\n");
-		return -1;
-	}
 
-	while (true)
-	{
-		tmp = get_toc();
-		printf("%d\n", tmp->type);
-		free(tmp);
-		tmp = NULL;
-	}
-	return 0;
-}
-
-#endif
 
 
