@@ -18,8 +18,8 @@ const int TOLOWER = (int)('a' - 'A');
  * Vytvari novou strukturu a vraci ji.
  * TODO: po udelani GC, prepsat malloc na gcmalloc
  */
-struct String* makeNewString(struct mainAll**ma){
-	struct String* str = (struct String*)gcMalloc(ma, sizeof(struct String));
+struct String* makeNewString(){
+	struct String* str = (struct String*)gcMalloc(sizeof(struct String));
 	if(str == NULL){
 		Log("String: makeNewString: malloc error", ERROR, STRING);
 		return NULL;
@@ -35,17 +35,17 @@ struct String* makeNewString(struct mainAll**ma){
 /**
  * Pridava na konec stringu znak, zvetsi pole a ulozi.
  */
-int addChar(struct mainAll**ma, struct String* s, char c){
+int addChar(struct String* s, char c){
 	if(s == NULL){
 		// v pripade, ze dostane prazdny string -> zalozi novy a prida znak
-		s = makeNewString(&(*ma));
+		s = makeNewString();
 		Log("String: addChar: novy string", DEBUG, STRING);
 	}
 	
 	if(s->Value == NULL){
 		// v pripade, ze string sice alokovan byl, ale neobsahoval hodnotu
 		// -> alokovat pole a vlozit znak + \0 nakonec
-		s->Value = (char*)gcMalloc(ma, sizeof(char)*2);
+		s->Value = (char*)gcMalloc(sizeof(char)*2);
 
 		s->Value[0] = c;
 		s->Value[1] = '\0';
@@ -58,7 +58,7 @@ int addChar(struct mainAll**ma, struct String* s, char c){
 	}
 	else {
 		// v pripade, ze se pouze pridava znak do pole
-		s->Value = (char*)gcRealloc(ma, s->Value, s->Allocated + 1);
+		s->Value = (char*)gcRealloc(s->Value, s->Allocated + 1);
 		s->Value[s->Length] = c;
 		s->Value[s->Length+1] = '\0';
 		
@@ -73,11 +73,11 @@ int addChar(struct mainAll**ma, struct String* s, char c){
 	return False;
 }
 
-int emptyString(struct mainAll** ma, struct String* str){
+int emptyString(struct String* str){
 	if(str == NULL)
 		return False;
 	if(str->Value != NULL){
-		str->Value = (char*)gcRealloc(ma, str->Value, 1);
+		str->Value = (char*)gcRealloc(str->Value, 1);
 		str->Value[0] = '\0';
 		str->Allocated = 1;
 		str->Length = 0;
@@ -104,13 +104,13 @@ int printString(struct String* s){
  * Uvolni vytvoreny string, vcetne odepsani z GC.
  * Kontroly na spravne predany string.
  */
-int freeString(struct mainAll** ma, struct String* s){
+int freeString(struct String* s){
 	if(s == NULL){
 		Log("String: freeString: predany string je prazdny", WARNING, STRING);
 		return False;
 	}
 
-	gcFree(ma, s);
+	gcFree(s);
 	return True;
 }
 
@@ -233,28 +233,23 @@ int toLower(struct String* str){
 /**
  * Skopiruje data ze stringu do druheho
  */
-int copyString(struct mainAll** ma, struct String* src, struct String** dest){
-	if((*ma) == NULL){
-		Log("Main all empty", ERROR, STRING);
-		return False;
-	}
-	
+int copyString(struct String* src, struct String** dest){
 	if(src == NULL){
 		Log("Src string == empty", ERROR, STRING);
-		(*ma)->errno = intern;
+		global.errno = intern;
 		return False;	
 	}
 	
-	if((*dest) == NULL && ((*dest) = makeNewString(ma)) == NULL)
+	if((*dest) == NULL && ((*dest) = makeNewString()) == NULL)
 		return False;
 	else {
-		if(!emptyString(ma, *dest)){
+		if(!emptyString(*dest)){
 			return False;
 		}
 	}
 
 	for(int i = 0; i < src->Length; i++){
-		if(!addChar(ma, (*dest), src->Value[i])){
+		if(!addChar((*dest), src->Value[i])){
 			return False;
 		}
 	}
@@ -264,21 +259,16 @@ int copyString(struct mainAll** ma, struct String* src, struct String** dest){
 /**
  * Skopiruje data z src pole do struktury dest
  */
-int copyFromArray(struct mainAll** ma, char* src, struct String** dest){
-	if((*ma) == NULL){
-		Log("Main all empty", ERROR, STRING);
-		return False;
-	}
-	
+int copyFromArray(char* src, struct String** dest){
 	if(src == NULL){
 		Log("Src string == empty", ERROR, STRING);
-		(*ma)->errno = intern;
+		global.errno = intern;
 		return False;	
 	}
-	if((*dest) == NULL && ((*dest) = makeNewString(ma)) == NULL)
+	if((*dest) == NULL && ((*dest) = makeNewString()) == NULL)
 		return False;
 	else {
-		if(!emptyString(ma, *dest)){
+		if(!emptyString(*dest)){
 			Log("Clearing failed", ERROR, STRING);
 			return False;
 		}
@@ -287,7 +277,7 @@ int copyFromArray(struct mainAll** ma, char* src, struct String** dest){
 	char c = ' ';
 	int i = 0;
 	while((c = src[i++]) != '\0'){
-		if(!addChar(ma, (*dest), c))
+		if(!addChar((*dest), c))
 			return False;
 	}
 	

@@ -15,9 +15,9 @@ struct stack {
 };
 
 
-struct stack* makeNewStack(struct mainAll**);
-int stackPush(struct mainAll**, struct stack*, void*);
-void* stackPop(struct mainAll**, struct stack*);
-void* stackTop(struct mainAll**, struct stack*);
-int stackEmpty(struct mainAll**, struct stack*);
+struct stack* makeNewStack();
+int stackPush(struct stack*, void*);
+void* stackPop(struct stack*);
+void* stackTop(struct stack*);
+int stackEmpty(struct stack*);
 #endif

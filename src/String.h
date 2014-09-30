@@ -26,16 +26,16 @@ struct String {
 /*
  *	Definice funkci knihovny String
  */
-struct String* makeNewString(struct mainAll**);
-int addChar(struct mainAll**,struct String*, char);
-int emptyString(struct mainAll**, struct String*);
+struct String* makeNewString();
+int addChar(struct String*, char);
+int emptyString(struct String*);
 int printString(struct String*);
-int freeString(struct mainAll**,struct String*);
+int freeString(struct String*);
 int toLower(struct String*);
 int getCharArrayLength(char*);
 int compareCharArrays(char*, char*);
 int compareString(struct String*, char*);
 int compareStrings(struct String*, struct String*);
-int copyString(struct mainAll**, struct String*, struct String**);
-int copyFromArray(struct mainAll**, char*, struct String**);
+int copyString(struct String*, struct String**);
+int copyFromArray(char*, struct String**);
 #endif

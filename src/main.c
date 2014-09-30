@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "main.h"
 #include "GC.h"
 #include "Structs.h"
 #include "Log.h"
 #include "Stack.h"
 #include "Ast.h"
+#include "SymbolTable.h"
+
+struct mainAll global;
 
 /*
  * Alokuje a nastavi hlavni strukturu. 
@@ -14,22 +16,19 @@
  * struct main_all** ma -- odkaz na strukturu, obsahujici data
  * char* srcpath		-- cesta k souboru, ktery ma byt interpretovan
  */
-int init(struct mainAll** ma, char* srcpath){
-	*ma = malloc(sizeof(struct mainAll));
-	if((*ma) == NULL)
-		return False;
-		
-	(*ma)->gc = malloc(sizeof(struct gc));
-	if((*ma)->gc == NULL){
-		(*ma)->errno = intern;
+int init(char* srcpath){
+
+	global.gc = malloc(sizeof(struct gc));
+	if(global.gc == NULL){
+		global.errno = intern;
 		return False;
 	}
 
-	(*ma)->gc->list = NULL;
-	(*ma)->gc->listLength = 0;
+	global.gc->list = NULL;
+	global.gc->listLength = 0;
 
-	(*ma)->src = fopen(srcpath, "r");
-	(*ma)->errno = ok;
+	global.src = fopen(srcpath, "r");
+	global.errno = ok;
 	
 	Log("main:init - done", DEBUG, MAIN);
 	return True;
@@ -39,12 +38,11 @@ int init(struct mainAll** ma, char* srcpath){
  *
  * struct main_all** ma -- odkaz na strukturu, obsahujici data
  */
-void quit(struct mainAll** ma){
-	gcPrintState(ma);
-	gcFreeAll(ma);
-	free((*ma)->gc);
-	free((*ma));
-	
+void quit(){
+	//gcPrintState(ma);
+	gcFreeAll();
+	free(global.gc);
+	fclose(global.src);
 	Log("main:exit - done", DEBUG, MAIN);
 }
 
@@ -59,26 +57,22 @@ int main(int argc, char** argv)
 		Log("Spatne parametry..", ERROR, MAIN);
 		return False;
 	}
-		
-	struct mainAll* ma;
-	if(init(&ma, argv[1]) != True){
-		if(ma == NULL) {
-			Log("main: main_all struct is not allocated", ERROR, MAIN);
-			return False;
-		}
-		else if(ma != NULL && ma->gc == NULL){
-			Log("main: main_all struct dont allocated garbage collector..", ERROR, MAIN);
-			return False;
-		}
+	
+	//struct mainAll global = {0};
+	
+	if(init(argv[1]) != True){
+		Log("main: main_all struct dont allocated garbage collector..", ERROR, MAIN);
+		return False;
 	}
+	
 
 	if(compareCharArrays(argv[2], "--stack")){
 		// spusteni cteni - lexikalni anal-lyzator
-		struct stack* stack = makeNewStack(&ma);
-		struct String* str = makeNewString(&ma);
+		struct stack* stack = makeNewStack();
+		struct String* str = makeNewString();
 		char c = ' ';
-		while(!feof(ma->src)){
-			c = fgetc(ma->src);
+		while(!feof(global.src)){
+			c = fgetc(global.src);
 
 			if(c == ' ' || c == '\n' || c == '\r' || c == '\t'){
 				// separator - konec tokenu
@@ -86,34 +80,34 @@ int main(int argc, char** argv)
 					//printString(str);
 					//emptyString(&ma, str);
 				
-					if(stackPush(&ma, stack, str)){
+					if(stackPush(stack, str)){
 						Log("Value pushed", DEBUG, MAIN);
 						printString(str);
 					}
 
-					str = makeNewString(&ma);
+					str = makeNewString();
 				}
 			}
 			else
-				addChar(&ma, str, c);
+				addChar(str, c);
 		}	
 		Log("READING....", DEBUG, MAIN);
-		while(!stackEmpty(&ma, stack)){
-			struct String* s = (struct String*)stackPop(&ma, stack);
+		while(!stackEmpty(stack)){
+			struct String* s = (struct String*)stackPop(stack);
 			printString(s);	
 		}
 		Log("END", DEBUG, MAIN);
 	}
 	else if(compareCharArrays(argv[2], "--ast")){
-		struct astNode* ast = makeNewAST(&ma);
+		struct astNode* ast = makeNewAST();
 		ast->type = AST_START;
-		struct astNode* l = makeNewAST(&ma);
+		struct astNode* l = makeNewAST();
 		l->type = AST_ADD;
-		struct astNode* r = makeNewAST(&ma);
+		struct astNode* r = makeNewAST();
 		r->type = AST_IF;
-		struct astNode* l1 = makeNewAST(&ma);
+		struct astNode* l1 = makeNewAST();
 		l1->type = AST_NUM;
-		struct astNode* r1 = makeNewAST(&ma);
+		struct astNode* r1 = makeNewAST();
 		r1->type = AST_NUM;
 		l->left = l1;
 		l->right = r1;
@@ -125,12 +119,45 @@ int main(int argc, char** argv)
 	else if(compareCharArrays(argv[2], "--symbol")){
 		// demonstrace tabulky symbolu
 		
+		struct symbolTableNode* symtable = NULL;
 		
+		struct String* str = makeNewString();
+		char c = ' ';
+		while(!feof(global.src)){
+			c = fgetc(global.src);
+
+			if(c == ' ' || c == '\n' || c == '\r' || c == '\t' || c == ';' || c == '.' || c == ',' || c == ':' || c == '{' || c == '}'){
+				// separator - konec tokenu
+				if(str->Length != 0){
+					printString(str);
+					if(!insertValue(&symtable, str, NULL)){
+						break;					
+					}
+				
+					//printString(str);
+					str = makeNewString();
+				}
+			}
+			else
+				addChar(str, c);
+		}
+		
+		printSymbolTable(symtable, 0);
+		
+		struct symbolTableNode* copy;
+		copyTable(symtable, &copy);
+		printSymbolTable(copy, 0);
+		
+		if(!deleteTable(&copy)){
+			Log("Deleting error", ERROR, MAIN);
+		}
+		printSymbolTable(copy, 0);
+			
 	}
 	
-	// uvolneni prostredku
-	fclose(ma->src);
-	int errno = ma->errno;
-	quit(&ma);	
-	return errno;
+	
+	fprintf(stderr, "Error code: %d\n", (int)global.errno);
+	
+	atexit(quit);
+	return 0;
 }

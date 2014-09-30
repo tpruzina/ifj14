@@ -10,11 +10,11 @@
 #include "Structs.h"
 
 
-struct symbolTableNode* makeNewSymbolTable(struct mainAll**);
-struct symbolTableNode* makeNewNamedNode(struct mainAll**, struct String*);
-int insertValue(struct mainAll**, struct symbolTableNode*, struct String*, struct String*);
-int copyTable(struct mainAll**, struct symbolTableNode*, struct symbolTableNode**);
-int deleteTable(struct mainAll**, struct symbolTableNode*);
+struct symbolTableNode* makeNewSymbolTable();
+struct symbolTableNode* makeNewNamedNode(struct String*);
+int insertValue(struct symbolTableNode**, struct String*, struct String*);
+int copyTable(struct symbolTableNode*, struct symbolTableNode**);
+int deleteTable(struct symbolTableNode**);
 
-int printSymbolTable(struct symbolTableNode*, int);
+void printSymbolTable(struct symbolTableNode*, int);
 #endif

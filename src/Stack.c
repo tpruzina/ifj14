@@ -5,19 +5,12 @@
 #include "Stack.h"
 #include "GC.h"
 
-struct stack* makeNewStack(struct mainAll** ma){
-	// kontrola na hlavni strukturu
-	if((*ma) == NULL){
-		Log("Main_all = NULL", ERROR, STACK);		
-		(*ma)->errno = intern;
-		return NULL;
-	}
-		
+struct stack* makeNewStack(){
 	// alokace nove polozky
-	struct stack* stc = (struct stack*)gcMalloc(ma, sizeof(struct stack));
+	struct stack* stc = (struct stack*)gcMalloc(sizeof(struct stack));
 	if(stc == NULL){
 		Log("Allocation error", ERROR, STACK);
-		(*ma)->errno = intern;
+		global.errno = intern;
 		return NULL;
 	}	
 	
@@ -27,26 +20,19 @@ struct stack* makeNewStack(struct mainAll** ma){
 	return stc;
 }
 
-int stackPush(struct mainAll** ma, struct stack* stack, void* val){
-	// kontrola na main_all strukturu
-	if((*ma) == NULL){
-		Log("Main_all = NULL", ERROR, STACK);
-		(*ma)->errno = intern;
-		return False;
-	}
-	
+int stackPush(struct stack* stack, void* val){
 	// kontroly na parametr se zasobnikem
 	if(stack == NULL){
 		Log("Stack == NULL", ERROR, STACK);
-		(*ma)->errno = intern;
+		global.errno = intern;
 		return False;
 	}
 	
 	// vytvoreni nove polozky, naplneni daty a provazani s vrcholem
-	struct stackItem* newitem = (struct stackItem*) gcMalloc(ma, sizeof(struct stackItem));
+	struct stackItem* newitem = (struct stackItem*) gcMalloc(sizeof(struct stackItem));
 	if(newitem == NULL){
 		Log("Allocation error", ERROR, STACK);
-		(*ma)->errno = intern;
+		global.errno = intern;
 		return False;	
 	}
 	newitem->Value = val;
@@ -56,17 +42,11 @@ int stackPush(struct mainAll** ma, struct stack* stack, void* val){
 	return True;
 }
 
-void* stackPop(struct mainAll** ma, struct stack* stack){
-	// kontrola na hlavni strukturu
-	if((*ma) == NULL){
-		Log("Main_all = NULL", ERROR, STACK);		
-		(*ma)->errno = intern;
-		return NULL;
-	}
+void* stackPop(struct stack* stack){
 	// kontroly na parametr se zasobnikem
 	if(stack == NULL){
 		Log("Stack == NULL", ERROR, STACK);
-		(*ma)->errno = intern;
+		global.errno = intern;
 		return NULL;
 	}
 	
@@ -77,7 +57,7 @@ void* stackPop(struct mainAll** ma, struct stack* stack){
 		// kopie hodnoty navrcholu
 		void* val = item->Value;
 		// uvolneni prvku navrcholu
-		gcFree(ma, item);
+		gcFree(item);
 		// zmenseni velikosti zasobniku
 		stack->Length--;
 		// vraceni hodnoty
@@ -89,17 +69,11 @@ void* stackPop(struct mainAll** ma, struct stack* stack){
 	}
 }
 
-void* stackTop(struct mainAll** ma, struct stack* stack){
-	// kontrola na hlavni strukturu
-	if((*ma) == NULL){
-		Log("Main_all = NULL", ERROR, STACK);		
-		(*ma)->errno = intern;
-		return NULL;
-	}
+void* stackTop(struct stack* stack){
 	// kontroly na parametr se zasobnikem
 	if(stack == NULL){
 		Log("Stack == NULL", ERROR, STACK);
-		(*ma)->errno = intern;
+		global.errno = intern;
 		return NULL;
 	}
 	
@@ -113,17 +87,11 @@ void* stackTop(struct mainAll** ma, struct stack* stack){
 	}	
 }
 
-int stackEmpty(struct mainAll** ma, struct stack* stack){
-	// kontrola na hlavni strukturu
-	if((*ma) == NULL){
-		Log("Main_all = NULL", ERROR, STACK);		
-		(*ma)->errno = intern;
-		return False;
-	}
+int stackEmpty(struct stack* stack){
 	// kontroly na parametr se zasobnikem
 	if(stack == NULL){
 		Log("Stack == NULL", ERROR, STACK);
-		(*ma)->errno = intern;
+		global.errno = intern;
 		return False;
 	}
 

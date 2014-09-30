@@ -169,7 +169,7 @@ struct mainAll {
 	FILE* src;
 	enum errno errno;
 };
-
+extern struct mainAll global;
 /**
  * Potrebne typy uzlu do AST
  */
