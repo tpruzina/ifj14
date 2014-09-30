@@ -76,11 +76,12 @@ int addChar(struct mainAll**ma, struct String* s, char c){
 int emptyString(struct mainAll** ma, struct String* str){
 	if(str == NULL)
 		return False;
-	
-	str->Value = (char*)gcRealloc(ma, str->Value, 1);
-	str->Value[0] = '\0';
-	str->Allocated = 1;
-	str->Length = 0;
+	if(str->Value != NULL){
+		str->Value = (char*)gcRealloc(ma, str->Value, 1);
+		str->Value[0] = '\0';
+		str->Allocated = 1;
+		str->Length = 0;
+	}
 	return True;
 }
 
@@ -168,33 +169,39 @@ int compareString(struct String* s, char* s2){
 /**
  * Porovnava obsahy dvou Stringovych struktur.
  * V pripade shody: True
-<<<<<<< HEAD
- * V pripade neshody: false
-=======
  * V pripade neshody: False
->>>>>>> master
  * V pripade chyb:
  * 		-1 = jedna nebo druha struktura je null
  */
 int compareStrings(struct String* s1, struct String* s2){
-	if(s1 == NULL || s2 == NULL)
+	if(s1 == NULL && s2 != NULL)
+		return 1;
+	else if(s1 != NULL && s2 == NULL)
 		return -1;
+	else if(s1 == NULL && s2 == NULL)
+		return 0;
+	else {
+		fprintf(stderr, "%s ? %s\n", s1->Value, s2->Value);
+		if(s1->Length == s2->Length){
+			// maji stejnou delku
 
-	if(s1->Length == s2->Length){
-		// maji stejnou delku
-
-		for(int i = 0; i < s1->Length; i++){
-			if(s1->Value[i] != s2->Value[i]){
-				if(s1->Value[i] < s2->Value[i])
-					return -1;
-				else 
-					return 1;
+			for(int i = 0; i < s1->Length; i++){
+				if(s1->Value[i] != s2->Value[i]){
+					if(s1->Value[i] < s2->Value[i])
+						return -1;
+					else 
+						return 1;
+				}
 			}
-		}
 		
-		return True;
+			return 0;
+		}
+		else if(s1->Length > s2->Length)
+			return -1;
+		else if(s1->Length < s2->Length)
+			return 1;
 	}
-	return False;
+	return 0;
 }
 
 /**
@@ -254,6 +261,9 @@ int copyString(struct mainAll** ma, struct String* src, struct String** dest){
 	
 	return True;
 }
+/**
+ * Skopiruje data z src pole do struktury dest
+ */
 int copyFromArray(struct mainAll** ma, char* src, struct String** dest){
 	if((*ma) == NULL){
 		Log("Main all empty", ERROR, STRING);
@@ -265,11 +275,11 @@ int copyFromArray(struct mainAll** ma, char* src, struct String** dest){
 		(*ma)->errno = intern;
 		return False;	
 	}
-	
 	if((*dest) == NULL && ((*dest) = makeNewString(ma)) == NULL)
 		return False;
 	else {
 		if(!emptyString(ma, *dest)){
+			Log("Clearing failed", ERROR, STRING);
 			return False;
 		}
 	}
@@ -281,5 +291,5 @@ int copyFromArray(struct mainAll** ma, char* src, struct String** dest){
 			return False;
 	}
 	
-	return False;
+	return True;
 }

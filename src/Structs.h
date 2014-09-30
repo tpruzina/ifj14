@@ -2,15 +2,16 @@
 #define STRUCTS_H
 
 #include "String.h"
+#include <stdbool.h>
 
-/*
-	Konstanty potrebne
+/**
+ * Konstanty
  */
 #define True 1
 #define False 0
 
-/*
-	Slouzi pro urceni typu tokenu, ktery lex. analyzator nacte
+/**
+ * Slouzi pro urceni typu tokenu, ktery lex. analyzator nacte
  */
 enum tokenType {
 	// klicove slova
@@ -118,15 +119,16 @@ char* keywords[37] = {
 };
 */
 
-/*
-	Struktura tokenu, pro uchovani typu a obsahu
+/**
+ * Struktura tokenu, pro uchovani typu a obsahu
  */
 struct token {
 	enum tokenType type;
 	struct String* value;
 };
-/*
-	Zastupuje zaznam v seznamu alokovanych prostredku
+
+/**
+ * Zastupuje zaznam v seznamu alokovanych prostredku
  */
 struct gcItem
 {
@@ -134,16 +136,17 @@ struct gcItem
 	struct gcItem* next;
 };
 
-/*
-	Garbage collector ktery v sobe uchovava pocet alokovanych prostredku
- */ 
+/**
+ * Garbage collector ktery v sobe uchovava pocet alokovanych prostredku
+ */
 struct gc
 {
 	struct gcItem* list;
 	int listLength;
 };
-/*
-	Chybove kody
+
+/**
+ * Chybove kody
  */
 enum errno { ok = 0, 
 	lex = 1, 		// chybna struktura aktualniho lexemu
@@ -157,8 +160,9 @@ enum errno { ok = 0,
 	run_else = 9, 
 	intern = 99 };
 
-/*
-	Vsechny hlavni soucasti 
+/**
+ * Vsechny hlavni soucasti.
+ * Hlavni struktura programu
  */
 struct mainAll {
 	struct gc* gc;
@@ -166,8 +170,8 @@ struct mainAll {
 	enum errno errno;
 };
 
-/*
-	Potrebne typy uzlu do AST
+/**
+ * Potrebne typy uzlu do AST
  */
 enum astNodeType {
 	AST_NONE,
@@ -197,8 +201,9 @@ enum astNodeType {
 	AST_STR,
 	AST_ID
 };
-/*
-	Jeden uzel AST
+
+/**
+ * Jeden uzel AST
  */
 struct astNode {
 	enum astNodeType type;
@@ -208,12 +213,18 @@ struct astNode {
 	
 	void* value;
 };
-/*
-	Uzel tabulky symbolu
+
+/**
+ * Uzel tabulky symbolu
  */
 struct symbolTableNode {
 	struct String* name;
-	struct String* value;
+	union {
+		struct String* str_data;
+		int int_data;
+		double real_data;
+		bool bool_data;
+	} data;
 	
 	struct symbolTableNode* left;
 	struct symbolTableNode* right;	
