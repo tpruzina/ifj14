@@ -3,7 +3,6 @@
  * 
  * Hlavickovy soubor knihovny GC.
  * 
- * 
  */
 #ifndef GC_H
 #define GC_H

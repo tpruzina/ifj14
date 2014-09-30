@@ -39,7 +39,9 @@ void* gcMalloc(struct mainAll** ma, size_t size){
 
 	return ptr;
 }
-
+/**
+ * Realokuje pocet prirazenych prvku strukture.
+ */
 void* gcRealloc(struct mainAll** ma, void* ptr, size_t size){
 	struct gcItem* item = (*ma)->gc->list;
 
@@ -52,7 +54,8 @@ void* gcRealloc(struct mainAll** ma, void* ptr, size_t size){
 			sprintf(txt, "realloc\tOK (%p)", ptr);
 			Log(txt, DEBUG, GC);
 			return item->ptr;
-		}	
+		}
+		item = item->next;	
 	}
 		
 	return NULL;
@@ -110,11 +113,11 @@ void gcFreeAll(struct mainAll** ma){
 		(*ma)->gc->list = item->next;
 
 		// uvolneni alokovaneho prvku
-		Log("free item start", WARNING, GC);
+		//Log("free item start", WARNING, GC);
 		free(item->ptr);
-		Log("free item->ptr", WARNING, GC);
+		//Log("free item->ptr", WARNING, GC);
 		free(item);
-		Log("free item", WARNING, GC);
+		//Log("free item", WARNING, GC);
 
 		// posun rezervovanych	
 		(*ma)->gc->listLength--;
@@ -122,6 +125,9 @@ void gcFreeAll(struct mainAll** ma){
 		// nastaveni na dalsi bod
 		item = (*ma)->gc->list;
 	}
-
-	Log("free_all:\tall free done", DEBUG, GC);
+	
+	if((*ma)->gc->listLength == 0)
+		Log("free_all:\tall free done", DEBUG, GC);
+	else
+		Log("free_add:\tmemory leak", DEBUG, GC);
 }
