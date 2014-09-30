@@ -74,7 +74,9 @@ enum tokenType {
 	T_LCBR,		// {
 	T_RCBR,		// }
 	T_DDOT,		// ..
-	T_USC		// _
+	T_USC,		// _
+
+	T_EOF		// EOF		
 };
 
 /*

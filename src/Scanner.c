@@ -1,7 +1,5 @@
 /******************************************************************************
  *
- * TODO: Project Title
- *
  * Author: Tomas Pruzina <pruzinat@gmail.com>
  *
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
@@ -12,6 +10,7 @@
 #include <ctype.h> 	// tolower()
 #include <string.h>	// strcmp()
 #include "Scanner.h"
+
 #include "String.h"
 
 FILE *fd;
@@ -27,7 +26,7 @@ get_toc()
 	int c;		// nacitany aktualny znak
 	int state;	// aktualny stav
 	struct toc *toc;
-//	struct string str;
+	struct String str;
 	
 	toc_init(&toc);
 	ASSERT(toc);
