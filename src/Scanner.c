@@ -17,8 +17,7 @@ FILE *fd;
 
 /* get_toc - cita zo suboru dalsi token
  * @vstup:	otvoreny file descriptor
- * @vystup:	vraci kod tokenu (vid scanner.h)
- * 		v (struct toc *) vrati dynamicky alokovanu strukturu s datami
+ * @vystup:	vraci alokovany token
  */
 struct toc *
 get_toc()
@@ -26,7 +25,7 @@ get_toc()
 	int c;		// nacitany aktualny znak
 	int state;	// aktualny stav
 	struct toc *toc;
-//	struct string str;
+	//struct String str;
 	
 	toc_init(&toc);
 	ASSERT(toc);
@@ -82,7 +81,7 @@ get_toc()
 			{
 				ungetc(c,fd);
 				
-				toc->type = T_INTEGER;
+				toc->type = T_INT;
 				//toc->data.integer = atoi(str);
 				//free string???
 				return toc;
@@ -216,9 +215,9 @@ get_toc()
 					toc->type = T_
 				else if (!strcmp("",str))
 					toc->type = 
-			else
+			else */
 				{
-*/					toc->type = T_ID;
+					toc->type = T_ID;
 					// toto by malo byt v string.c ???
 					//strcpy(toc->str,str);
 					return toc;
@@ -232,6 +231,8 @@ get_toc()
 
 	// chyba scanneru, mal by vyletiet inde!!
 	exit(99);
+	
+	return toc;
 }
 
 void
@@ -252,14 +253,14 @@ void skip_ws_and_comments()
 	ASSERT(fd);
 	int c;
 
-	while(c = fgetc(fd))
+	while(EOF != (c = fgetc(fd)))
 	{
 		if(c == '{')
 		{
 			while(c != '}' || c != EOF )
 				c = fgetc(fd);
 		}
-		else if(c != ' ')
+		else if(!isspace(c))
 			break;
 	}
 	ungetc(c,fd);
