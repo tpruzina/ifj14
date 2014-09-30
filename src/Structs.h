@@ -14,37 +14,43 @@
  * Slouzi pro urceni typu tokenu, ktery lex. analyzator nacte
  */
 enum tokenType {
-	// klicove slova
-	T_START,	// program
-	T_BEGIN,	// begin
-	T_END,  	// end
-	T_FUNC,		// function
-	T_FORW,		// forward
-	T_WHILE, 	// while
-	T_RPT,		// repeat
+	// klicove slova - zadani 3.1.1
+	T_KW_BEGIN,	// begin
+	T_KW_BOOLEAN,	// boolean
+	T_KW_DO,	// do
+	T_KW_START,	// program
+	T_KW_ELSE,	// else
+	T_KW_END,  	// end
+	T_KW_FALSE,	// false
+	T_KW_FIND,	// find
+	T_KW_FORW,	// forward
+	T_KW_FUNC,	// function
+	T_KW_IF,	// if
+	T_KW_INT,	// integer
+	T_KW_READLN,	// readln
+	T_KW_REAL,	// real
+	T_KW_SORT,	// sort
+	T_KW_STRING,	// string
+	T_KW_THEN,	// then
+	T_KW_TRUE,		// true
+	T_KW_VAR,	// var
+	T_KW_WHILE, 	// while
+	T_WRT,		// write
+	// neni v zadani ako klucove slovo - ??? 
+	T_RPT,	// repeat
 	T_UNTIL,	// until
-	T_IF,		// if
-	T_ELSE,		// else
-	T_THEN,		// then
-	T_VAR,		// var
-	T_ID,		// cokoliv odpovidajici identifikatoru
-	T_TEXT,		// cokoliv odpovidajici stringu
-	T_NMB,		// cokoliv odpovidajici cislu
+	T_ID,	// cokoliv odpovidajici identifikatoru
+	T_TEXT,	// cokoliv odpovidajici stringu
+	T_NMB,	// cokoliv odpovidajici cislu
 	// datove typy
-	T_INT,		// integer
+	T_INT
 	T_REAL,		// real
-	T_BOOL,		// boolean
 	T_STR,		// string
 	T_ARR,		// array
 	// obecne
 	T_OF,		// of
-	T_TRUE,		// true
-	T_FALSE,	// false
 	// inline
-	T_FIND,		// find
-	T_SORT,		// sort
 	T_RDLN,		// readln
-	T_WRT,		// write
 	// aritmetika a logika
 	T_ASGN,		// :=
 	T_EQV,   	// =
