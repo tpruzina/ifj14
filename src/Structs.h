@@ -43,7 +43,7 @@ enum tokenType {
 	T_TEXT,	// cokoliv odpovidajici stringu
 	T_NMB,	// cokoliv odpovidajici cislu
 	// datove typy
-	T_INT
+	T_INT,
 	T_REAL,		// real
 	T_STR,		// string
 	T_ARR,		// array
@@ -81,12 +81,7 @@ enum tokenType {
 	T_RCBR,		// }
 	T_DDOT,		// ..
 	T_USC,		// _
-<<<<<<< HEAD
-
 	T_EOF		// EOF		
-=======
-	T_EOF,		// EOF
->>>>>>> master
 };
 
 /*

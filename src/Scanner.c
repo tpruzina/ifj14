@@ -24,11 +24,7 @@ get_toc()
 	int c;		// nacitany aktualny znak
 	int state;	// aktualny stav
 	struct toc *toc;
-<<<<<<< HEAD
 	struct String str;
-=======
-	//struct String str;
->>>>>>> master
 	
 	toc_init(&toc);
 	ASSERT(toc);
