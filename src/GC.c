@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "main.h"
 #include "GC.h"
 #include "Structs.h"
 #include "Log.h"
