@@ -47,10 +47,10 @@ struct symbolTableNode* makeNewNamedNode(struct String* name){
  * Vklada polozku do tabulky symbolu.
  * Rekurzivnim zpusobem se zanori az na potrebne misto a vytvori novy uzel
  */
-int insertValue(struct symbolTableNode** table, struct String* name, struct String* value){
+void* insertValue(struct symbolTableNode** table, struct String* name){
 	if((*table) == NULL){
 		if(!((*table) = makeNewNamedNode(name))){
-			return False;		
+			return NULL;		
 		}
 	}
 	else {
@@ -59,30 +59,79 @@ int insertValue(struct symbolTableNode** table, struct String* name, struct Stri
 		if(key == 0){
 			Log("Redefinition!", ERROR, SYMTABLE);
 			global.errno = sem_prog;
-			return False;
+			return NULL;
 		}
 		else if(key < 0){
 			// posun doleva || vytvoreni noveho uzlu
 			if((*table)->left == NULL){
 				if(!((*table)->left = makeNewNamedNode(name)))
-					return False;				
+					return (*table)->left;				
 			}
 			else
-				return insertValue(&((*table)->left), name, value);
+				return insertValue(&((*table)->left), name);
 		}
 		else if(key > 0){
 			// posun doprava || vytvoreni noveho uzlu
 			if((*table)->right == NULL){
 				if(!((*table)->right = makeNewNamedNode(name)))
-					return False;				
+					return (*table)->right;				
 			}
 			else
-				return insertValue(&((*table)->right), name, value);
+				return insertValue(&((*table)->right), name);
 		}
 	}
 
+	return NULL;
+}
+
+/**
+ * Vklada do vytvoreneho uzlu data na prislusnou polozku do unionu.
+ * Kopiruje data do integeru
+ */
+int insertDataInteger(struct symbolTableNode** table, int value){
+	if((*table) == NULL)
+		return False;
+		
+	(*table)->data.int_data = value;
 	return True;
 }
+/**
+ * Vklada do vytvoreneho uzlu data na prislusnou polozku do unionu.
+ * Kopiruje data do realu
+ */
+int insertDataReal(struct symbolTableNode** table, double value){
+	if((*table) == NULL)
+		return False;
+		
+	(*table)->data.real_data = value;
+	return True;
+}
+/**
+ * Vklada do vytvoreneho uzlu data na prislusnou polozku do unionu.
+ * Kopiruje data do boolu
+ */
+int insertDataBoolean(struct symbolTableNode** table, bool value){
+	if((*table) == NULL)
+		return False;
+		
+	(*table)->data.bool_data = value;
+	return True;
+}
+/**
+ * Vklada do vytvoreneho uzlu data na prislusnou polozku do unionu.
+ * Kopiruje data do stringu
+ */
+int insertDataString(struct symbolTableNode** table, struct String* value){
+	if((*table) == NULL)
+		return False;
+		
+	if(value == NULL)
+		return False;
+		
+	copyString(value, &((*table)->data.str_data));
+	return True;
+}
+
 /**
  * Kopiruje celou tabulku z src do dest parametru. Rekurzivnim zpusobem.
  * Predpokladane pouziti v TOP vrstve zasobniku tabulek symbolu.
