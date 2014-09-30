@@ -29,7 +29,7 @@
 
 #include "Defines.h"
 #include "Structs.h"
-
+#include "String.h"
 
 struct toc
 {

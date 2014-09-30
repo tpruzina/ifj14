@@ -81,8 +81,12 @@ enum tokenType {
 	T_RCBR,		// }
 	T_DDOT,		// ..
 	T_USC,		// _
+<<<<<<< HEAD
 
 	T_EOF		// EOF		
+=======
+	T_EOF,		// EOF
+>>>>>>> master
 };
 
 /*
