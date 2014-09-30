@@ -16,7 +16,6 @@ const int TOLOWER = (int)('a' - 'A');
 
 /**
  * Vytvari novou strukturu a vraci ji.
- * TODO: po udelani GC, prepsat malloc na gcmalloc
  */
 struct String* makeNewString(){
 	struct String* str = (struct String*)gcMalloc(sizeof(struct String));
@@ -73,6 +72,9 @@ int addChar(struct String* s, char c){
 	return False;
 }
 
+/**
+ * Vycisti string, vynuluje obsah.
+ */
 int emptyString(struct String* str){
 	if(str == NULL)
 		return False;
@@ -113,13 +115,16 @@ int freeString(struct String* s){
 	gcFree(s);
 	return True;
 }
-
+/**
+ * Zastupuje strcmp
+ */
 int compareCharArrays(char* s1, char* s2){
 	if(s1 == NULL || s2 == NULL)
 		return False;
 	
 	int len = getCharArrayLength(s1);
-	if(len == getCharArrayLength(s2)){
+	int len2 = getCharArrayLength(s2);
+	if(len == len2){
 		for(int i = 0; i < len; i++){
 			if(s1[i] != s2[i]){
 				if(s1[i] < s2[i])
@@ -128,58 +133,58 @@ int compareCharArrays(char* s1, char* s2){
 					return 1;			
 			}
 		}
-		return True;
+		return 0;
 	}
+	else if(len > len2)
+		return -1;
+	else if(len < len2)
+		return 1;
 	else {
-		return False;
+		Log("Comparison error", ERROR, STRING);
+		return 0;
 	}
 }
 /**
  * Porovna string s charovym polem
- * V pripade shody vraci True (1)
- * v pripade neshody vraci False (0)
- * v pripade chyby:
- * 		-1 = predana struktura je null
- * 		-2 = predane pole charu je null
  */
 int compareString(struct String* s, char* s2){
-	if(s == NULL)
-		return -1;
-	if(s2 == NULL)
-		return -2;
-
-	if(s->Length == getCharArrayLength(s2)){
+	if(s == NULL || s2 == NULL){
+		Log("Empty params", ERROR, STRING);
+		global.errno = intern;
+		return 0;
+	}
+	int charlen = getCharArrayLength(s2);
+	if(s->Length == charlen){
 		// jsou stejne delky, zacit porovnavat po znacich
-
 		for(int i = 0; i < s->Length; i++){
 			if(s->Value[i] != s2[i]){
 				if(s->Value[i] < s2[i])
 					return -1;
 				else 
 					return 1;
-				// jedna neshoda = nejsou stejne
-				return False;
 			}			
 		}
 		
-		return True;
+		return 0;
 	}
-	return False;
+	else if(s->Length > charlen)
+		return -1;
+	else if(s->Length < charlen)
+		return 1;
+	else {
+		Log("Comparison error", ERROR, STRING);
+		return 0;
+	}
 }
 /**
  * Porovnava obsahy dvou Stringovych struktur.
- * V pripade shody: True
- * V pripade neshody: False
- * V pripade chyb:
- * 		-1 = jedna nebo druha struktura je null
  */
 int compareStrings(struct String* s1, struct String* s2){
-	if(s1 == NULL && s2 != NULL)
-		return 1;
-	else if(s1 != NULL && s2 == NULL)
-		return -1;
-	else if(s1 == NULL && s2 == NULL)
-		return 0;
+	if(s1 == NULL || s2 == NULL){
+		Log("s1 or s2 = null", ERROR, STRING);
+		global.errno = intern;
+		return 0;	
+	}
 	else {
 		fprintf(stderr, "%s ? %s\n", s1->Value, s2->Value);
 		if(s1->Length == s2->Length){
@@ -201,6 +206,8 @@ int compareStrings(struct String* s1, struct String* s2){
 		else if(s1->Length < s2->Length)
 			return 1;
 	}
+	
+	Log("Comparison error", ERROR, STRING);
 	return 0;
 }
 
@@ -256,6 +263,7 @@ int copyString(struct String* src, struct String** dest){
 	
 	return True;
 }
+
 /**
  * Skopiruje data z src pole do struktury dest
  */
