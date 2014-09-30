@@ -4,16 +4,11 @@
 #include "Structs.h"
 #include "Log.h"
 
-struct astNode* makeNewAST(struct mainAll** ma){
-	if((*ma) == NULL){
-		Log("main_all null", ERROR, AST);
-		return NULL;
-	}
-
-	struct astNode* ast = (struct astNode*)gcMalloc(ma, sizeof(struct astNode));
+struct astNode* makeNewAST(){
+	struct astNode* ast = (struct astNode*)gcMalloc(sizeof(struct astNode));
 	if(ast == NULL){
 		Log("New ast not allocated", ERROR, AST);
-		(*ma)->errno = intern;
+		global.errno = intern;
 		return NULL;
 	}
 	

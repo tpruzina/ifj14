@@ -3,7 +3,7 @@
 
 #include "Structs.h"
 
-struct astNode* makeNewAST(struct mainAll**);
+struct astNode* makeNewAST();
 void printAst(struct astNode*);
 
 #endif
