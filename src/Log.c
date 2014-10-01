@@ -54,9 +54,9 @@ void Log(char* msg, enum LogType type, enum LogFrom frm){
 			sprintf(from, "SYMTABLE");
 			break;
 		}
-		case OTHER: {
+		case PARSER: {
 			fcol = COLOR_LRED;
-			sprintf(from, "OTHER");
+			sprintf(from, "PARSER");
 			break;
 		}
 	}
