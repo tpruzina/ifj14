@@ -22,6 +22,15 @@ getToc()
 	int state;	// aktualny stav
 	struct toc *toc;
 	struct String *str;
+	// pomocna premenna pouzivana len v escape sekvenciach
+	// stringovych literalov
+//	short escape_seq=0;
+
+// makro na vratenie charu na vstup a return tokenu
+#define UNGETC_AND_RETURN_TOKEN() do {	\
+		ungetc(c,global.src); 			\
+		return toc;						\
+		} while(0)
 		
 	tocInit(&toc);
 	ASSERT(toc);
@@ -36,8 +45,6 @@ getToc()
 
 	while (true)
 	{
-		// todo: kontrola ci toto je validna, specialne pri vyrazoch
-		// apod
 		c = tolower(fgetc(global.src));
 
 		switch(state)
@@ -52,11 +59,6 @@ getToc()
 			{
 				addChar(str,c);
 				state = KA_INTEGER;
-			}
-			else if(EOF == c)
-			{
-				toc->type = T_EOF;
-				return toc;
 			}
 			else if(';' == c)
 				state = KA_SCOL;
@@ -94,44 +96,48 @@ getToc()
 				state = KA_MUL;
 			else if('/' == c)
 				state = KA_DIV;
+			else if(EOF == c)
+			{
+				toc->type = T_EOF;
+				return toc;
+			}
 			else
 				toc->type = KA_ERR;
 			break;
-		// KA_START end.
 
 // jednopismenkove stavy - copy & paste
 		case KA_LPAR:
 			toc->type = T_LPAR;		// (
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 		case KA_RPAR:
 			toc->type = T_RPAR;		// )
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 		case KA_LBRC:
 			toc->type = T_LBRC;		// [
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 		case KA_RBRC:
 			toc->type = T_RBRC;		// ]
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 		case KA_LCBR:
 			toc->type = T_LCBR;		// {
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 		case KA_RCBR:
 			toc->type = T_LCBR;		// }
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 		case KA_SCOL:
 			toc->type = T_SCOL;		// ;
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 		case KA_DOT:
 			toc->type = T_DOT;		// .
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 		case KA_COM:
 			toc->type = T_COM;		// ,
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 
 // POROVNANIA =, > a >=
 		case KA_EQ:
 			toc->type = T_EQV;
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 
 		case KA_GRT:
 			if('=' == c)
@@ -139,13 +145,13 @@ getToc()
 			else
 			{
 				toc->type = T_GRT;
-				return toc;
+				UNGETC_AND_RETURN_TOKEN();
 			}
 			break;
 
 		case KA_GEQV:
 			toc->type = T_GEQV;
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 
 // POROVNANIA < , <> a <=
 		case KA_LSS:	// mame <
@@ -156,15 +162,15 @@ getToc()
 			else
 			{
 				toc->type = T_LSS;
-				return toc;
+				UNGETC_AND_RETURN_TOKEN();
 			}
 			break;
 		case KA_LEQV:
 			toc->type = T_LEQV;
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 		case KA_NEQV:
 			toc->type = T_NEQV;
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 // : a :=
 		case KA_COL:	//mame ':'
 			if('=' == c)	// :=
@@ -172,51 +178,74 @@ getToc()
 			else
 			{
 				toc->type = T_COL;
-				return toc;
+				UNGETC_AND_RETURN_TOKEN();
 			}
 			break;
 
 		case KA_ASGN:	// mame :=
 			toc->type = T_ASGN;
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 
 // MATEMATICKE OPERATORY
 		case KA_ADD:
 			toc->type = T_ADD;
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 		case KA_SUB:
 			toc->type = T_SUB;
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 		case KA_DIV:
 			toc->type = T_DIV;
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 		case KA_MUL:
 			toc->type = T_MUL;
-			return toc;
+			UNGETC_AND_RETURN_TOKEN();
 
 // STRINGOVE LITERALY + ESCAPE SEQ #
+// vid konecny automat z ktoreho sa tento shit da pochopit
 		case KA_STR_LIT:	//mame '
-			if('\'' == c)	//mame prazdny literal
+			if('\'' == c)	//mame prazdny literal - go STR_LIT_DONE
+				state = KA_STR_LIT_DONE;
+			else if('#' == c)	// mame escape sekvenciu
+				state = KA_SHARP;
+			else if(ascii(c))	//mame znak v tele literalu 31-127 minus {#,'}
 			{
+				addChar(str,c);
+				state = KA_STR_LIT_INISDE;
+			}
+			else
+				state = KA_ERR;
+			break;
+
+		case KA_STR_LIT_INISDE:	//sme vnoreni v str. literale
+			if(ascii(c))
+				addChar(str,c);
+			else if('#' == c)
+				state = KA_SHARP;	//mame escape sekvenciu
+			else if('\'' == c)
+				state = KA_STR_LIT_DONE; //mame ukoncenie
+			else
+				state = KA_ERR;
+			break;
+
+		case KA_STR_LIT_DONE:	// mame ukoncenie
+			if('\'' == c)
+			{	// specialny case ked mame dve ''
+				// musime pridat ' do stringu a vratit sa do inside
+				addChar(str,c);
+				state = KA_STR_LIT_INISDE;
+			}
+			else
+			{
+				// inak hotovo
 				toc->type = T_STR;
 				toc->data.str = str;
-				ASSERT(compareString(str,"") == 0);
-				return toc;
+				UNGETC_AND_RETURN_TOKEN();
 			}
-			else if('#' == c)
-				state = KA_SHARP;
 			break;
 
-		case KA_SHARP:
-			state = KA_STR_LIT;	// go back
-			break;
+		case KA_SHARP:	//mame escape sekvenciu, nasleduje cislo
+				exit(99);	// TODO
 
-		case KA_STR_LIT_INISDE:
-				addChar(str,c);
-			break;
-
-		case KA_STR_LIT_DONE:
-			break;
 
 // INTEGER + REAL LIT
 		case KA_INTEGER:	//uz mame cislicu
@@ -236,12 +265,9 @@ getToc()
 			}
 			else	//mame integer
 			{
-				ungetc(c,global.src);
-				
 				toc->type = T_INT;
-				//toc->data.integer = atoi(str);
-				//free string???
-				return toc;
+				toc->data.integer = atoi(str->Value);
+				UNGETC_AND_RETURN_TOKEN();
 			}	
 			break;
 
@@ -268,10 +294,9 @@ getToc()
 			else
 			{
 				// success, mame real cislo!!
-				ungetc(c,global.src);
 				toc->type = T_REAL;
 				toc->data.real = atof(str->Value);
-				return toc;
+				UNGETC_AND_RETURN_TOKEN();
 			}
 			break;
 			
@@ -307,22 +332,17 @@ getToc()
 			}
 			else	//mame real
 			{
-				ungetc(c,global.src);
 				toc->type = T_REAL;			
 				toc->data.real = atof(str->Value);
-				return toc;
+				UNGETC_AND_RETURN_TOKEN();
 			}
 			break;
 
 		case KA_IDENT: // mali sme [_,a-z]
 			if (isalnum (c) || (c == '_'))
-			{
 				addChar(str,c);
-			}
 			else
 			{
-				ungetc(c,global.src);
-
 				// klicove slova (zoradena dle zadani) 3.1
 				// tu bude treba davat bacha na rozlisenie tokenov
 				// na klucove slova vztahujuce sa na datove typy
@@ -337,7 +357,13 @@ getToc()
 				else if (!compareString(str,"else"))
 					toc->type = T_KW_ELSE;
 				else if (!compareString(str,"end"))
-					toc->type = T_KW_END;
+				{
+					if((c = fgetc(global.src)) == '.')	// mensi hack no rozlisenie END a END.
+						toc->type = T_KW_ENDDOT;
+					else
+						toc->type = T_KW_END;
+					ungetc(c, global.src);
+				}
 				else if (!compareString(str,"false"))
 					toc->type = T_KW_FALSE;
 				else if (!compareString(str,"find"))
@@ -391,16 +417,18 @@ getToc()
 				else
 				{
 					toc->type = T_ID;
-					// copy string toc->data
+					// copy string toc->data ???
+					toc->data.str = str;
 				}
-				return toc;
+				UNGETC_AND_RETURN_TOKEN();
 			}
 			break;
 
 		case KA_ERR:
+			exit(1);
 		default:
 			fprintf(stderr,"ERROR LEX, TOKEN\nc == %d\n %s\n",c, str->Value);
-			exit(1);
+			exit(99);
 			break;
 		}
 	}
@@ -438,6 +466,12 @@ void skipWSandComments()
 	ungetc(c,global.src);
 }
 
+// pomocne funkcie
+int ascii(unsigned char c)
+{
+	return ((c >= 31) && (c <= 127)) ? 1 : 0;
+}
+
 // DEBUG
 // pomocna globalna premenna, funkcia returnTypeAssStr vrati
 // string k token typu
@@ -448,6 +482,7 @@ struct token2str array[] = {
 	{"program", T_KW_BEGIN },
 	{"else", T_KW_ELSE },
 	{"end", T_KW_END },
+	{"end.", T_KW_ENDDOT },
 	{"false", T_KW_FALSE },
 	{"find", T_KW_FIND },
 	{"forward", T_KW_FORW },
@@ -504,6 +539,8 @@ struct token2str array[] = {
 	{"rbrc", T_RBRC},
 	{"lcbr", T_LCBR},
 	{"rcbr", T_RCBR},
+	//identifikator
+	{"identifikator", T_ID},
 	// EOF
 	{"eof",T_EOF},
 	{NULL, 0},

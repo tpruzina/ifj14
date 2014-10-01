@@ -25,8 +25,10 @@ void skipWSandComments();
 
 // pomocna funkcia, das jej typ a navrati string
 // napriklad T_NOT vrati "not"
-
 const char *returnTypeAsStr(int type);
+
+// pomocna premenna pre stringove literaly
+int ascii(unsigned char);
 
 
 enum KA_STATES
@@ -53,7 +55,10 @@ enum KA_STATES
 	KA_STR_LIT,
 	KA_STR_LIT_INISDE,
 	KA_STR_LIT_DONE,
+	//here the fun begins
 	KA_SHARP,			// #
+
+
 
 	KA_EQ,		// =
 	KA_GRT,		// >

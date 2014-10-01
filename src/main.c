@@ -81,8 +81,17 @@ int main(int argc, char** argv)
 	{
 		tmp = getToc();
 		str = returnTypeAsStr(tmp->type);
+
 		if(str)
+		{
+			if(tmp->type == T_INT)
+				printf("%s(%d)\n",str,tmp->data.integer);
+			else if(tmp->type == T_REAL)
+				printf("%s(%f)\n",str,tmp->data.real);
+			else if(tmp->type == T_STR)
+				printf("%s(%s)\n",str,tmp->data.str->Value);
 			printf("%s\n",str);
+		}
 		else
 			printf("%d\n",tmp->type);
 		fflush(stdout);

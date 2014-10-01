@@ -20,6 +20,7 @@ enum tokenType {
 	T_KW_DO,	// do
 	T_KW_ELSE,	// else
 	T_KW_END,  	// end
+	T_KW_ENDDOT,	// end.
 	T_KW_FALSE,	// false
 	T_KW_FIND,	// find
 	T_KW_FORW,	// forward
