@@ -29,7 +29,7 @@ void skipWSandComments();
 const char *returnTypeAsStr(int type);
 
 // pomocna premenna pre stringove literaly
-int ascii(unsigned char);
+int asci(unsigned char);
 
 
 enum KA_STATES
@@ -56,10 +56,14 @@ enum KA_STATES
 	KA_STR_LIT,
 	KA_STR_LIT_INISDE,
 	KA_STR_LIT_DONE,
-	//here the fun begins
-	KA_SHARP,			// #
-
-
+	KA_SHARP,// #
+	KA_S_0,				// #0, #00 atp
+	KA_S_1,				// #1
+	KA_S_2,				// #2
+	KA_S_39,			// #[3-9]
+	KA_S_239_69N,	//slouceny stav - ak dostaneme cislicu tak budeme >255
+	KA_S_12_04N,	//slouceny stav	- sme < 249
+	KA_S_2_5,		// mame #25	- ak dostaneme > 6 error (226-229) inak (250-255)
 
 	KA_EQ,		// =
 	KA_GRT,		// >
