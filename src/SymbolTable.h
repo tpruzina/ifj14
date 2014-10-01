@@ -12,7 +12,7 @@
 
 struct symbolTableNode* makeNewSymbolTable();
 struct symbolTableNode* makeNewNamedNode(struct String*);
-int insertValue(struct symbolTableNode**, struct String*, struct String*);
+void* insertValue(struct symbolTableNode**, struct String*, struct String*);
 int copyTable(struct symbolTableNode*, struct symbolTableNode**);
 int deleteTable(struct symbolTableNode**);
 
