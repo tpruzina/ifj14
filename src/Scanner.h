@@ -1,29 +1,3 @@
-/******************************************************************************
- * %FILE%  [:VIM_EVAL:]ls[:END_EVAL:]
- * Author: Tomas Pruzina <pruzinat@gmail.com>
- * 
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use,
- * copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following
- * conditions:
- * 
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT.  IN NO EVENT SHALL SIMON TATHAM BE LIABLE FOR
- * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
- * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- ******************************************************************************/
-
 #ifndef __SCANNER_H__
 #define __SCANNER_H__
 
@@ -36,7 +10,7 @@ struct toc
 	int type;
 	union
 	{
-		char	*str;
+		struct String *str;
 		double	real;
 		int	integer;
 		bool	boolean;
@@ -47,6 +21,11 @@ struct toc * getToc();
 
 void tocInit(struct toc **);
 void skipWSandComments();
+
+// pomocna funkcia, das jej typ a navrati string
+// napriklad T_NOT vrati "not"
+
+const char *returnTypeAsStr(int type);
 
 
 enum KA_STATES
@@ -63,6 +42,18 @@ enum KA_STATES
 	KA_REAL_EXP_NUM,
 
 	KA_IDENT,
+	KA_COL,
+	KA_ASGN,
+
+	KA_STR_LIT,
+	KA_STR_LIT_INISDE,
+	KA_STR_LIT_DONE,
+	KA_SHARP,			// #
+
+	KA_EQ,	// =
+
+	KA_LESS,	// <
+	KA_NEQV,	// <>
 };
 
 #endif /* __SCANNER_H__ */

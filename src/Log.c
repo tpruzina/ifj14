@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include "Log.h"
 
-#define PRINT 1
+#define PRINT 0
 
 /**
  * Pise chybovou zpravu, cervene

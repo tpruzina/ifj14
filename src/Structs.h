@@ -18,7 +18,6 @@ enum tokenType {
 	T_KW_BEGIN,	// begin
 	T_KW_BOOLEAN,	// boolean
 	T_KW_DO,	// do
-	T_KW_START,	// program
 	T_KW_ELSE,	// else
 	T_KW_END,  	// end
 	T_KW_FALSE,	// false
@@ -33,9 +32,11 @@ enum tokenType {
 	T_KW_STRING,	// string
 	T_KW_THEN,	// then
 	T_KW_TRUE,		// true
+	T_KW_USES,		//uses
 	T_KW_VAR,	// var
 	T_KW_WHILE, 	// while
 	T_KW_WRT,		// write
+	T_KW_PROGRAM,
 	// neni v zadani ako klucove slovo - ??? 
 	T_RPT,	// repeat
 	T_UNTIL,	// until
@@ -50,7 +51,7 @@ enum tokenType {
 	// obecne
 	T_OF,		// of
 	// inline
-	T_RDLN,		// readln
+	//T_RDLN,		// readln
 	// aritmetika a logika
 	T_ASGN,		// :=
 	T_EQV,   	// =
@@ -84,47 +85,6 @@ enum tokenType {
 	T_EOF		// EOF		
 };
 
-/*
-char* keywords[37] = {
-	"program\0",
-	"begin\0",
-	"end\0",
-	"procedure\0",
-	"function\0",
-	"while\0",
-	"for\0",
-	"to\0",
-	"downto\0",
-	"repeat\0",
-	"until\0",
-	"break\0",
-	"continue\0",
-	"case\0",
-	"if\0",
-	"else\0",
-	"then\0",
-	"var\0",
-	"const\0",
-	"integer\0",
-	"real\0",
-	"boolean\0",
-	"char\0",
-	"type\0",
-	"set\0",
-	"in\0",
-	"record\0",
-	"array\0",
-	"file\0",
-	"of\0",
-	"do\0",
-	"nil\0",
-	"div\0",
-	"mod\0",
-	"and\0",
-	"or\0",
-	"not\0"
-};
-*/
 
 /**
  * Struktura tokenu, pro uchovani typu a obsahu
@@ -235,6 +195,12 @@ struct symbolTableNode {
 	
 	struct symbolTableNode* left;
 	struct symbolTableNode* right;	
+};
+
+// struktura potrebna na reverzny string z token typu
+struct token2str{
+	char	*str;
+	int	type;
 };
 
 

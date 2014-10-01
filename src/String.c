@@ -148,23 +148,15 @@ int compareString(struct String* s, char* s2){
 	if(s2 == NULL)
 		return -2;
 
-	if(s->Length == getCharArrayLength(s2)){
-		// jsou stejne delky, zacit porovnavat po znacich
-
 		for(int i = 0; i < s->Length; i++){
 			if(s->Value[i] != s2[i]){
 				if(s->Value[i] < s2[i])
 					return -1;
 				else 
 					return 1;
-				// jedna neshoda = nejsou stejne
-				return False;
 			}			
 		}
-		
-		return True;
-	}
-	return False;
+		return 0;
 }
 /**
  * Porovnava obsahy dvou Stringovych struktur.

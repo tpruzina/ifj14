@@ -6,6 +6,8 @@
 #include "Stack.h"
 #include "Ast.h"
 #include "SymbolTable.h"
+#include "String.h"
+#include "Scanner.h"
 
 struct mainAll global;
 
@@ -28,6 +30,10 @@ int init(char* srcpath){
 	global.gc->listLength = 0;
 
 	global.src = fopen(srcpath, "r");
+	if(!global.src)
+	{
+		fprintf(stderr, "Failed to open a file %s\n", srcpath);
+	}
 	global.errno = ok;
 	
 	Log("main:init - done", DEBUG, MAIN);
@@ -51,6 +57,8 @@ void quit(){
  *
  *
  */
+
+
 int main(int argc, char** argv)
 {
 	if(argc < 2){
@@ -58,15 +66,32 @@ int main(int argc, char** argv)
 		return False;
 	}
 	
-	//struct mainAll global = {0};
-	
 	if(init(argv[1]) != True){
 		Log("main: main_all struct dont allocated garbage collector..", ERROR, MAIN);
 		return False;
 	}
 	
-	
-	
+	if(!global.src)
+		return -99;
+
+	struct toc *tmp;
+
+	const char *str;
+	while(true)
+	{
+		tmp = getToc();
+		str = returnTypeAsStr(tmp->type);
+		if(str)
+			printf("%s\n",str);
+		else
+			printf("%d\n",tmp->type);
+		fflush(stdout);
+		fflush(stderr);
+
+
+		if(tmp->type == T_EOF)
+			break;
+	}
 	
 	atexit(quit);
 	return 0;
