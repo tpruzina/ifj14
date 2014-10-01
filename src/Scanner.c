@@ -245,7 +245,6 @@ getToc()
 		case KA_SHARP:	//mame escape sekvenciu, nasleduje cislo
 				exit(99);	// TODO
 
-
 // INTEGER + REAL LIT
 		case KA_INTEGER:	//uz mame cislicu
 			if(isdigit(c))
@@ -471,7 +470,6 @@ int ascii(unsigned char c)
 	return ((c >= 31) && (c <= 127)) ? 1 : 0;
 }
 
-// DEBUG
 // pomocna globalna premenna, funkcia returnTypeAssStr vrati
 // string k token typu
 struct token2str array[] = {
@@ -508,12 +506,10 @@ struct token2str array[] = {
 	{"and", T_AND},
 	{"or", T_OR},
 	{"not", T_NOT},
-
 	{"dot", T_DOT},
 	{"scol", T_SCOL},
 	{"comma", T_COM},
 	{"col", T_COL},
-
 	// literals
 	{"T_int", T_INT},
 	{"T_real", T_REAL},
@@ -552,6 +548,3 @@ const char *returnTypeAsStr(int type)
 			return array[i].str;
 	return NULL;
 }
-
-
-
