@@ -58,36 +58,114 @@ getToc()
 				toc->type = T_EOF;
 				return toc;
 			}
+			else if(';' == c)
+				state = KA_SCOL;
 			else if(':' == c)
 				state = KA_COL;
+			else if('.' == c)
+				state = KA_DOT;
+			else if(',' == c)
+				state = KA_COM;
+			else if('(' == c)
+				state = KA_LPAR;
+			else if(')' == c)
+				state = KA_RPAR;
+			else if('{' == c)
+				state = KA_LCBR;
+			else if('}' == c)
+				state = KA_RCBR;
+			else if('[' == c)
+				state = KA_LBRC;
+			else if(']' == c)
+				state = KA_RBRC;
 			else if('\'' == c)
 				state = KA_STR_LIT;
 			else if('=' == c)
 				state = KA_EQ;
+			else if('<' == c)
+				state = KA_LSS;
+			else if('>' == c)
+				state = KA_GRT;
+			else if('+' == c)
+				state = KA_ADD;
+			else if('-' == c)
+				state = KA_SUB;
+			else if('*' == c)
+				state = KA_MUL;
+			else if('/' == c)
+				state = KA_DIV;
 			else
 				toc->type = KA_ERR;
 			break;
+		// KA_START end.
 
+// jednopismenkove stavy - copy & paste
+		case KA_LPAR:
+			toc->type = T_LPAR;		// (
+			return toc;
+		case KA_RPAR:
+			toc->type = T_RPAR;		// )
+			return toc;
+		case KA_LBRC:
+			toc->type = T_LBRC;		// [
+			return toc;
+		case KA_RBRC:
+			toc->type = T_RBRC;		// ]
+			return toc;
+		case KA_LCBR:
+			toc->type = T_LCBR;		// {
+			return toc;
+		case KA_RCBR:
+			toc->type = T_LCBR;		// }
+			return toc;
+		case KA_SCOL:
+			toc->type = T_SCOL;		// ;
+			return toc;
+		case KA_DOT:
+			toc->type = T_DOT;		// .
+			return toc;
+		case KA_COM:
+			toc->type = T_COM;		// ,
+			return toc;
+
+// POROVNANIA =, > a >=
 		case KA_EQ:
 			toc->type = T_EQV;
 			return toc;
+
+		case KA_GRT:
+			if('=' == c)
+				state = KA_GEQV;
+			else
+			{
+				toc->type = T_GRT;
+				return toc;
+			}
 			break;
 
-		case KA_LESS:	// mame <
+		case KA_GEQV:
+			toc->type = T_GEQV;
+			return toc;
+
+// POROVNANIA < , <> a <=
+		case KA_LSS:	// mame <
 			if('>' == c)	//mame <>
 				state = KA_NEQV;
+			else if('=' == c)
+				state = KA_LEQV;
 			else
 			{
 				toc->type = T_LSS;
 				return toc;
 			}
 			break;
-
+		case KA_LEQV:
+			toc->type = T_LEQV;
+			return toc;
 		case KA_NEQV:
 			toc->type = T_NEQV;
 			return toc;
-			break;
-
+// : a :=
 		case KA_COL:	//mame ':'
 			if('=' == c)	// :=
 				state = KA_ASGN;
@@ -102,9 +180,21 @@ getToc()
 			toc->type = T_ASGN;
 			return toc;
 
-			break;
+// MATEMATICKE OPERATORY
+		case KA_ADD:
+			toc->type = T_ADD;
+			return toc;
+		case KA_SUB:
+			toc->type = T_SUB;
+			return toc;
+		case KA_DIV:
+			toc->type = T_DIV;
+			return toc;
+		case KA_MUL:
+			toc->type = T_MUL;
+			return toc;
 
-
+// STRINGOVE LITERALY + ESCAPE SEQ #
 		case KA_STR_LIT:	//mame '
 			if('\'' == c)	//mame prazdny literal
 			{
@@ -113,10 +203,14 @@ getToc()
 				ASSERT(compareString(str,"") == 0);
 				return toc;
 			}
+			else if('#' == c)
+				state = KA_SHARP;
 			break;
 
 		case KA_SHARP:
+			state = KA_STR_LIT;	// go back
 			break;
+
 		case KA_STR_LIT_INISDE:
 				addChar(str,c);
 			break;
@@ -124,8 +218,7 @@ getToc()
 		case KA_STR_LIT_DONE:
 			break;
 
-
-
+// INTEGER + REAL LIT
 		case KA_INTEGER:	//uz mame cislicu
 			if(isdigit(c))
 			{
@@ -177,7 +270,7 @@ getToc()
 				// success, mame real cislo!!
 				ungetc(c,global.src);
 				toc->type = T_REAL;
-				//toc->data.real = atof(str);
+				toc->data.real = atof(str->Value);
 				return toc;
 			}
 			break;
@@ -287,12 +380,12 @@ getToc()
 					toc->type = T_OR;
 				else if(!compareString(str,"of"))
 					toc->type = T_OF;
-				else if(!compareString(str,"do"))
-					toc->type = T_KW_DO;
-				else if(!compareString(str,"do"))
-					toc->type = T_KW_DO;
-				else if(!compareString(str,"do"))
-					toc->type = T_KW_DO;
+				else if(!compareString(str,"and"))
+					toc->type = T_AND;
+				else if(!compareString(str,"not"))
+					toc->type = T_NOT;
+				else if(!compareString(str,"mod"))
+					toc->type = T_MOD;
 				else if(!compareString(str,"do"))
 					toc->type = T_KW_DO;
 				else
@@ -345,6 +438,7 @@ void skipWSandComments()
 	ungetc(c,global.src);
 }
 
+// DEBUG
 // pomocna globalna premenna, funkcia returnTypeAssStr vrati
 // string k token typu
 struct token2str array[] = {
@@ -359,9 +453,9 @@ struct token2str array[] = {
 	{"forward", T_KW_FORW },
 	{"function", T_KW_FUNC },
 	{"if", T_KW_IF },
-	{"integer", T_KW_INT },
+	{"KW_integer", T_KW_INT },
 	{"readln", T_KW_READLN },
-	{"real", T_KW_REAL },
+	{"KW_real", T_KW_REAL },
 	{"sort", T_KW_SORT },
 	{"string", T_KW_STRING },
 	{"then", T_KW_THEN },
@@ -376,6 +470,42 @@ struct token2str array[] = {
 	{"and", T_AND },
 	{"not", T_NOT },
 	{"else", T_KW_ELSE},
+	{"mod", T_MOD},
+	{"and", T_AND},
+	{"or", T_OR},
+	{"not", T_NOT},
+
+	{"dot", T_DOT},
+	{"scol", T_SCOL},
+	{"comma", T_COM},
+	{"col", T_COL},
+
+	// literals
+	{"T_int", T_INT},
+	{"T_real", T_REAL},
+	{"T_str", T_STR},
+	{"assign",T_ASGN},
+	// comparison
+	{"greater", T_GRT},
+	{"geqv", T_GEQV},
+	{"less", T_LSS},
+	{"leqv",T_LEQV},
+	{"eq",T_EQV},
+	{"neqv",T_NEQV},
+	// +,-,*,/
+	{"add", T_ADD},
+	{"sub", T_SUB},
+	{"mul", T_MUL},
+	{"div", T_DIV},
+	// brackets
+	{"lpar", T_LPAR},
+	{"rpar", T_RPAR},
+	{"lbrc", T_LBRC},
+	{"rbrc", T_RBRC},
+	{"lcbr", T_LCBR},
+	{"rcbr", T_RCBR},
+	// EOF
+	{"eof",T_EOF},
 	{NULL, 0},
 };
 

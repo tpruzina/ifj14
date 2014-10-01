@@ -20,6 +20,7 @@ struct toc
 struct toc * getToc();
 
 void tocInit(struct toc **);
+//preskoci whitespace a komentare
 void skipWSandComments();
 
 // pomocna funkcia, das jej typ a navrati string
@@ -45,15 +46,33 @@ enum KA_STATES
 	KA_COL,
 	KA_ASGN,
 
+	KA_DOT,
+	KA_SCOL,
+	KA_COM,
+
 	KA_STR_LIT,
 	KA_STR_LIT_INISDE,
 	KA_STR_LIT_DONE,
 	KA_SHARP,			// #
 
-	KA_EQ,	// =
-
-	KA_LESS,	// <
+	KA_EQ,		// =
+	KA_GRT,		// >
+	KA_GEQV,	// >=
+	KA_LSS,	// <
+	KA_LEQV,	// <=
 	KA_NEQV,	// <>
+
+	KA_ADD,		// +
+	KA_SUB,		// -
+	KA_MUL,		// *
+	KA_DIV,		// /
+
+	KA_LPAR,
+	KA_RPAR,
+	KA_LBRC,
+	KA_RBRC,
+	KA_LCBR,
+	KA_RCBR,
 };
 
 #endif /* __SCANNER_H__ */
