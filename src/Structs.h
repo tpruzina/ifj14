@@ -135,7 +135,7 @@ enum errno { ok = 0,
 struct mainAll {
 	struct gc* gc;
 	FILE* src;
-	enum errno errno;
+	int errno;
 };
 extern struct mainAll global;
 /**

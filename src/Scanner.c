@@ -216,12 +216,12 @@ getToc()
 			break;
 
 		case KA_STR_LIT_INISDE:	//sme vnoreni v str. literale
-			if(ascii(c))
-				addChar(str,c);
-			else if('#' == c)
+			if('#' == c)
 				state = KA_SHARP;	//mame escape sekvenciu
 			else if('\'' == c)
 				state = KA_STR_LIT_DONE; //mame ukoncenie
+			else if(ascii(c))
+				addChar(str,c);
 			else
 				state = KA_ERR;
 			break;
@@ -243,7 +243,7 @@ getToc()
 			break;
 
 		case KA_SHARP:	//mame escape sekvenciu, nasleduje cislo
-				exit(99);	// TODO
+				exit(intern);	// TODO
 
 // INTEGER + REAL LIT
 		case KA_INTEGER:	//uz mame cislicu
@@ -417,9 +417,9 @@ getToc()
 			break;
 
 		case KA_ERR:
-			exit(1);
+			exit(lex);
 		default:
-			exit(99);
+			exit(intern);
 			break;
 		}
 	}
@@ -433,7 +433,7 @@ tocInit(struct toc **toc)
 
 	struct toc *tmp = gcMalloc(sizeof(struct toc));
 	if(!tmp)
-		exit(1);	// todo, error kod
+		exit(intern);	// todo, error kod
 	tmp->type = 0;		// todo: pridat define do headeru?
 	
 	*(toc) = tmp;
@@ -460,7 +460,10 @@ void skipWSandComments()
 // pomocne funkcie
 int ascii(unsigned char c)
 {
-	return ((c >= 31) && (c <= 127)) ? 1 : 0;
+	return (
+			((c >= 31) && (c <= 127)) &&
+			!(c == '#' || c == '\'')) ?
+					1 : 0;
 }
 
 // pomocna globalna premenna, funkcia returnTypeAssStr vrati
