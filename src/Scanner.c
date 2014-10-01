@@ -460,7 +460,10 @@ void skipWSandComments()
 // pomocne funkcie
 int ascii(unsigned char c)
 {
-	return ((c >= 31) && (c <= 127)) ? 1 : 0;
+	return (
+			((c >= 31) && (c <= 127)) &&
+			!(c == '#' || c == '\'')) ?
+					1 : 0;
 }
 
 // pomocna globalna premenna, funkcia returnTypeAssStr vrati
