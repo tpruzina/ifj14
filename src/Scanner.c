@@ -248,9 +248,7 @@ getToc()
 // INTEGER + REAL LIT
 		case KA_INTEGER:	//uz mame cislicu
 			if(isdigit(c))
-			{
 				addChar(str,c);	// 123
-			}
 			else if ('.' == c)
 			{
 				addChar(str,c);
@@ -281,9 +279,7 @@ getToc()
 
 		case KA_REAL:		// uz bola .x
 			if(isdigit(c))
-			{
 				addChar(str,c);
-			}
 			else if ('e' == c)
 			{
 				addChar(str,c);
@@ -325,9 +321,7 @@ getToc()
 
 		case KA_REAL_EXP_NUM:	// mame real,exp,cislo, uz mozu byt len cisla	
 			if(isdigit(c))
-			{
 				addChar(str,c);
-			}
 			else	//mame real
 			{
 				toc->type = T_REAL;			
@@ -425,7 +419,6 @@ getToc()
 		case KA_ERR:
 			exit(1);
 		default:
-			fprintf(stderr,"ERROR LEX, TOKEN\nc == %d\n %s\n",c, str->Value);
 			exit(99);
 			break;
 		}
