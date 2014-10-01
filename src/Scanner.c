@@ -71,10 +71,10 @@ getToc()
 				state = KA_LPAR;
 			else if(')' == c)
 				state = KA_RPAR;
-			else if('{' == c)
-				state = KA_LCBR;
-			else if('}' == c)
-				state = KA_RCBR;
+//			else if('{' == c)
+//				state = KA_LCBR;
+//			else if('}' == c)
+//				state = KA_RCBR;
 			else if('[' == c)
 				state = KA_LBRC;
 			else if(']' == c)
@@ -117,12 +117,12 @@ getToc()
 		case KA_RBRC:
 			toc->type = T_RBRC;		// ]
 			UNGETC_AND_RETURN_TOKEN();
-		case KA_LCBR:
-			toc->type = T_LCBR;		// {
-			UNGETC_AND_RETURN_TOKEN();
-		case KA_RCBR:
-			toc->type = T_LCBR;		// }
-			UNGETC_AND_RETURN_TOKEN();
+//		case KA_LCBR:
+//			toc->type = T_LCBR;		// {
+//			UNGETC_AND_RETURN_TOKEN();
+//		case KA_RCBR:
+//			toc->type = T_LCBR;		// }
+//			UNGETC_AND_RETURN_TOKEN();
 		case KA_SCOL:
 			toc->type = T_SCOL;		// ;
 			UNGETC_AND_RETURN_TOKEN();
@@ -455,7 +455,7 @@ void skipWSandComments()
 	{
 		if(c == '{')
 		{
-			while(c != '}' || c != EOF )
+			while(c != '}' && c != EOF )
 				c = fgetc(global.src);
 		}
 		else if(!isspace(c))
@@ -532,8 +532,8 @@ struct token2str array[] = {
 	{"rpar", T_RPAR},
 	{"lbrc", T_LBRC},
 	{"rbrc", T_RBRC},
-	{"lcbr", T_LCBR},
-	{"rcbr", T_RCBR},
+//	{"lcbr", T_LCBR},
+//	{"rcbr", T_RCBR},
 	//identifikator
 	{"identifikator", T_ID},
 	// EOF
