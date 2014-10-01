@@ -9,7 +9,6 @@
 
 #include <ctype.h> 	// tolower()
 #include "Scanner.h"
-#include "String.h"
 
 /* get_toc - cita zo suboru dalsi token
  * @vstup:	otvoreny file descriptor
@@ -440,7 +439,7 @@ tocInit(struct toc **toc)
 {
 	ASSERT(toc);
 
-	struct toc *tmp = malloc(sizeof(struct toc));
+	struct toc *tmp = gcMalloc(sizeof(struct toc));
 	if(!tmp)
 		exit(1);	// todo, error kod
 	tmp->type = 0;		// todo: pridat define do headeru?

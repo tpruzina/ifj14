@@ -4,6 +4,7 @@
 #include "Defines.h"
 #include "Structs.h"
 #include "String.h"
+#include "GC.h"
 
 struct toc
 {
