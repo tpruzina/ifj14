@@ -16,7 +16,7 @@
 /**
  * Pise chybovou zpravu, cervene
  */
-void Log(char* msg, enum LogType type, enum LogFrom frm){
+void Log(char* msg, int type, int frm){
 	if(!PRINT) return;
 	
 	char* fcol;
@@ -45,7 +45,7 @@ void Log(char* msg, enum LogType type, enum LogFrom frm){
 			break;
 		}
 		case AST: {
-			fcol = COLOR_LMGN;
+			fcol = COLOR_LRED;
 			sprintf(from, "AST");
 			break;
 		}
@@ -55,7 +55,7 @@ void Log(char* msg, enum LogType type, enum LogFrom frm){
 			break;
 		}
 		case PARSER: {
-			fcol = COLOR_LRED;
+			fcol = COLOR_LMGN;
 			sprintf(from, "PARSER");
 			break;
 		}

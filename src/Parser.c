@@ -4,6 +4,9 @@
 #include "Stack.h"
 #include "Log.h"
 #include "Ast.h"
+#include "Scanner.h"
+#include "Parser.h"
+
 
 /**
  * Interni funkce parseru, podle tokenu vrati jeho prioritu.
@@ -91,6 +94,95 @@ int convertTokenToNode(struct toc* t){
 	}
 }
 
+struct tokennames {
+	char* str;
+	int type;
+};
+struct tokennames tokennames[] = {
+	{"T_KW_BEGIN", T_KW_BEGIN},
+	{"T_KW_BOOLEAN",T_KW_BOOLEAN},
+	{"T_KW_DO", T_KW_DO},
+	{"T_KW_ELSE", T_KW_ELSE},
+	{"T_KW_END", T_KW_END},
+	{"T_KW_ENDDOT", T_KW_ENDDOT},
+	{"T_KW_FALSE", T_KW_FALSE},
+	{"T_KW_FALSE", T_KW_FALSE},
+	{"T_KW_FORW", T_KW_FORW},
+	{"T_KW_FUNC",T_KW_FUNC},
+	{"T_KW_IF", T_KW_IF},
+	{"T_KW_INT", T_KW_INT},
+	{"T_KW_READLN",T_KW_READLN},
+	{"T_KW_REAL", T_KW_REAL},
+	{"T_KW_SORT",T_KW_SORT},
+	{"T_KW_STRING", T_KW_STRING},
+	{"T_KW_THEN", T_KW_THEN},
+	{"T_KW_TRUE", T_KW_TRUE},
+	{"T_KW_VAR", T_KW_VAR},
+	{"T_KW_WHILE",T_KW_WHILE},
+	{"T_KW_WRT", T_KW_WRT},
+	{"T_KW_PROGRAM",T_KW_PROGRAM},
+	{"T_RPT",T_RPT},
+	{"T_UNTIL",T_UNTIL},
+	{"T_ID",T_ID},
+	{"T_TEXT",T_TEXT},
+	{"T_NMB",T_NMB},
+	{"T_INT", T_INT},
+	{"T_REAL", T_REAL},
+	{"T_STR", T_STR},
+	{"T_BOOL", T_BOOL},
+	{"T_ARR", T_ARR},
+	{"T_OF", T_OF},
+	{"T_ASGN", T_ASGN},
+	{"T_EQV", T_EQV},
+	{"T_NEQV", T_NEQV},
+	{"T_GRT", T_GRT},
+	{"T_LSS", T_LSS},
+	{"T_GEQV", T_GEQV},
+	{"T_LEQV", T_LEQV},
+	{"T_ADD", T_ADD},
+	{"T_SUB", T_SUB},
+	{"T_MUL", T_MUL},
+	{"T_DIV", T_DIV},
+	{"T_AND", T_AND},
+	{"T_OR", T_OR},
+	{"T_XOR", T_XOR},
+	{"T_NOT", T_NOT},
+	{"T_SCOL", T_SCOL},
+	{"T_COL", T_COL},
+	{"T_DOT", T_DOT},
+	{"T_COM", T_COM},
+	{"T_APS", T_APS},
+	{"T_LPAR", T_LPAR},
+	{"T_RPAR", T_RPAR},
+	{"T_LBRC", T_LBRC},
+	{"T_RBRC", T_RBRC},
+	{"T_LCBR", T_LCBR},
+	{"T_RCBR", T_RCBR},
+	{"T_DDOT", T_DDOT},
+	{"T_USC", T_USC},
+	{"T_EOF", T_EOF}};
+	
+void printTokenType(struct toc* token){
+	for(int i=0; tokennames[i].str; i++)
+		if(token->type == tokennames[i].type)
+			fprintf(stderr, "Token: %s\n", tokennames[i].str);
+}
+
+
+void printAstStack(struct stack* aststack){
+	fprintf(stderr, "AST STACK..\n");
+	
+	struct stackItem* item = aststack->Top;
+	
+	while(item != NULL){
+		printAst((struct astNode*)item->Value);
+		item = item->Next;
+		if(item != NULL)
+			fprintf(stderr, "------------------------------\n");	
+	}	
+	fprintf(stderr, "AST STACK END\n");
+}
+
 /**
  * Vytvari novy uzel do stromu podle operatoru.
  * --------------------
@@ -98,44 +190,51 @@ int convertTokenToNode(struct toc* t){
  * aststack: Urcuje zasobnik ze ktereho bude tahat data a kam bude ukladat vysledek
  */
 int makeAstFromToken(struct toc* token, struct stack** aststack){
+	fprintf(stderr, "MAFT\t");
+	printTokenType(token);
+	printAstStack(*aststack);
+
 	struct astNode* node = makeNewAST();
 	// vytazeny operator
 	int prio = getPriority(token);
 	if(prio > 0 && prio < 10){
 		// operatory bez NOT
 		node->type = convertTokenToNode(token);
-		if(node->type == -1){
+		if((int)node->type == -1){
 			Log("Unsuported token type to convert", ERROR, PARSER);
 			return False;
 		}
+		
+		Log("Dyadic operators", WARNING, PARSER);
 		node->right = (struct astNode*)stackPop(*aststack);
 		node->left = (struct astNode*)stackPop(*aststack);
 	}
 	else if(prio == 0){
 		// not
 				
+		Log("Not operator", WARNING, PARSER);
 		node->type = AST_NOT;
 		node->left = (struct astNode*)stackPop(*aststack);
 	}
 	else {
 		Log("Stack error - invalid data", WARNING, PARSER);
+		printTokenType(token);
 		return False;						
 	}
-			
+	
+	
+	printAst((struct astNode*)stackTop(*aststack));
 	return stackPush(*aststack, node);
 }
+
 
 /**
  * Parsuje vyraz, aritmeticko-logicky
  * --------------------
  */
 struct astNode* parseException(){
-	// vystupni strom
-	struct astNode* ast = makeNewAST();
 	// zasobnik pro operatory Shunting-yard algoritmu
 	struct stack* stack = makeNewStack();
-	// fronta pro vystupni postfix zapis
-	struct queue* outqueue = makeNewQueue();
 	// zasobnik pro chystani AST
 	struct stack* aststack = makeNewStack();				
 				
@@ -155,28 +254,37 @@ struct astNode* parseException(){
 	// 5. v pripade jineho tokenu -> vyprazdnovat zasobnik na vystup
 	// 		tokeny ;, THEN, DO by mely vesmes ukoncovat vyrazy	
 	while(cur != NULL){
-		switch(toc->type){
+		switch(cur->type){
 			// leva zavorka
 			case T_LPAR: {
-				if(!stackPush(stack, toc))
+				Log("T_LPAR comes", WARNING, PARSER);
+			
+				if(!stackPush(stack, cur))
 					return NULL;
 				break;
 			}
 			// prava zavorka
 			case T_RPAR: {
+				Log("T_RPAR comes", WARNING, PARSER);
+			
 				struct toc* t = (struct toc*)stackPop(stack);
 				if(t == NULL){
 					// pravdepodobne chyba syntaxe
 					Log("Syntax error - no '(' before ')'", ERROR, PARSER);
 					return NULL;
 				}
-			
-				struct toc* helper;
-				while((t = (struct toc*)stackPop(stack)) != NULL && t != T_LPAR){
+				
+				// TODO neco je tady spatne! opravit
+				while(!stackEmpty(stack) && t->type != T_LPAR){
 					// vybira operatory ze zasobniku a hrne je do zasobniku operandu
-					
 					if(!makeAstFromToken(t, &aststack))
-						return NULL;					
+						return NULL;	
+					
+					t = (struct toc*)stackPop(stack);				
+					printTokenType(t);
+				}
+				if(t->type == T_LPAR){
+					Log("LPAR found", ERROR, PARSER);
 				}
 				
 				break;
@@ -187,29 +295,30 @@ struct astNode* parseException(){
 			case T_REAL:
 			case T_STR:
 			case T_BOOL: {
+				Log("Literal comes", WARNING, PARSER);
 				struct astNode* node = makeNewAST();
 				
-				if(toc->type == T_ID){
+				if(cur->type == T_ID){
 					node->type = AST_ID;
 					// kopie jmena
-					if(!copyString(toc->data.str, &(node->data.str)))
+					if(!copyString(cur->data.str, &(node->data.str)))
 						return NULL;
 				}
-				else if(toc->type == T_INT){
+				else if(cur->type == T_INT){
 					node->type = AST_INT;
-					node->data.integer = toc->data.integer;				
+					node->data.integer = cur->data.integer;				
 				}
-				else if(toc->type == T_REAL){
+				else if(cur->type == T_REAL){
 					node->type = AST_REAL;
-					node->data.real = toc->data.real;
+					node->data.real = cur->data.real;
 				}
-				else if(toc->type == T_BOOL){
+				else if(cur->type == T_BOOL){
 					node->type = AST_BOOL;
-					node->data.boolean = toc->data.boolean;
+					node->data.boolean = cur->data.boolean;
 				}
-				else if(toc->type == T_STR){
+				else if(cur->type == T_STR){
 					node->type = AST_STR;
-					if(!copyString(toc->data.str, &(node->data.str))
+					if(!copyString(cur->data.str, &(node->data.str)))
 						return NULL;
 				}
 										
@@ -234,6 +343,8 @@ struct astNode* parseException(){
 			case T_OR:
 			case T_XOR:
 			case T_NOT: {
+				Log("Operator comes", WARNING, PARSER);
+				printTokenType(cur);
 				// 3. operator:
 				// 		pokud je zasobnik prazdny
 				// 		pokud je na vrcholu leva zavorka
@@ -243,32 +354,33 @@ struct astNode* parseException(){
 			
 				struct toc* top;
 				if(stackEmpty(stack)){
-					if(!stackPush(stack, toc))
+					if(!stackPush(stack, cur))
 						return NULL;
 				}
 				else {
 					while(!stackEmpty(stack)){			
 						top = stackTop(stack);
 						if(top == NULL){
-							if(!stackPush(stack, toc))
+							if(!stackPush(stack, cur))
 								return NULL;
 						
 							// vlozen prvek do zasobniku
 							break;
 						}
 								
-						// v pripade, ze je na vrcholu vyssi priorita				
-						if(getPriority(top) >= getPriority(toc)){
+						// v pripade, ze je na vrcholu vyssi priorita
+						if(getPriority(top) >= getPriority(cur)){
 							// vybrat a poslat na vystup a opakovat
 							top = stackPop(stack);
-						
+
+							//TODO tady se sere LPAR, i kdyz by mela byt v prdeli pryc
 							if(!makeAstFromToken(top, &aststack))
 								return NULL;
-						}
-								
+						}						
+						
 						// pokus vlozeni - za jakekoliv okolnosti 
-						if(stackEmpty(stack) || top->type == T_LPAR || (getPriority(top) < getPriority(toc))){
-							if(!stackPush(stack, toc))
+						if(stackEmpty(stack) || top->type == T_LPAR || (getPriority(top) < getPriority(cur))){
+							if(!stackPush(stack, cur))
 								return NULL;
 							break;
 						}
@@ -277,24 +389,20 @@ struct astNode* parseException(){
 				break;
 			}
 			// ukoncovaci operatory/klicove slova/separatory
-			case T_THEN: 
-			case T_DO:
+			case T_KW_THEN: 
+			case T_KW_DO:
 			case T_SCOL: {
+				Log("End marks comes", WARNING, PARSER);
 				// vyprazdnit vsechny operatory v zasobniku a postavit nad nimi strom
 				while(!stackEmpty(stack)){
-					if(!makeAstFromToken(stackPop(stack), &aststack))
+					struct toc* now = (struct toc*)stackPop(stack);
+					if(!makeAstFromToken(now, &aststack))
 						return NULL;
 				}
 				
 				// v pripade, ze je v zasobniku jen jeden prvek, vratit ho, je to vysledek SY algoritmu
-				if(aststack->Length == 1)
-					return stackPop(aststack);
-				else {
-					Log("AST stack contains more than one item!", ERROR, PARSER);
-					return NULL;
-				}
-					
-				break;
+				
+				return stackPop(aststack);
 			}
 			default:
 				Log("Syntax error - invalid token type", ERROR, PARSER);	
@@ -304,6 +412,7 @@ struct astNode* parseException(){
 		// get next token
 		cur = getToc();
 	}
+	return NULL;
 }
 
 

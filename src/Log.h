@@ -30,5 +30,5 @@ enum LogType { DEBUG, ERROR, WARNING };
 /*
  * Definice funkci knihovny Log
  */
-void Log(char*, enum LogType, enum LogFrom);
+void Log(char*, int, int);
 
