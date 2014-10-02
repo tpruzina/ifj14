@@ -10,6 +10,33 @@
 #include <ctype.h> 	// tolower()
 #include "Scanner.h"
 
+void parse_escape_seq(char *c)
+{
+	if(*c != '#')
+		return;
+	else
+	{
+		unsigned short num = 0;
+		unsigned char tmp_c = fgetc(global.src);
+
+		if(!isdigit(tmp_c))
+			exit(lex);
+
+		while(isdigit((char)tmp_c))
+		{
+			num *= 10;
+			num += tmp_c - '0';
+			if(num > 255)
+				exit(lex);
+			tmp_c = fgetc(global.src);
+		}
+
+		if('\'' != tmp_c)
+			exit(lex);
+		*c = (char) num;
+	}
+}
+
 /* get_toc - cita zo suboru dalsi token
  * @vstup:	otvoreny file descriptor
  * @vystup:	vraci alokovany token
@@ -17,13 +44,10 @@
 struct toc *
 getToc()
 {
-	int c;		// nacitany aktualny znak
+	char c;		// nacitany aktualny znak
 	int state;	// aktualny stav
 	struct toc *toc;
 	struct String *str;
-	// pomocna premenna pouzivana len v escape sekvenciach
-	// stringovych literalov
-	short escape_seq=-1;	// -1 inicializacia je hack ktory potreb
 // makro na vratenie charu na vstup a return tokenu
 #define UNGETC_AND_RETURN_TOKEN() do {	\
 		ungetc(c,global.src); 			\
@@ -70,10 +94,6 @@ getToc()
 				state = KA_LPAR;
 			else if(')' == c)
 				state = KA_RPAR;
-//			else if('{' == c)
-//				state = KA_LCBR;
-//			else if('}' == c)
-//				state = KA_RCBR;
 			else if('[' == c)
 				state = KA_LBRC;
 			else if(']' == c)
@@ -202,9 +222,10 @@ getToc()
 // vid konecny automat z ktoreho sa tento shit da pochopit
 		case KA_STR_LIT:	//mame '
 			if('\'' == c)	//mame prazdny literal - go STR_LIT_DONE
+			{
+				addChar(str,'\0');
 				state = KA_STR_LIT_DONE;
-			else if('#' == c)	// mame escape sekvenciu
-				state = KA_SHARP;
+			}
 			else if(asci(c))	//mame znak v tele literalu 31-127 minus {#,'}
 			{
 				addChar(str,c);
@@ -215,9 +236,7 @@ getToc()
 			break;
 
 		case KA_STR_LIT_INISDE:	//sme vnoreni v str. literale
-			if('#' == c)
-				state = KA_SHARP;	//mame escape sekvenciu
-			else if('\'' == c)
+			if('\'' == c)
 				state = KA_STR_LIT_DONE; //mame ukoncenie
 			else if(asci(c))
 				addChar(str,c);
@@ -225,10 +244,17 @@ getToc()
 				state = KA_ERR;
 			break;
 
+
 		case KA_STR_LIT_DONE:	// mame ukoncenie
 			if('\'' == c)
 			{	// specialny case ked mame dve ''
 				// musime pridat ' do stringu a vratit sa do inside
+				addChar(str,c);
+				state = KA_STR_LIT_INISDE;
+			}
+			else if('#' == c)
+			{
+				parse_escape_seq(&c);
 				addChar(str,c);
 				state = KA_STR_LIT_INISDE;
 			}
@@ -241,182 +267,7 @@ getToc()
 			}
 			break;
 
-		case KA_SHARP:	//mame escape sekvenciu, nasleduje cislo
-			if(isdigit(c))
-			{
-				escape_seq = c - '0';
-				if(c == '0') //nuly preskakujeme
-					state = KA_S_0;
-				else if('1' == c)
-					state = KA_S_1;
-				else if('2' == c)
-					state = KA_S_2;
-				else	// 3-9
-					state = KA_S_39;
-			}
-			else
-				state = KA_ERR;	// za escape sekvenciou musi byt digit
-			break;
 
-		case KA_S_0:	//mame leading nuly
-			if(isdigit(c))
-			{
-				if('0' == c)
-					state = KA_S_0;	// zmazeme leading nulu
-				else // mame 1-9
-					state = KA_SHARP;	//mame leading nulu a za tym 1-9 -> ideme spat do stave #
-			}
-			else if('\'' == c)	// '#0'
-			{
-				addChar(str,(unsigned)0);
-				state = KA_STR_LIT_DONE;
-			}
-			else if('#' == c)
-			{
-				ungetc(c,global.src);
-				state = KA_STR_LIT_INISDE;
-			}
-			else if(asci(c)) // mame #0 -> zapiseme do stringu nulu a ideme spat do stringoveho literalu
-			{
-				ungetc(c,global.src);
-				addChar(str,(unsigned char)0);
-				state = KA_STR_LIT_INISDE;
-			}
-			else
-				state = KA_ERR;
-			break;
-
-		case KA_S_1:	//nacitali sme jednotku
-			if(isdigit(c))	//mame cislo
-			{
-				escape_seq *= 10;		// nastavime si prvu cislicu escape seq na 1 a dekadicky shift left
-				escape_seq += c - '0';
-				state = KA_S_12_04N;
-			}
-			else if('\'' == c)
-			{
-				addChar(str,(unsigned char)1);
-				state = KA_STR_LIT_DONE;
-			}
-			else if(asci(c))			// mame ascii pismeno pridame jednicku - #1
-			{
-				ungetc(c,global.src);
-				addChar(str,(unsigned char)1);
-				state = KA_STR_LIT_INISDE;
-			}
-			else
-				state = KA_ERR;
-			break;
-
-		case KA_S_2:
-			if(isdigit(c))	//mame cislo
-			{
-				escape_seq = 20;		// nastavime si prvu cislicu escape seq na 2 a dekadicky shift left
-				if(c > '5')
-					state = KA_S_239_69N;
-				else if(c < '4')
-					state = KA_S_12_04N;
-				else
-					state = KA_S_2_5;
-			}
-			else if('\'' == c)
-			{
-				addChar(str,(unsigned char)2);
-				state = KA_STR_LIT_DONE;
-			}
-			else if (asci(c))			//mame dvojku, pridaj a chod do string literalu
-			{
-				ungetc(c,global.src);
-				addChar(str,(unsigned char)1);
-				state = KA_STR_LIT_INISDE;
-			}
-			else
-				state = KA_ERR;
-			break;
-
-		case KA_S_39:
-			if(isdigit(c))	//mame cislo
-			{
-				escape_seq *= 10;
-				escape_seq += c - '0'; // nastavime si prvu cislicu escape seq na x a dekadicky shift left
-				state = KA_S_239_69N;
-			}
-			else if('\'' == c)
-			{
-				addChar(str,(unsigned char)(c-'0'));
-				state = KA_STR_LIT_DONE;
-			}
-			else if(asci(c))			// mame ascii pismeno pridame jednicku - #1
-			{
-				ungetc(c,global.src);
-				addChar(str,(unsigned char)1);
-				state = KA_STR_LIT_INISDE;
-			}
-			else
-				state = KA_ERR;
-			break;
-
-		case KA_S_239_69N:	//slouceny stav pre [3-9]N a 2[6-9]N
-			if(isdigit(c))
-				state = KA_ERR;	//dostali sme > 255
-			else if('\'' == c)
-			{
-				addChar(str,(unsigned char)escape_seq);
-				state = KA_STR_LIT_DONE;
-			}
-			else if(asci(c))
-			{
-				ungetc(c,global.src);
-				addChar(str,(unsigned char)escape_seq);
-				state = KA_STR_LIT_INISDE;
-			}
-			else
-				state = KA_ERR;
-			break;
-
-		case KA_S_12_04N:	//slouceny stav pre 1N a 2[0-4]N
-			if(isdigit(c))	//mame < 250
-			{
-				escape_seq *= 10;	//posun doprava '12 -> 120'
-				escape_seq += c - '0';	// a pridame novy digit
-				addChar(str,(unsigned char)escape_seq);
-				state = KA_STR_LIT_INISDE;
-			}
-			else if('\'' == c)
-			{
-				addChar(str,(unsigned char)escape_seq);
-				state = KA_STR_LIT_DONE;
-			}
-			else if(asci(c))
-			{
-				ungetc(c, global.src);
-				addChar(str, (unsigned char)escape_seq);
-				state = KA_STR_LIT_INISDE;
-			}
-			else
-				state = KA_ERR;
-			break;
-
-		case KA_S_2_5:		//stave pre 25
-			if(isdigit(c))
-			{
-				if(c > '5')	// mame 256-259	-- erorr
-					state = KA_ERR;
-				else		//mame 250-255 - ok
-				{
-					escape_seq *= 10;
-					escape_seq += c - '0';
-					addChar(str,(unsigned char)escape_seq);
-					state = KA_STR_LIT_INISDE;
-				}
-			}
-			else if(asci(c))	//mame #25[pismeno]
-			{
-				ungetc(c,global.src);
-				addChar(str,(unsigned char)25);
-				state = KA_STR_LIT_INISDE;
-			}
-			break;
 
 // INTEGER + REAL LIT
 		case KA_INTEGER:	//uz mame cislicu
@@ -635,7 +486,7 @@ int asci(unsigned char c)
 {
 	return (
 			((c >= 31) && (c <= 127)) &&
-			!(c == '#' || c == '\'')) ?
+			!(c == '\'')) ?
 					1 : 0;
 }
 
