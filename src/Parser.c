@@ -275,7 +275,7 @@ struct astNode* parseParams(){
 				if(!(nd = makeNewAST()))
 					return NULL;
 				
-				nd->type = AST_BOOLEAN;
+				nd->type = AST_BOOL;
 				nd->data.boolean = cur->data.boolean;
 				
 				break;
@@ -286,14 +286,9 @@ struct astNode* parseParams(){
 					return NULL;
 				
 				nd->type = AST_STR;
-				
+				if(!(copyString(cur->data.str, &(nd->data.str))))
+					return NULL;
 		
-				break;
-			}
-			case T_ARR: {
-				// predane pole...
-			
-			
 				break;
 			}
 			default:
@@ -301,13 +296,21 @@ struct astNode* parseParams(){
 				return NULL;
 		}
 		
-		//TODO vytvoreni polozky a vlozeni polozky do node
 		
+		//TODO vytvoreni polozky a vlozeni polozky do node
+		struct astNode* item = node;
+		while(item->left != NULL){
+			item = item->left;
+		}
+		// vlozeni do praveho uzlu parametr
+		item->left = makeNewAST();
+		item->left->type = AST_NONE;
+		item->left->right = nd;
 		
 		// nacteni dalsiho tokenu
 		cur = getToc();
 	}
-	
+	return node;
 }
 /**
  * Parsuje volani funkce, kde uz dostane predany T_ID od exprParseru

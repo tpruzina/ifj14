@@ -6,6 +6,10 @@
 #include "Stack.h"
 #include "Ast.h"
 #include "SymbolTable.h"
+#include "Scanner.h"
+#include "Parser.h"
+
+
 
 struct mainAll global;
 
@@ -46,11 +50,6 @@ void quit(){
 	Log("main:exit - done", DEBUG, MAIN);
 }
 
-/*
- * 
- *
- *
- */
 int main(int argc, char** argv)
 {
 	if(argc < 2){
@@ -66,7 +65,7 @@ int main(int argc, char** argv)
 	}
 	
 
-	if(compareCharArrays(argv[2], "--stack")){
+	if(!compareCharArrays(argv[2], "--stack")){
 		// spusteni cteni - lexikalni anal-lyzator
 		struct stack* stack = makeNewStack();
 		struct String* str = makeNewString();
@@ -98,7 +97,7 @@ int main(int argc, char** argv)
 		}
 		Log("END", DEBUG, MAIN);
 	}
-	else if(compareCharArrays(argv[2], "--ast")){
+	else if(!compareCharArrays(argv[2], "--ast")){
 		struct astNode* ast = makeNewAST();
 		ast->type = AST_START;
 		struct astNode* l = makeNewAST();
@@ -116,7 +115,7 @@ int main(int argc, char** argv)
 	
 		printAst(ast);
 	}
-	else if(compareCharArrays(argv[2], "--symbol")){
+	else if(!compareCharArrays(argv[2], "--symbol")){
 		// demonstrace tabulky symbolu
 		
 		struct symbolTableNode* symtable = NULL;
@@ -130,8 +129,13 @@ int main(int argc, char** argv)
 				// separator - konec tokenu
 				if(str->Length != 0){
 					printString(str);
-					if(!insertValue(&symtable, str, NULL)){
+					struct symbolTableNode* node = insertValue(&symtable, str, NULL);
+					if(node == NULL){
 						break;					
+					}
+					else {
+						// vkladat hodnoty
+											
 					}
 				
 					//printString(str);
@@ -141,23 +145,33 @@ int main(int argc, char** argv)
 			else
 				addChar(str, c);
 		}
+		if(global.errno == 0){
+			printSymbolTable(symtable, 0);
 		
-		printSymbolTable(symtable, 0);
+			struct symbolTableNode* copy;
+			copyTable(symtable, &copy);
+			printSymbolTable(copy, 0);
 		
-		struct symbolTableNode* copy;
-		copyTable(symtable, &copy);
-		printSymbolTable(copy, 0);
-		
-		if(!deleteTable(&copy)){
-			Log("Deleting error", ERROR, MAIN);
+			if(!deleteTable(&copy)){
+				Log("Deleting error", ERROR, MAIN);
+			}
+			printSymbolTable(copy, 0);
 		}
-		printSymbolTable(copy, 0);
+	}
+	else if(!compareCharArrays(argv[2], "--expr")){
+		Log("Starting parsing", WARNING, MAIN);
+		struct astNode* ast = parseException();
+		if(ast == NULL)
+			Log("Parser failed", WARNING, MAIN);
+		else
+			Log("Parser successed", WARNING, MAIN);
 			
+		printAst(ast);
 	}
 	
 	
 	fprintf(stderr, "Error code: %d\n", (int)global.errno);
 	
 	atexit(quit);
-	return 0;
+	return global.errno;
 }

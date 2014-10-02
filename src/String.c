@@ -76,8 +76,10 @@ int addChar(struct String* s, char c){
  * Vycisti string, vynuluje obsah.
  */
 int emptyString(struct String* str){
-	if(str == NULL)
+	if(str == NULL){
+		Log("String is NULL, cannot be cleaned", ERROR, STRING);
 		return False;
+	}
 	if(str->Value != NULL){
 		str->Value = (char*)gcRealloc(str->Value, 1);
 		str->Value[0] = '\0';
@@ -119,9 +121,12 @@ int freeString(struct String* s){
  * Zastupuje strcmp
  */
 int compareCharArrays(char* s1, char* s2){
-	if(s1 == NULL || s2 == NULL)
+	if(s1 == NULL || s2 == NULL){
+		Log("Char arrays are both NULL", ERROR, STRING);
 		return False;
+	}
 	
+	Log("All done", DEBUG, STRING);
 	int len = getCharArrayLength(s1);
 	int len2 = getCharArrayLength(s2);
 	if(len == len2){
@@ -133,6 +138,8 @@ int compareCharArrays(char* s1, char* s2){
 					return 1;			
 			}
 		}
+		
+		Log("Char arrays are same", DEBUG, STRING);
 		return 0;
 	}
 	else if(len > len2)
@@ -247,8 +254,10 @@ int copyString(struct String* src, struct String** dest){
 		return False;	
 	}
 	
-	if((*dest) == NULL && ((*dest) = makeNewString()) == NULL)
+	if((*dest) == NULL && ((*dest) = makeNewString()) == NULL){
+		Log("Destination string cannot be maked", ERROR, STRING);
 		return False;
+	}
 	else {
 		if(!emptyString(*dest)){
 			return False;

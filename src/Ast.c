@@ -15,7 +15,6 @@ struct astNode* makeNewAST(){
 	ast->left = NULL;
 	ast->right = NULL;
 	ast->type = AST_NONE;
-	ast->value = NULL;
 	
 	return ast;
 }
@@ -36,7 +35,7 @@ void printAst(struct astNode* ast){
 		return;
 	}
 	
-	char* nodes[26] = {
+	char* nodes[] = {
 		"[ AST_NONE ]",
 		"[ AST_START ]",
 		"[ AST_END ]",
@@ -61,8 +60,11 @@ void printAst(struct astNode* ast){
 		"[ AST_XOR ]",
 		"[ AST_NOT ]",
 		"[ AST_NUM ]",
-		"[ AST_STR ]",
-		"[ AST_ID ]" };
+		"[ AST_ID ]",
+		"[ AST_INT ]",
+		"[ AST_REAL ]",
+		"[ AST_BOOL ]",
+		"[ AST_STR ]"};
 	
 	prtAst(ast, 0, nodes);
 }

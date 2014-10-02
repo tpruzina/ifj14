@@ -14,37 +14,48 @@
  * Slouzi pro urceni typu tokenu, ktery lex. analyzator nacte
  */
 enum tokenType {
-	// klicove slova
-	T_START,	// program
-	T_BEGIN,	// begin
-	T_END,  	// end
-	T_FUNC,		// function
-	T_FORW,		// forward
-	T_WHILE, 	// while
-	T_RPT,		// repeat
+	// klicove slova - zadani 3.1.1
+	T_KW_BEGIN,	// begin
+	T_KW_BOOLEAN,	// boolean
+	T_KW_DO,	// do
+	T_KW_ELSE,	// else
+	T_KW_END,  	// end
+	T_KW_ENDDOT,	// end.
+	T_KW_FALSE,	// false
+	T_KW_FIND,	// find
+	T_KW_FORW,	// forward
+	T_KW_FUNC,	// function
+	T_KW_IF,	// if
+	T_KW_INT,	// integer
+	T_KW_READLN,	// readln
+	T_KW_REAL,	// real
+	T_KW_SORT,	// sort
+	T_KW_STRING,	// string
+	T_KW_THEN,	// then
+	T_KW_TRUE,		// true
+	T_KW_USES,		//uses
+	T_KW_VAR,	// var
+	T_KW_WHILE, 	// while
+	T_KW_WRT,		// write
+	T_KW_PROGRAM,
+	T_KW_LENGTH,
+	T_KW_COPY,
+	// neni v zadani ako klucove slovo - ??? 
+	T_RPT,	// repeat
 	T_UNTIL,	// until
-	T_IF,		// if
-	T_ELSE,		// else
-	T_THEN,		// then
-	T_VAR,		// var
-	T_ID,		// cokoliv odpovidajici identifikatoru
-	T_TEXT,		// cokoliv odpovidajici stringu
-	T_NMB,		// cokoliv odpovidajici cislu
+	T_ID,	// cokoliv odpovidajici identifikatoru
+	T_TEXT,	// cokoliv odpovidajici stringu
+	T_NMB,	// cokoliv odpovidajici cislu
 	// datove typy
-	T_INT,		// integer
+	T_INT,
 	T_REAL,		// real
-	T_BOOL,		// boolean
 	T_STR,		// string
+	T_BOOL,
 	T_ARR,		// array
 	// obecne
 	T_OF,		// of
-	T_TRUE,		// true
-	T_FALSE,	// false
 	// inline
-	T_FIND,		// find
-	T_SORT,		// sort
-	T_RDLN,		// readln
-	T_WRT,		// write
+	//T_RDLN,		// readln
 	// aritmetika a logika
 	T_ASGN,		// :=
 	T_EQV,   	// =
@@ -60,6 +71,7 @@ enum tokenType {
 	T_MOD,		// mod
 	T_AND,		// and
 	T_OR,		// or
+	T_XOR,
 	T_NOT,		// not
 	// specialni znaky
 	T_SCOL,		// ;
@@ -74,50 +86,10 @@ enum tokenType {
 	T_LCBR,		// {
 	T_RCBR,		// }
 	T_DDOT,		// ..
-	T_USC		// _
+	T_USC,		// _
+	T_EOF		// EOF		
 };
 
-/*
-char* keywords[37] = {
-	"program\0",
-	"begin\0",
-	"end\0",
-	"procedure\0",
-	"function\0",
-	"while\0",
-	"for\0",
-	"to\0",
-	"downto\0",
-	"repeat\0",
-	"until\0",
-	"break\0",
-	"continue\0",
-	"case\0",
-	"if\0",
-	"else\0",
-	"then\0",
-	"var\0",
-	"const\0",
-	"integer\0",
-	"real\0",
-	"boolean\0",
-	"char\0",
-	"type\0",
-	"set\0",
-	"in\0",
-	"record\0",
-	"array\0",
-	"file\0",
-	"of\0",
-	"do\0",
-	"nil\0",
-	"div\0",
-	"mod\0",
-	"and\0",
-	"or\0",
-	"not\0"
-};
-*/
 
 /**
  * Struktura tokenu, pro uchovani typu a obsahu
@@ -167,7 +139,7 @@ enum errno { ok = 0,
 struct mainAll {
 	struct gc* gc;
 	FILE* src;
-	enum errno errno;
+	int errno;
 };
 extern struct mainAll global;
 /**
@@ -198,8 +170,12 @@ enum astNodeType {
 	AST_XOR,
 	AST_NOT,
 	AST_NUM,
+	AST_ID,
+	AST_INT,
+	AST_REAL,
+	AST_BOOL,
 	AST_STR,
-	AST_ID
+	AST_CMD
 };
 
 /**
@@ -211,14 +187,25 @@ struct astNode {
 	struct astNode* left;
 	struct astNode* right;
 	
-	void* value;
+	void* other;
+	
+	int data_type;
+	union {
+		struct String* str;
+		int integer;
+		double real;
+		bool boolean;	
+	} data;
 };
 
+
+enum dataType { DT_NONE, DT_INT, DT_REAL, DT_BOOL, DT_STR };
 /**
  * Uzel tabulky symbolu
  */
 struct symbolTableNode {
 	struct String* name;
+	int type;
 	union {
 		struct String* str_data;
 		int int_data;
@@ -228,6 +215,12 @@ struct symbolTableNode {
 	
 	struct symbolTableNode* left;
 	struct symbolTableNode* right;	
+};
+
+// struktura potrebna na reverzny string z token typu
+struct token2str{
+	char	*str;
+	int	type;
 };
 
 
