@@ -7,7 +7,6 @@
 #include "Scanner.h"
 #include "Parser.h"
 
-
 /**
  * Interni funkce parseru, podle tokenu vrati jeho prioritu.
  * Vaze se hlavne na operatory u vsech ostatnich vraci prioritu 10
@@ -16,7 +15,7 @@
  */
 int getPriority(struct toc* t){
 	if(t == NULL){
-		return 10;
+		return 0;
 	}
 
 	switch(t->type){
@@ -26,7 +25,7 @@ int getPriority(struct toc* t){
 		case T_LSS:
 		case T_GEQV:
 		case T_LEQV:
-			return 3;
+			return 1;
 		case T_ADD:
 		case T_SUB:
 		case T_OR:
@@ -35,11 +34,11 @@ int getPriority(struct toc* t){
 		case T_MUL:
 		case T_DIV:
 		case T_AND:
-			return 1;
+			return 3;
 		case T_NOT:
-			return 0;
+			return 4;
 		default:
-			return 10;	
+			return 0;	
 	}
 }
 
@@ -227,17 +226,306 @@ int makeAstFromToken(struct toc* token, struct stack** aststack){
 	return stackPush(*aststack, node);
 }
 
+struct astNode* parseParams(){
+	// prochazi podel parametru a vytvari doleva jdouci strom z parametru
+	struct astNode* node = makeNewAST();
+	if(!node)
+		return NULL;
+	
+	struct toc* cur = getToc();
+	while(cur->type != T_RPAR){
+		struct astNode* nd;
+		switch(cur->type){
+			case T_ID: {
+				// predana promenna
+				//TODO vytvorit ast node a vlozit doleva nakonec
+				
+				if(!(nd = makeNewAST()))
+					return NULL;
+				
+				nd->type = AST_ID;
+				if(!(copyString(cur->data.str, &(nd->data.str))))
+					return NULL;
+
+				break;
+			}
+			case T_INT: {
+				// predany parametr je typu INT
+				
+				if(!(nd = makeNewAST()))
+					return NULL;
+				
+				nd->type = AST_INT;
+				nd->data.integer = cur->data.integer;
+							
+				break;
+			}
+			case T_REAL: {
+				// predany parametr typu real
+				if(!(nd = makeNewAST()))
+					return NULL;
+				
+				nd->type = AST_REAL;
+				nd->data.real = cur->data.real;
+				
+				break;
+			}
+			case T_BOOL: {
+				// predany parametr typu bool
+				if(!(nd = makeNewAST()))
+					return NULL;
+				
+				nd->type = AST_BOOLEAN;
+				nd->data.boolean = cur->data.boolean;
+				
+				break;
+			}
+			case T_STR: {
+				// predany parametry typu string
+				if(!(nd = makeNewAST()))
+					return NULL;
+				
+				nd->type = AST_STR;
+				
+		
+				break;
+			}
+			case T_ARR: {
+				// predane pole...
+			
+			
+				break;
+			}
+			default:
+				Log("Syntax error - invalid parameter type", ERROR, PARSER);
+				return NULL;
+		}
+		
+		//TODO vytvoreni polozky a vlozeni polozky do node
+		
+		
+		// nacteni dalsiho tokenu
+		cur = getToc();
+	}
+	
+}
+/**
+ * Parsuje volani funkce, kde uz dostane predany T_ID od exprParseru
+ * --------------------
+ * id: Token ID se jmenem funkce
+ */
+struct astNode* parseFuncCall(struct toc* id){
+	// v cyklu nasel T_ID a nasledne T_LPAR --> pravdepodobne volani funkce
+	
+	struct astNode* node = makeNewAST();
+	if(!node)
+		return NULL;
+		
+	// skopirovani jmena promenne
+	if(!(copyString(id->data.str, &(node->data.str))))
+		return NULL;
+	
+	
+	if(!(node->left = parseParams()))
+		return NULL;
+
+	node->right = NULL;
+	return NULL;
+}
+
+/**
+ * Parsuje telo, pouze zkontroluje zda-li zacina na begin a konci na end.
+ * --------------------
+ */
+struct astNode* parseBody(){
+	struct toc* cur = getToc();
+		
+	if(cur->type == T_KW_BEGIN){
+		//	zacatek tela -> spustit prikazy
+		struct astNode* body = parseCommands();
+		if(!body)
+			return NULL;
+			
+		// nacteni konce END
+		cur = getToc();
+		if(cur->type == T_KW_END)
+			return body;
+		else {
+			Log("Syntax error - expected END token at the end of body", ERROR, PARSER);
+			return NULL;
+		}
+	}
+	else {
+		Log("Syntax error - expected BEGIN token", ERROR, PARSER);
+		return NULL;
+	}
+}
+/**
+ * Vyhodnoti vsechny moznosti prikazu, ktere se muzou vyskytovat v tele funkce/programu
+ * --------------------
+ * TODO Volani funkci apod.
+ */
+struct astNode* parseCommand(){
+	struct toc* cur = getToc();
+	
+	switch(cur->type){
+		case T_KW_IF: {
+			struct astNode* ifnode;
+		
+			// nasleduje podminka
+			struct astNode* condition = parseException(T_KW_THEN);
+			if(!condition)
+				return NULL;
+				
+			if(!(fnode = makeNewAST()))
+				return NULL;
+			ifnode->othen = condition;
+			
+			// telo true
+			ifnode->left = parseBody();						
+			// telo else -- 
+			cur = getToc();
+			if(cur->type == T_KW_ELSE)
+				ifnode->right = parseBody();
+			else if(cur->type == T_END){
+				// kratky if -> musi nasledovat strednik
+				cur = getToc();
+				if(cur->type == T_SCOL){
+					// validni kratky if
+				
+					ifnode->right = NULL;
+					return ifnode;
+				}
+				else {
+					// chybi strednik!!
+					// TODO z konzultace zjistit jestli ma byt nebo ne
+				}					
+			}		
+			else {
+				Log("Syntax error - expected ELSE or END", ERROR, PARSER);
+				return NULL;		
+			}
+			break;
+		}
+		case T_KW_WHILE: {
+			struct astNode* node;
+			
+			struct astNode* condition = parseException(T_KW_DO);
+			if(!condition)
+				return NULL;
+				
+			if(!(node = makeNewAST()))
+				return NULL;
+			// ulozeni podminky
+			node->other = condition;
+			
+			// kompletace tela
+			if((node->left = parseBody()) == NULL)
+				return NULL;
+			node->right = NULL;
+			// navraceni stromu 
+			return node;
+		}
+		case T_RPT: {
+			// nejdriv je telo a pak podminka!!!!
+			struct astNode* node = makeNewAST();
+			if(!node)
+				return NULL;
+				
+			// zjisteni tela
+			if(!(node->left = parseBody()))
+				return NULL;
+			
+			cur = getToc();
+			if(cur->type == T_KW_UNTIL){
+				// korektni pokracovani
+				
+				// precteni podminky
+				if(!(node->other = parseException(T_SCOL)))
+					return NULL;
+				
+				node->right = NULL;
+				return node;
+			}
+			else {
+				Log("Syntax error - expected UNTIL", ERROR, PARSER);
+				return NULL;			
+			}
+		}
+		case T_KW_WRT: {
+			/* content */
+			break;
+		}
+		case T_KW_READLN: {
+			/* content */
+			break;
+		}
+		case T_KW_FIND: {
+			/* content */
+			break;
+		}
+		case T_KW_SORT: {
+			/* content */
+			break;
+		}
+		case T_KW_LENGTH: {
+			/* content */
+			break;
+		}
+		case T_KW_COPY: {
+			/* content */
+			break;
+		}
+		case T_ID: {
+			struct toc* next = getToc();
+			if(next->type == T_LPAR){
+				// pravdepodobne volani funkce
+				
+			}
+			else if(next->type == T_ASG){
+				// pravdepodobne prirazeni
+				
+				// levy uzel je T_ID
+				// pravy uzel je expression
+				struct astNode* left = makeNewAST();
+				if(left == NULL)
+					return NULL;
+					
+				left->type = AST_ID;
+				if(!copyString(cur->data.str, &(left->data.str)))
+					return NULL;
+				
+				// prava strana je vyraz
+				struct astNode* right = parseExpression(T_SCOL);
+				if(right == NULL) 
+					return NULL;
+				
+				// vytvorit uzel prirazeni a vratit jej
+				struct astNode* asgn = makeNewAST();
+				asgn->type = AST_ASGN;
+				asgn->left = left;
+				asgn->right = right;
+				return asgn;
+			}
+			else {
+				Log("Syntax error - expected funcCall or assign", ERROR, PARSER);
+				return NULL;
+			}		
+			break;
+		}
+	}	
+}
 
 /**
  * Parsuje vyraz, aritmeticko-logicky
  * --------------------
+ * TODO Doplnit rozliseni volani funkce!!!
  */
-struct astNode* parseException(){
+struct astNode* parseException(int endToken){
 	// zasobnik pro operatory Shunting-yard algoritmu
 	struct stack* stack = makeNewStack();
 	// zasobnik pro chystani AST
 	struct stack* aststack = makeNewStack();				
-				
 	// zacatek podminky
 	struct toc* cur = getToc();
 	
@@ -275,7 +563,7 @@ struct astNode* parseException(){
 				}
 				
 				// TODO neco je tady spatne! opravit
-				while(!stackEmpty(stack) && t->type != T_LPAR){
+				while(!stackEmpty(stack) && (t->type != T_LPAR)){
 					// vybira operatory ze zasobniku a hrne je do zasobniku operandu
 					if(!makeAstFromToken(t, &aststack))
 						return NULL;	
@@ -294,7 +582,9 @@ struct astNode* parseException(){
 			case T_INT:
 			case T_REAL:
 			case T_STR:
-			case T_BOOL: {
+			case T_BOOL: 
+			case T_KW_TRUE:
+			case T_KW_FALSE:{
 				Log("Literal comes", WARNING, PARSER);
 				struct astNode* node = makeNewAST();
 				
@@ -320,6 +610,14 @@ struct astNode* parseException(){
 					node->type = AST_STR;
 					if(!copyString(cur->data.str, &(node->data.str)))
 						return NULL;
+				}
+				else if(cur->type == T_KW_TRUE){
+					node->type = AST_BOOL;
+					node->data.boolean = True;
+				}
+				else if(cur->type == T_KW_FALSE){
+					node->type = AST_BOOL;
+					node->data.boolean = False;
 				}
 										
 				node->left = NULL;
@@ -358,40 +656,30 @@ struct astNode* parseException(){
 						return NULL;
 				}
 				else {
-					while(!stackEmpty(stack)){			
-						top = stackTop(stack);
-						if(top == NULL){
-							if(!stackPush(stack, cur))
-								return NULL;
+					/*
+					while(!empty($stack) && ($top->prior >= $token->prior)){
+						array_push($out, array_pop($stack));
 						
-							// vlozen prvek do zasobniku
-							break;
-						}
-								
-						// v pripade, ze je na vrcholu vyssi priorita
-						if(getPriority(top) >= getPriority(cur)){
-							// vybrat a poslat na vystup a opakovat
-							top = stackPop(stack);
-
-							//TODO tady se sere LPAR, i kdyz by mela byt v prdeli pryc
-							if(!makeAstFromToken(top, &aststack))
-								return NULL;
-						}						
+						$top = array_top($stack);
+					}
+					array_push($stack, $token);					
+					*/
+				
+					while(!stackEmpty(stack) && (getPriority(top) >= getPriority(cur))){
+						top = (struct toc*)stackPop(stack);
 						
-						// pokus vlozeni - za jakekoliv okolnosti 
-						if(stackEmpty(stack) || top->type == T_LPAR || (getPriority(top) < getPriority(cur))){
-							if(!stackPush(stack, cur))
-								return NULL;
-							break;
-						}
+						if(!makeAstFromToken(top, &aststack))
+							return NULL;	
+					
+						top = (struct toc*)stackTop(stack);
 					}		
+					if(!stackPush(stack, cur))
+						return NULL;
 				}	
 				break;
 			}
 			// ukoncovaci operatory/klicove slova/separatory
-			case T_KW_THEN: 
-			case T_KW_DO:
-			case T_SCOL: {
+			case endToken: {
 				Log("End marks comes", WARNING, PARSER);
 				// vyprazdnit vsechny operatory v zasobniku a postavit nad nimi strom
 				while(!stackEmpty(stack)){
