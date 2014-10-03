@@ -146,8 +146,19 @@ getToc()
 			toc->type = T_SCOL;		// ;
 			UNGETC_AND_RETURN_TOKEN();
 		case KA_DOT:
-			toc->type = T_DOT;		// .
+			if('.' == c)
+				state = KA_DDOT;
+			else
+			{
+				toc->type = T_DOT;		// .
+				UNGETC_AND_RETURN_TOKEN();
+			}
+			break;
+
+		case KA_DDOT:
+			toc->type = T_DDOT;
 			UNGETC_AND_RETURN_TOKEN();
+
 		case KA_COM:
 			toc->type = T_COM;		// ,
 			UNGETC_AND_RETURN_TOKEN();

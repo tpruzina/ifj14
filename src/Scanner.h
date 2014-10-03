@@ -49,6 +49,7 @@ enum KA_STATES
 	KA_COL,
 	KA_ASGN,
 
+	KA_DDOT,
 	KA_DOT,
 	KA_SCOL,
 	KA_COM,
