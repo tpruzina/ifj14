@@ -34,6 +34,9 @@ int init(char* srcpath){
 	global.src = fopen(srcpath, "r");
 	global.errno = ok;
 	
+	global.program = NULL;
+	global.symTable = makeNewStack();	
+	
 	Log("main:init - done", DEBUG, MAIN);
 	return True;
 }
@@ -63,6 +66,8 @@ int main(int argc, char** argv)
 		Log("main: main_all struct dont allocated garbage collector..", ERROR, MAIN);
 		return False;
 	}
+	
+	
 	
 
 	if(!compareCharArrays(argv[2], "--stack")){
@@ -129,15 +134,10 @@ int main(int argc, char** argv)
 				// separator - konec tokenu
 				if(str->Length != 0){
 					printString(str);
-					struct symbolTableNode* node = insertValue(&symtable, str, NULL);
+					struct symbolTableNode* node = insertValue(&symtable, str);
 					if(node == NULL){
 						break;					
 					}
-					else {
-						// vkladat hodnoty
-											
-					}
-				
 					//printString(str);
 					str = makeNewString();
 				}
@@ -158,15 +158,14 @@ int main(int argc, char** argv)
 			printSymbolTable(copy, 0);
 		}
 	}
-	else if(!compareCharArrays(argv[2], "--expr")){
-		Log("Starting parsing", WARNING, MAIN);
-		struct astNode* ast = parseException();
-		if(ast == NULL)
-			Log("Parser failed", WARNING, MAIN);
-		else
-			Log("Parser successed", WARNING, MAIN);
+	else if(!compareCharArrays(argv[2], "--run")){
+		// pokud vse probehlo OK, tak zobrazit strom
+		if(parser()){
+			printAst(global.program);	
 			
-		printAst(ast);
+			struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+			printSymbolTable(top, 0);	
+		}	
 	}
 	
 	
