@@ -385,11 +385,13 @@ getToc()
 					toc->type = T_KW_ELSE;
 				else if (!compareString(str,"end"))
 				{
-					if((c = fgetc(global.src)) == '.')	// mensi hack no rozlisenie END a END.
+					if(c == '.')	// mensi hack no rozlisenie END a END.
+					{
 						toc->type = T_KW_ENDDOT;
+						return toc;
+					}
 					else
 						toc->type = T_KW_END;
-					ungetc(c, global.src);
 				}
 				else if (!compareString(str,"false"))
 					toc->type = T_KW_FALSE;
