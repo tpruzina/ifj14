@@ -124,13 +124,13 @@ enum errno { ok = 0,
 	lex = 1, 		// chybna struktura aktualniho lexemu
 	synt = 2, 		// chybna syntaxe struktury programu
 	sem_prog = 3, 	// nedefinovana promenna/fukce, pokus o redefinici funkce/promenne
-	sem_komp = 4, 
-	sem_else = 5, 
-	run_num = 6, 
-	run_ninit = 7, 
-	run_div = 8, 
-	run_else = 9, 
-	intern = 99 };
+	sem_komp = 4, //chyba typove kompatibility v aritmetickych, retezcovych a relacnich vyrazech, pripadne spatny pocet ci typ parametru u volani funkce
+	sem_else = 5, // ostatni semanticke chyby
+	run_num = 6, // nacitani ciselne hodnoty ze vstupu
+	run_ninit = 7, // neinicializovana promenna
+	run_div = 8, // deleni nulou
+	run_else = 9, // ostatni behove chyby
+	intern = 99 }; // alokace, chyba otvirani souboru, spatne parametry prikazove radky
 
 /**
  * Vsechny hlavni soucasti.
@@ -139,6 +139,10 @@ enum errno { ok = 0,
 struct mainAll {
 	struct gc* gc;
 	FILE* src;
+	
+	struct astNode* program;
+	struct stack* symTable;
+	struct symbolTableNode* funcTable;
 	int errno;
 };
 extern struct mainAll global;
@@ -175,6 +179,7 @@ enum astNodeType {
 	AST_REAL,
 	AST_BOOL,
 	AST_STR,
+	AST_ARR,
 	AST_CMD
 };
 
@@ -189,7 +194,7 @@ struct astNode {
 	
 	void* other;
 	
-	int data_type;
+	int dataType;
 	union {
 		struct String* str;
 		int integer;
@@ -199,7 +204,7 @@ struct astNode {
 };
 
 
-enum dataType { DT_NONE, DT_INT, DT_REAL, DT_BOOL, DT_STR };
+enum dataType { DT_NONE, DT_INT, DT_REAL, DT_BOOL, DT_STR, DT_ARR };
 /**
  * Uzel tabulky symbolu
  */
@@ -213,8 +218,18 @@ struct symbolTableNode {
 		bool bool_data;
 	} data;
 	
+	// pro odkaz na astNode s telem funkce
+	void* other;
+	
 	struct symbolTableNode* left;
 	struct symbolTableNode* right;	
+};
+
+struct dataTypeArray {
+	int low;
+	int high;
+	int type;
+	struct String* id;
 };
 
 // struktura potrebna na reverzny string z token typu

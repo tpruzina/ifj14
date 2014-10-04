@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include "Structs.h"
 #include "GC.h"
 #include "Stack.h"
@@ -43,18 +45,38 @@ struct symbolTableNode* makeNewNamedNode(struct String* name){
 	
 	return stn;
 }
+
+struct symbolTableNode* search(struct symbolTableNode** table, struct String* name){
+	if(!(*table))
+		return NULL;
+		
+	int key = strcmp((*table)->name->Value, name->Value);
+	if(key == 0){
+		return (*table);
+	}
+	else if(key < 0){
+		// posun doleva	
+		return search(&((*table)->left), name);
+	}
+	else if(key > 0){
+		// posun doprava
+		return search(&((*table)->right), name);
+	}
+	return NULL;
+}
+
 /**
  * Vklada polozku do tabulky symbolu.
  * Rekurzivnim zpusobem se zanori az na potrebne misto a vytvori novy uzel
  */
-void* insertValue(struct symbolTableNode** table, struct String* name){
+struct symbolTableNode* insertValue(struct symbolTableNode** table, struct String* name){
 	if((*table) == NULL){
 		if(!((*table) = makeNewNamedNode(name))){
 			return NULL;		
 		}
 	}
 	else {
-		int key = compareStrings((*table)->name, name);
+		int key = strcmp((*table)->name->Value, name->Value);
 		
 		if(key == 0){
 			Log("Redefinition!", ERROR, SYMTABLE);
@@ -132,7 +154,8 @@ int insertDataString(struct symbolTableNode** table, struct String* value){
 		return False;
 	
 	(*table)->type = DT_STR;
-	copyString(value, &((*table)->data.str_data));
+	if(!(copyString(value, &((*table)->data.str_data))))
+		return False;
 	return True;
 }
 
