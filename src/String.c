@@ -126,7 +126,6 @@ int compareCharArrays(char* s1, char* s2){
 		return False;
 	}
 	
-	Log("All done", DEBUG, STRING);
 	int len = getCharArrayLength(s1);
 	int len2 = getCharArrayLength(s2);
 	if(len == len2){
@@ -139,7 +138,6 @@ int compareCharArrays(char* s1, char* s2){
 			}
 		}
 		
-		Log("Char arrays are same", DEBUG, STRING);
 		return 0;
 	}
 	else if(len > len2)

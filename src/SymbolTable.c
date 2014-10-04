@@ -6,6 +6,8 @@
 #include "GC.h"
 #include "Stack.h"
 #include "Log.h"
+#include "SymbolTable.h"
+
 
 /**
  * Vytvori cisty uzel do tabulky. Bez jmena vyplneneho.
@@ -14,13 +16,13 @@ struct symbolTableNode* makeNewSymbolTable(){
 	// alokace tabulky
 	struct symbolTableNode* table = (struct symbolTableNode*)gcMalloc(sizeof(struct symbolTableNode));
 	if(table == NULL){
-		Log("Allocation error", ERROR, SYMTABLE);
+		Log("symTable: Allocation error", ERROR, SYMTABLE);
 		global.errno = intern;
 		return NULL;	
 	}
 	
 	if((table->name = makeNewString()) == NULL){
-		return False;
+		return NULL;
 	}
 	table->left = NULL;
 	table->right = NULL;
@@ -71,32 +73,45 @@ struct symbolTableNode* search(struct symbolTableNode** table, struct String* na
  */
 struct symbolTableNode* insertValue(struct symbolTableNode** table, struct String* name){
 	if((*table) == NULL){
+		// v pripade, ze se vklada do prazdne tabulky
 		if(!((*table) = makeNewNamedNode(name))){
 			return NULL;		
 		}
+		
+		Log("insertValue: data inserted into empty table", DEBUG, SYMTABLE);
+		
+		printSymbolTable((*table), 0);
+		return (*table);
 	}
 	else {
 		int key = strcmp((*table)->name->Value, name->Value);
 		
 		if(key == 0){
-			Log("Redefinition!", ERROR, SYMTABLE);
+			Log("insertValue: Redefinition!", ERROR, SYMTABLE);
 			global.errno = sem_prog;
 			return NULL;
 		}
 		else if(key < 0){
 			// posun doleva || vytvoreni noveho uzlu
 			if((*table)->left == NULL){
-				if(!((*table)->left = makeNewNamedNode(name)))
+				if(!((*table)->left = makeNewNamedNode(name))){
+					Log("insertValue: data inserted", DEBUG, SYMTABLE);
+					printSymbolTable((*table), 0);
 					return (*table)->left;				
+				}
 			}
-			else
+			else 
 				return insertValue(&((*table)->left), name);
+			
 		}
 		else if(key > 0){
 			// posun doprava || vytvoreni noveho uzlu
 			if((*table)->right == NULL){
-				if(!((*table)->right = makeNewNamedNode(name)))
+				if(!((*table)->right = makeNewNamedNode(name))){
+					Log("insertValue: data inserted", DEBUG, SYMTABLE);
+					printSymbolTable((*table), 0);
 					return (*table)->right;				
+				}
 			}
 			else
 				return insertValue(&((*table)->right), name);
