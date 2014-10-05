@@ -46,7 +46,7 @@ int init(char* srcpath){
  * struct main_all** ma -- odkaz na strukturu, obsahujici data
  */
 void quit(){
-	//gcPrintState(ma);
+	//gcPrintState();
 	gcFreeAll();
 	free(global.gc);
 	fclose(global.src);

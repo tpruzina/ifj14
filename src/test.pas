@@ -1,8 +1,9 @@
 program jmeno;
 var 
 	x: integer;
-	y: integer;
-	z: integer;
+	a: integer;
+	m: integer;
 begin
-	x := 1
+	x := 1;
+	a := x;
 end.

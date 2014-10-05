@@ -406,16 +406,13 @@ struct astNode* parseVars(struct toc** cur){
 	if((*cur)->type == T_KW_VAR){
 		// zacinat parsovat promenne
 		
-		struct astNode* node;
+		struct astNode* node = NULL;
 		
 		struct symbolTableNode* top = (struct symbolTableNode*)stackPop(global.symTable);
 		while(1){
 			// definice promennych
 			struct astNode* var = makeNewAST();
 			(*cur) = getToc();
-			Log("vars: new token", DEBUG, PARSER);
-			printTokenType(*cur);
-			
 			if((*cur)->type == T_ID){
 				// dostal jsem ID -> ocekavam dvoutecku
 			
@@ -432,18 +429,14 @@ struct astNode* parseVars(struct toc** cur){
 					// dostal dvojtecku --> ocekavat typ
 														
 					(*cur) = getToc();
-					Log("vars: before switch", DEBUG, PARSER);
-					printTokenType(*cur);
 					switch((*cur)->type){
 						case T_KW_INT: {
 							var->type = AST_INT;
-							Log("vars: in switch", DEBUG, PARSER);
 							// vytvorit novy zaznam v tabulce
 							new = insertValue(&top, var->data.str);
 							if(!new)
 								return NULL;
 							
-							Log("vars: returned value", DEBUG, PARSER);
 							new->type = DT_INT;													
 							break;
 						}
@@ -492,6 +485,7 @@ struct astNode* parseVars(struct toc** cur){
 								(*cur) = getToc();
 								if((*cur)->type != T_INT){
 									Log("vars: Syntax error - expected integer as lower range of array index", ERROR, PARSER);
+									printTokenType(*cur);
 									exit(synt);
 								}
 								dta->low = (*cur)->data.integer;
@@ -500,6 +494,7 @@ struct astNode* parseVars(struct toc** cur){
 								(*cur) = getToc();
 								if((*cur)->type != T_DDOT){
 									Log("vars: Syntax error - expected two dots", ERROR, PARSER);
+									printTokenType(*cur);
 									exit(synt);
 								}
 								
@@ -507,6 +502,7 @@ struct astNode* parseVars(struct toc** cur){
 								(*cur) = getToc();
 								if((*cur)->type != T_INT){
 									Log("vars: Syntax error - expected integer as higher range of array index", ERROR, PARSER);
+									printTokenType(*cur);
 									exit(synt);
 								}
 								dta->high = (*cur)->data.integer;
@@ -515,6 +511,7 @@ struct astNode* parseVars(struct toc** cur){
 								(*cur) = getToc();
 								if((*cur)->type != T_RBRC){
 									Log("vars: Syntax error - expected right brace", ERROR, PARSER);
+									printTokenType(*cur);
 									exit(synt);
 								}
 								
@@ -522,6 +519,7 @@ struct astNode* parseVars(struct toc** cur){
 								(*cur) = getToc();
 								if((*cur)->type != T_OF){
 									Log("vars: Syntax error - expected OF for defining type of array", ERROR, PARSER);
+									printTokenType(*cur);
 									exit(synt);
 								}
 								
@@ -546,6 +544,7 @@ struct astNode* parseVars(struct toc** cur){
 									}
 									default:
 										Log("vars: Syntax error - unsupported type of array", ERROR, PARSER);
+										printTokenType(*cur);
 										exit(synt);
 								}
 								// ulozeni odkazu na strukturu dat
@@ -561,13 +560,13 @@ struct astNode* parseVars(struct toc** cur){
 							}
 							else {
 								Log("vars: Syntax error - expected left brace", ERROR, PARSER);
+								printTokenType(*cur);
 								exit(synt);
 							}
 							
 							break;
 						}
-					}
-					Log("vars: end switch", DEBUG, PARSER);
+					}	
 				}
 				
 				
@@ -609,11 +608,8 @@ struct astNode* parseVars(struct toc** cur){
 			}
 		}
 		
-		Log("vars: pushing back top layer", DEBUG, PARSER);
 		if(!stackPush(global.symTable, top))
 			return NULL;
-			
-		Log("vars: End reading", DEBUG, PARSER);
 				
 		// vratit seznam promennych
 		return node;
@@ -637,6 +633,7 @@ struct astNode* parseParams(){
 		
 	if(cur->type != T_LPAR){
 		Log("params: Syntax error - expected Left parenthesis", ERROR, PARSER);
+		printTokenType(cur);
 		exit(synt);	
 	}
 	
@@ -657,6 +654,7 @@ struct astNode* parseParams(){
 				cur = getToc();
 				if(cur->type != T_COL){
 					Log("params: Syntax error - expected COLON after identificator", ERROR, PARSER);
+					printTokenType(cur);
 					exit(synt);				
 				}
 				
@@ -681,6 +679,7 @@ struct astNode* parseParams(){
 					}
 					default:
 						Log("params: Syntax error - unsupported type of parameter", ERROR, PARSER);
+						printTokenType(cur);
 						exit(synt);
 				}
 				
@@ -703,6 +702,7 @@ struct astNode* parseParams(){
 			}
 			else {
 				Log("params: Syntax error - expected identificator of parameter", ERROR, PARSER);
+				printTokenType(cur);
 				exit(synt);	
 			}
 		
@@ -732,6 +732,7 @@ struct astNode* parseFunction(){
 	struct toc* cur = getToc();
 	if(cur->type != T_ID){
 		Log("function: Syntax error - expected ID after FUNCTION", ERROR, PARSER);
+		printTokenType(cur);
 		exit(synt);
 	}
 	
@@ -741,12 +742,11 @@ struct astNode* parseFunction(){
 	
 	// sparsovat parametry
 	node->right = parseParams();
-	if(global.errno != ok)
-		return NULL;
 	
 	cur = getToc();
 	if(cur->type != T_COL){
 		Log("function: Syntax error - expected colon after function params", ERROR, PARSER);
+		printTokenType(cur);
 		exit(synt);	
 	}
 
@@ -772,6 +772,7 @@ struct astNode* parseFunction(){
 		}
 		default: {
 			Log("function: Syntax error - unsupported returning type of function", ERROR, PARSER);
+			printTokenType(cur);
 			exit(synt);
 		}
 	}	
@@ -805,7 +806,8 @@ struct astNode* parseFunction(){
 	// Pokud funkce nebude nalezena - jedna se rovnou o definici funkce
 	// 			vytvorit novy uzel v tabulce symbolu
 	// 			pak nahrat telo a promenne do uzlu
-	if(!(dekl)) {// nebyla nalezena - vlozit novy uzel
+	if(!(dekl)) {
+		// nebyla nalezena - vlozit novy uzel
 		if(!(dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), node->data.str)))
 			return NULL;
 	}
@@ -822,14 +824,12 @@ struct astNode* parseFunction(){
 	// ocekavat var-def --> other
 	node->other = parseVars(&cur);
 	// po definici promennych MUSI nasledovat telo, tedy begin
-	if(global.errno != ok || cur->type != T_KW_BEGIN)
+	if(cur->type != T_KW_BEGIN)
 		return NULL;
 		
 	// ocekavat telo
 	node->left = parseBody(&cur);	
-	if(global.errno != ok)
-		return NULL;
-		
+			
 	return node;
 }
 
@@ -906,6 +906,7 @@ struct astNode* parseCallParams(){
 			}
 			default:
 				Log("callPars: Syntax error - invalid parameter type", ERROR, PARSER);
+				printTokenType(cur);
 				exit(synt);
 		}
 		
@@ -915,7 +916,8 @@ struct astNode* parseCallParams(){
 			// nacetl carku - v poradku pokud nenasleduje T_RPAR
 			cur = getToc();
 			if(cur->type == T_RPAR){
-				Log("callPars: Syntax error - coma before right parenthesis", ERROR, PARSER);
+				Log("callPars: Syntax error - comma before right parenthesis", ERROR, PARSER);
+				printTokenType(cur);
 				exit(synt);
 			}
 		}
@@ -1049,6 +1051,7 @@ struct astNode* parseCommand(struct toc** cur){
 			}
 			else {
 				Log("cmd: Syntax error - expected funcCall or assign", ERROR, PARSER);
+				printTokenType(*cur);
 				exit(synt);
 			}		
 			break;
@@ -1163,6 +1166,7 @@ struct astNode* repeatStatement(struct toc** cur){
 	(*cur) = getToc();
 	if((*cur)->type != T_UNTIL){
 		Log("repeat: Syntax error - expected UNTIL keyword", ERROR, PARSER);
+		printTokenType(*cur);
 		exit(synt);
 	}
 	

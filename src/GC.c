@@ -34,10 +34,11 @@ void* gcMalloc(size_t size){
 	}
 
 	// kontrolni vypis
+	/*
 	char txt[100];
 	sprintf(txt, "malloc\tOK (%p)", ptr);
 	Log(txt, DEBUG, GC);
-
+	*/
 	return ptr;
 }
 /**
@@ -51,9 +52,11 @@ void* gcRealloc(void* ptr, size_t size){
 			// nalezeni prislusneho odkazu
 			// realokace a navraceni realokovaneho prvku
 			item->ptr = realloc(ptr, size);
+			/*
 			char txt[100];
 			sprintf(txt, "realloc\tOK (%p)", ptr);
 			Log(txt, DEBUG, GC);
+			*/
 			return item->ptr;
 		}
 		item = item->next;	
@@ -125,7 +128,7 @@ void gcPrintState(){
 void gcFreeAll(){
 	struct gcItem* item = global.gc->list;
 
-	int i;
+	int i = 0;
 	while(item != NULL){
 		// posun na dalsi item
 		global.gc->list = item->next;

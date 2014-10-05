@@ -20,9 +20,10 @@ struct symbolTableNode* makeNewSymbolTable(){
 		exit(intern);	
 	}
 	
-	if((table->name = makeNewString()) == NULL){
+	table->name = makeNewString();
+	if(table->name == NULL)
 		return NULL;
-	}
+	
 	table->left = NULL;
 	table->right = NULL;
 	
@@ -33,18 +34,13 @@ struct symbolTableNode* makeNewSymbolTable(){
  */
 struct symbolTableNode* makeNewNamedNode(struct String* name){
 	struct symbolTableNode* stn = makeNewSymbolTable();
-	if(stn == NULL){
-		Log("mnnn: mnst failed", ERROR, SYMTABLE);
+	if(stn == NULL)
 		return NULL;
-	}
-		
+			
 	// kopirovani jmena do noveho
-	if(!copyString(name, &(stn->name))){
-		Log("mnnn: copy string faild", ERROR, SYMTABLE);
+	if(!copyString(name, &(stn->name)))
 		return NULL;
-	}
-	
-	
+		
 	stn->left = NULL;
 	stn->right = NULL;
 	
@@ -75,15 +71,11 @@ struct symbolTableNode* search(struct symbolTableNode** table, struct String* na
  * Rekurzivnim zpusobem se zanori az na potrebne misto a vytvori novy uzel
  */
 struct symbolTableNode* insertValue(struct symbolTableNode** table, struct String* name){
-	Log("insertValue: recursive walkthrough", DEBUG, SYMTABLE);
-	
 	if((*table) == NULL){
 		// v pripade, ze se vklada do prazdne tabulky
 		if(!((*table) = makeNewNamedNode(name))){
 			return NULL;		
 		}		
-		Log("insertValue: data inserted into empty table", DEBUG, SYMTABLE);
-		
 		printSymbolTable((*table), 0);
 		return (*table);
 	}
@@ -96,7 +88,6 @@ struct symbolTableNode* insertValue(struct symbolTableNode** table, struct Strin
 				if(!((*table)->left = makeNewNamedNode(name)))
 					return NULL;
 				
-				Log("insertValue: data inserted", DEBUG, SYMTABLE);
 				printSymbolTable((*table), 0);
 				return (*table)->left;				
 			}
@@ -109,7 +100,6 @@ struct symbolTableNode* insertValue(struct symbolTableNode** table, struct Strin
 				if(!((*table)->right = makeNewNamedNode(name)))
 					return NULL;	
 				
-				Log("insertValue: data inserted", DEBUG, SYMTABLE);
 				printSymbolTable((*table), 0);
 				return (*table)->right;				
 			}
@@ -121,8 +111,6 @@ struct symbolTableNode* insertValue(struct symbolTableNode** table, struct Strin
 			exit(sem_prog);
 		}
 	}
-
-	Log("insertValue: returning NULL", DEBUG, SYMTABLE);
 	return NULL;
 }
 
@@ -210,7 +198,7 @@ int copyTable(struct symbolTableNode* src, struct symbolTableNode** dest){
  */
 int delete(struct symbolTableNode* node){
 	if(node == NULL){
-		Log("Cannot free NULL", WARNING, SYMTABLE);
+		Log("delete: Cannot free NULL", WARNING, SYMTABLE);
 		return False;
 	}
 	
@@ -227,7 +215,7 @@ int delete(struct symbolTableNode* node){
 int deleteTable(struct symbolTableNode** table){
 	// kontrola na neprazdnost 
 	if(*table == NULL){
-		Log("Empty table", WARNING, SYMTABLE);
+		Log("deleteTable: Empty table", WARNING, SYMTABLE);
 		return False;
 	}	
 	
@@ -250,7 +238,7 @@ void printSymbolTable(struct symbolTableNode* table, int lvl){
 			printSymbolTable(table->left, lvl+1);
 		
 		for (int i = 0; i < lvl; i++)
-			fprintf(stderr, "\t");
+			fprintf(stderr, "  ");
 		fprintf(stderr, "[ %s ]\n", table->name->Value);
 		
 		if(table->right != NULL)
