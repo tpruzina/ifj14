@@ -17,8 +17,7 @@ struct symbolTableNode* makeNewSymbolTable(){
 	struct symbolTableNode* table = (struct symbolTableNode*)gcMalloc(sizeof(struct symbolTableNode));
 	if(table == NULL){
 		Log("symTable: Allocation error", ERROR, SYMTABLE);
-		global.errno = intern;
-		return NULL;	
+		exit(intern);	
 	}
 	
 	if((table->name = makeNewString()) == NULL){
@@ -34,12 +33,16 @@ struct symbolTableNode* makeNewSymbolTable(){
  */
 struct symbolTableNode* makeNewNamedNode(struct String* name){
 	struct symbolTableNode* stn = makeNewSymbolTable();
-	if(stn == NULL)
+	if(stn == NULL){
+		Log("mnnn: mnst failed", ERROR, SYMTABLE);
 		return NULL;
+	}
 		
 	// kopirovani jmena do noveho
-	if(!copyString(name, &(stn->name)))
+	if(!copyString(name, &(stn->name))){
+		Log("mnnn: copy string faild", ERROR, SYMTABLE);
 		return NULL;
+	}
 	
 	
 	stn->left = NULL;
@@ -72,12 +75,13 @@ struct symbolTableNode* search(struct symbolTableNode** table, struct String* na
  * Rekurzivnim zpusobem se zanori az na potrebne misto a vytvori novy uzel
  */
 struct symbolTableNode* insertValue(struct symbolTableNode** table, struct String* name){
+	Log("insertValue: recursive walkthrough", DEBUG, SYMTABLE);
+	
 	if((*table) == NULL){
 		// v pripade, ze se vklada do prazdne tabulky
 		if(!((*table) = makeNewNamedNode(name))){
 			return NULL;		
-		}
-		
+		}		
 		Log("insertValue: data inserted into empty table", DEBUG, SYMTABLE);
 		
 		printSymbolTable((*table), 0);
@@ -86,38 +90,39 @@ struct symbolTableNode* insertValue(struct symbolTableNode** table, struct Strin
 	else {
 		int key = strcmp((*table)->name->Value, name->Value);
 		
-		if(key == 0){
-			Log("insertValue: Redefinition!", ERROR, SYMTABLE);
-			global.errno = sem_prog;
-			return NULL;
-		}
-		else if(key < 0){
+		if(key < 0){
 			// posun doleva || vytvoreni noveho uzlu
 			if((*table)->left == NULL){
-				if(!((*table)->left = makeNewNamedNode(name))){
-					Log("insertValue: data inserted", DEBUG, SYMTABLE);
-					printSymbolTable((*table), 0);
-					return (*table)->left;				
-				}
+				if(!((*table)->left = makeNewNamedNode(name)))
+					return NULL;
+				
+				Log("insertValue: data inserted", DEBUG, SYMTABLE);
+				printSymbolTable((*table), 0);
+				return (*table)->left;				
 			}
 			else 
 				return insertValue(&((*table)->left), name);
-			
 		}
 		else if(key > 0){
 			// posun doprava || vytvoreni noveho uzlu
 			if((*table)->right == NULL){
-				if(!((*table)->right = makeNewNamedNode(name))){
-					Log("insertValue: data inserted", DEBUG, SYMTABLE);
-					printSymbolTable((*table), 0);
-					return (*table)->right;				
-				}
+				if(!((*table)->right = makeNewNamedNode(name)))
+					return NULL;	
+				
+				Log("insertValue: data inserted", DEBUG, SYMTABLE);
+				printSymbolTable((*table), 0);
+				return (*table)->right;				
 			}
 			else
 				return insertValue(&((*table)->right), name);
 		}
+		else {
+			Log("insertValue: Redefinition!", ERROR, SYMTABLE);
+			exit(sem_prog);
+		}
 	}
 
+	Log("insertValue: returning NULL", DEBUG, SYMTABLE);
 	return NULL;
 }
 

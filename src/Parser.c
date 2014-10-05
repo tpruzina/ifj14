@@ -272,8 +272,7 @@ struct astNode* parseProgram(){
 	if(cur->type != T_ID){
 		// chyba, melo nasledovat oznaceni
 		Log("Syntax error - expected name of program", ERROR, PARSER);
-		global.errno = synt;
-		return NULL;
+		exit(synt);
 	}
 	
 	// jmeno programu
@@ -287,8 +286,7 @@ struct astNode* parseProgram(){
 	cur = getToc();
 	if(cur->type != T_SCOL){
 		Log("Syntax error - expected SEMICOLON", ERROR, PARSER);
-		global.errno = synt;
-		return NULL;
+		exit(synt);
 	}
 					
 	// ok -> nasleduje telo programu nebo definice promennych nebo definice funkci/dopredne definice funkci			
@@ -301,6 +299,7 @@ struct astNode* parseProgram(){
 		// vyskytla se chyba
 		return NULL;				
 	}
+	Log("program: back from VARS", DEBUG, PARSER);
 	// lokalni promenne
 	program->other = vardef;
 		
@@ -326,8 +325,7 @@ struct astNode* parseProgram(){
 	if(cur->type != T_EOF){
 		Log("program: Syntax error - expected program end", ERROR, PARSER);
 		printTokenType(cur);
-		global.errno = synt;
-		return NULL;
+		exit(synt);
 	}
 			
 	return program;
@@ -346,8 +344,7 @@ struct astNode* parseBody(struct toc** cur){
 		if((*cur)->type != T_KW_BEGIN){
 			Log("body: Syntax error - expected BEGIN keyword", ERROR, PARSER);
 			printTokenType(*cur);		
-			global.errno = synt;
-			return NULL;
+			exit(synt);
 		}
 	}
 	
@@ -390,8 +387,7 @@ struct astNode* parseBody(struct toc** cur){
 			else {
 				Log("body: Syntax error - unsupported token", ERROR, PARSER);
 				printTokenType(*cur);
-				global.errno = synt;
-				return NULL;			
+				exit(synt);			
 			}			
 		}
 	}
@@ -417,6 +413,7 @@ struct astNode* parseVars(struct toc** cur){
 			// definice promennych
 			struct astNode* var = makeNewAST();
 			(*cur) = getToc();
+			Log("vars: new token", DEBUG, PARSER);
 			printTokenType(*cur);
 			
 			if((*cur)->type == T_ID){
@@ -431,18 +428,22 @@ struct astNode* parseVars(struct toc** cur){
 				
 				(*cur) = getToc();
 				if((*cur)->type == T_COL){
+					printTokenType(*cur);
 					// dostal dvojtecku --> ocekavat typ
 														
 					(*cur) = getToc();
+					Log("vars: before switch", DEBUG, PARSER);
+					printTokenType(*cur);
 					switch((*cur)->type){
 						case T_KW_INT: {
 							var->type = AST_INT;
-							
+							Log("vars: in switch", DEBUG, PARSER);
 							// vytvorit novy zaznam v tabulce
 							new = insertValue(&top, var->data.str);
 							if(!new)
 								return NULL;
 							
+							Log("vars: returned value", DEBUG, PARSER);
 							new->type = DT_INT;													
 							break;
 						}
@@ -491,8 +492,7 @@ struct astNode* parseVars(struct toc** cur){
 								(*cur) = getToc();
 								if((*cur)->type != T_INT){
 									Log("vars: Syntax error - expected integer as lower range of array index", ERROR, PARSER);
-									global.errno = synt;
-									return NULL;
+									exit(synt);
 								}
 								dta->low = (*cur)->data.integer;
 								
@@ -500,16 +500,14 @@ struct astNode* parseVars(struct toc** cur){
 								(*cur) = getToc();
 								if((*cur)->type != T_DDOT){
 									Log("vars: Syntax error - expected two dots", ERROR, PARSER);
-									global.errno = synt;
-									return NULL;
+									exit(synt);
 								}
 								
 								// ocekavat druhy integer
 								(*cur) = getToc();
 								if((*cur)->type != T_INT){
 									Log("vars: Syntax error - expected integer as higher range of array index", ERROR, PARSER);
-									global.errno = synt;
-									return NULL;
+									exit(synt);
 								}
 								dta->high = (*cur)->data.integer;
 								
@@ -517,16 +515,14 @@ struct astNode* parseVars(struct toc** cur){
 								(*cur) = getToc();
 								if((*cur)->type != T_RBRC){
 									Log("vars: Syntax error - expected right brace", ERROR, PARSER);
-									global.errno = synt;
-									return NULL;
+									exit(synt);
 								}
 								
 								// ocekavat OF
 								(*cur) = getToc();
 								if((*cur)->type != T_OF){
 									Log("vars: Syntax error - expected OF for defining type of array", ERROR, PARSER);
-									global.errno = synt;
-									return NULL;
+									exit(synt);
 								}
 								
 								// nacteni typu promenne
@@ -550,8 +546,7 @@ struct astNode* parseVars(struct toc** cur){
 									}
 									default:
 										Log("vars: Syntax error - unsupported type of array", ERROR, PARSER);
-										global.errno = synt;
-										return NULL;
+										exit(synt);
 								}
 								// ulozeni odkazu na strukturu dat
 								var->other = dta;		
@@ -566,13 +561,13 @@ struct astNode* parseVars(struct toc** cur){
 							}
 							else {
 								Log("vars: Syntax error - expected left brace", ERROR, PARSER);
-								global.errno = synt;
-								return NULL;
+								exit(synt);
 							}
 							
 							break;
 						}
 					}
+					Log("vars: end switch", DEBUG, PARSER);
 				}
 				
 				
@@ -580,8 +575,7 @@ struct astNode* parseVars(struct toc** cur){
 				if((*cur)->type != T_SCOL){
 					Log("vars: Syntax error - expected semicolon after var deklaration", ERROR, PARSER);
 					printTokenType(*cur);
-					global.errno = synt;
-					return NULL;
+					exit(synt);
 				}
 				
 				
@@ -611,11 +605,11 @@ struct astNode* parseVars(struct toc** cur){
 			else {
 				Log("vars: Syntax error - unsupported token", ERROR, PARSER);
 				printTokenType(*cur);
-				global.errno = synt;
-				return NULL;			
+				exit(synt);			
 			}
 		}
 		
+		Log("vars: pushing back top layer", DEBUG, PARSER);
 		if(!stackPush(global.symTable, top))
 			return NULL;
 			
@@ -642,9 +636,8 @@ struct astNode* parseParams(){
 		
 		
 	if(cur->type != T_LPAR){
-		Log("Syntax error - expected Left parenthesis", ERROR, PARSER);
-		global.errno = synt;
-		return NULL;	
+		Log("params: Syntax error - expected Left parenthesis", ERROR, PARSER);
+		exit(synt);	
 	}
 	
 	// nelezl levou zavorku -> nacitat dokud nenarazi na pravou zavorku
@@ -663,9 +656,8 @@ struct astNode* parseParams(){
 				// nacist dvojtecku
 				cur = getToc();
 				if(cur->type != T_COL){
-					Log("Syntax error - expected COLON after identificator", ERROR, PARSER);
-					global.errno = synt;
-					return NULL;				
+					Log("params: Syntax error - expected COLON after identificator", ERROR, PARSER);
+					exit(synt);				
 				}
 				
 				// nacteni datoveho typu parametru
@@ -688,9 +680,8 @@ struct astNode* parseParams(){
 						break;
 					}
 					default:
-						Log("Syntax error - unsupported type of parameter", ERROR, PARSER);
-						global.errno = synt;
-						return NULL;
+						Log("params: Syntax error - unsupported type of parameter", ERROR, PARSER);
+						exit(synt);
 				}
 				
 				// ulozit do seznamu a pokracovat
@@ -711,9 +702,8 @@ struct astNode* parseParams(){
 				}			
 			}
 			else {
-				Log("Syntax error - expected identificator of parameter", ERROR, PARSER);
-				global.errno = synt;
-				return NULL;	
+				Log("params: Syntax error - expected identificator of parameter", ERROR, PARSER);
+				exit(synt);	
 			}
 		
 			cur = getToc();
@@ -741,9 +731,8 @@ struct astNode* parseFunction(){
 	
 	struct toc* cur = getToc();
 	if(cur->type != T_ID){
-		Log("Syntax error - expected ID after FUNCTION", ERROR, PARSER);
-		global.errno = synt;
-		return NULL;
+		Log("function: Syntax error - expected ID after FUNCTION", ERROR, PARSER);
+		exit(synt);
 	}
 	
 	// skopirovani jmena
@@ -757,9 +746,8 @@ struct astNode* parseFunction(){
 	
 	cur = getToc();
 	if(cur->type != T_COL){
-		Log("Syntax error - expected colon after function params", ERROR, PARSER);
-		global.errno = synt;
-		return NULL;	
+		Log("function: Syntax error - expected colon after function params", ERROR, PARSER);
+		exit(synt);	
 	}
 
 	// dostal dvojtecku -> typ
@@ -783,9 +771,8 @@ struct astNode* parseFunction(){
 			break;
 		}
 		default: {
-			Log("Syntax error - unsupported returning type of function", ERROR, PARSER);
-			global.errno = synt;
-			return NULL;
+			Log("function: Syntax error - unsupported returning type of function", ERROR, PARSER);
+			exit(synt);
 		}
 	}	
 	// typ OK
@@ -801,9 +788,8 @@ struct astNode* parseFunction(){
 		 	dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), node->data.str);
 		else {
 			// nalezl deklarovanou/definovanou funkci v tabulce - chyba!
-			Log("Syntax error - redefinition of forward declaration", ERROR, PARSER);
-			global.errno = synt;
-			return NULL;
+			Log("function: Syntax error - redefinition of forward declaration", ERROR, PARSER);
+			exit(synt);
 		}
 			
 	 	// nastaveni navratovy typ
@@ -827,9 +813,8 @@ struct astNode* parseFunction(){
 	if(dekl->other != NULL) {	
 		if(((struct symbolTableNode*)dekl->other)->left != NULL){
 			// telo uz bylo jednou definovane!!
-			Log("Syntax error - redefinition of function", ERROR, PARSER);
-			global.errno = sem_prog;
-			return NULL;
+			Log("function: Syntax error - redefinition of function", ERROR, PARSER);
+			exit(sem_prog);
 		}
 	}
 	
@@ -920,9 +905,8 @@ struct astNode* parseCallParams(){
 				break;
 			}
 			default:
-				Log("Syntax error - invalid parameter type", ERROR, PARSER);
-				global.errno = synt;
-				return NULL;
+				Log("callPars: Syntax error - invalid parameter type", ERROR, PARSER);
+				exit(synt);
 		}
 		
 		// nacteni oddelovace
@@ -931,9 +915,8 @@ struct astNode* parseCallParams(){
 			// nacetl carku - v poradku pokud nenasleduje T_RPAR
 			cur = getToc();
 			if(cur->type == T_RPAR){
-				Log("Syntax error - coma before right parenthesis", ERROR, PARSER);
-				global.errno = synt;			
-				return NULL;
+				Log("callPars: Syntax error - coma before right parenthesis", ERROR, PARSER);
+				exit(synt);
 			}
 		}
 		
@@ -1066,8 +1049,7 @@ struct astNode* parseCommand(struct toc** cur){
 			}
 			else {
 				Log("cmd: Syntax error - expected funcCall or assign", ERROR, PARSER);
-				global.errno = synt;
-				return NULL;
+				exit(synt);
 			}		
 			break;
 		}
@@ -1093,8 +1075,7 @@ struct astNode* ifStatement(struct toc** cur){
 	if((*cur)->type != T_KW_THEN){
 		Log("if: Syntax error - expected THEN keyword at the end of condition", ERROR, PARSER);
 		printTokenType(*cur);
-		global.errno = synt;
-		return NULL;
+		exit(synt);
 	}
 		
 	// vytvoreni nove polozky
@@ -1137,8 +1118,7 @@ struct astNode* whileStatement(){
 	if(cur->type != T_KW_DO){
 		Log("while: Syntax error - expected DO keyword at the end of condition", ERROR, PARSER);
 		printTokenType(cur);
-		global.errno = synt;
-		return NULL;
+		exit(synt);
 	}
 
 	struct astNode* node = makeNewAST();				
@@ -1177,15 +1157,13 @@ struct astNode* repeatStatement(struct toc** cur){
 	// rpt->left->right == prikaz tela
 	if(rpt->left->right == NULL){
 		Log("repeat: Syntax error - repeat cycle must have at least one command in the body", ERROR, PARSER);
-		global.errno = synt;
-		return NULL;
+		exit(synt);
 	}
 	
 	(*cur) = getToc();
 	if((*cur)->type != T_UNTIL){
 		Log("repeat: Syntax error - expected UNTIL keyword", ERROR, PARSER);
-		global.errno = synt;
-		return NULL;
+		exit(synt);
 	}
 	
 	// nacetl UNTIL
@@ -1272,8 +1250,7 @@ struct astNode* parseExpression(struct toc** cur){
 				if(t == NULL){
 					// pravdepodobne chyba syntaxe
 					Log("expression: Syntax error - no Left parenthesis before Right parenthesis", ERROR, PARSER);
-					global.errno = synt;
-					return NULL;
+					exit(synt);
 				}
 				
 				while(!stackEmpty(stack) && (t->type != T_LPAR)){
@@ -1397,13 +1374,11 @@ struct astNode* parseExpression(struct toc** cur){
 				// v pripade, ze je v zasobniku jen jeden prvek, vratit ho, je to vysledek SY algoritmu
 				if(aststack->Length > 1){
 					Log("expression: Shunting yard error - stack length is grather then 1", ERROR, PARSER);
-					global.errno = intern;
-					return NULL;
+					exit(intern);
 				}
 				else if(aststack->Length == 0){
 					Log("expression: Shunting yard error - stack is empty", ERROR, PARSER);
-					global.errno = intern;
-					return NULL;
+					exit(intern);
 				}
 			
 				// vrati vrchol 
