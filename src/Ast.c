@@ -20,14 +20,14 @@ struct astNode* makeNewAST(){
 }
 
 void prtAst(struct astNode* nd, int lvl, char** str){
-	if(nd->left != NULL)
-		prtAst(nd->left, lvl+1, str);
-		
-	for(int i = 0; i < lvl; i++) fprintf(stderr, "  ");		
-	fprintf(stderr, "%s\n", str[nd->type]);
-	
 	if(nd->right != NULL)
 		prtAst(nd->right, lvl+1, str);
+		
+	for(int i = 0; i < lvl; i++) fprintf(stderr, "   ");		
+	fprintf(stderr, "%s\n", str[nd->type]);
+	
+	if(nd->left != NULL)
+		prtAst(nd->left, lvl+1, str);
 }
 void printAst(struct astNode* ast){
 	if(ast == NULL){

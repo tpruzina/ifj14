@@ -197,7 +197,7 @@ void printAstStack(struct stack* aststack){
  * aststack: Urcuje zasobnik ze ktereho bude tahat data a kam bude ukladat vysledek
  */
 int makeAstFromToken(struct toc* token, struct stack** aststack){
-	fprintf(stderr, "MAFT\t");
+	fprintf(stderr, " [  MAFT  ] \t");
 	printTokenType(token);
 	printAstStack(*aststack);
 
@@ -205,6 +205,7 @@ int makeAstFromToken(struct toc* token, struct stack** aststack){
 	// vytazeny operator
 	int prio = getPriority(token);
 	if(prio > 0 && prio < 10){
+		Log("maft: dyadic operators", DEBUG, PARSER);
 		// operatory bez NOT
 		node->type = convertTokenToNode(token);
 		if((int)node->type == -1){
@@ -226,19 +227,10 @@ int makeAstFromToken(struct toc* token, struct stack** aststack){
 		return False;						
 	}
 	
-	
+	int ret = stackPush(*aststack, node);
 	printAst((struct astNode*)stackTop(*aststack));
-	return stackPush(*aststack, node);
+	return ret;
 }
-
-
-
-
-
-
-
-
-
 
 /**
  * Hlavni funkce parseru - spousti rekurzivni pruchod
@@ -354,9 +346,12 @@ struct astNode* parseBody(struct toc** cur){
 	struct astNode* cmd = parseCommand(cur);
 	if((*cur)->type == T_KW_END){
 		// ukonceni tela
-		
+		Log("body: returned END kw", DEBUG, PARSER);
 		if(cmd == NULL){
 			Log("body: WARNING - statement without effect", WARNING, PARSER);
+			
+			body->left = NULL;
+			return body;
 		}
 		
 		body->left = makeNewAST();
@@ -376,14 +371,15 @@ struct astNode* parseBody(struct toc** cur){
 			item->left->left = NULL;
 			item->left->right = cmd;
 		
-			// hledat dalsi
-			cmd = parseCommand(cur);
-			
 			// pokud narazi na END tak ukoncit hledani dalsich 
 			if((*cur)->type == T_KW_END)
 				break;
-			else if((*cur)->type == T_SCOL)
+			else if((*cur)->type == T_SCOL){
+				// hledat dalsi
+				cmd = parseCommand(cur);
+			
 				continue;
+			}
 			else {
 				Log("body: Syntax error - unsupported token", ERROR, PARSER);
 				printTokenType(*cur);
@@ -398,7 +394,7 @@ struct astNode* parseBody(struct toc** cur){
 
 /**
  * Parsuje var sekci funkce/programu
- * --------------------
+ * ---------------------------------
  */
 struct astNode* parseVars(struct toc** cur){
 	Log("parseVars", WARNING, PARSER);
@@ -835,7 +831,7 @@ struct astNode* parseFunction(){
 
 /**
  * Parsuje parametry volani funkce a vklada je do stromu, smerem doleva
- * --------------------
+ * --------------------------------------------------------------------
  */
 struct astNode* parseCallParams(){
 	Log("parseCallParams", WARNING, PARSER);
@@ -970,6 +966,11 @@ struct astNode* parseCommand(struct toc** cur){
 	
 	printTokenType(*cur);
 	switch((*cur)->type){
+		case T_KW_END: {
+			// narazil hned na END -> po stredniku nasledoval END chyba
+			Log("cmd: Syntax error - last command cannot be ended with semicolon", ERROR, PARSER);
+			exit(synt);
+		}	
 		case T_KW_IF: {			
 			struct astNode* ifstat = ifStatement(cur);
 			if(!ifstat)
@@ -1023,6 +1024,7 @@ struct astNode* parseCommand(struct toc** cur){
 			}
 			else if(next->type == T_ASGN){
 				// pravdepodobne prirazeni
+				Log("cmd: cur and next token", DEBUG, PARSER);
 				printTokenType(*cur);
 				printTokenType(next);
 				
@@ -1030,8 +1032,7 @@ struct astNode* parseCommand(struct toc** cur){
 				// pravy uzel je expression
 				struct astNode* left = makeNewAST();
 				if(!left)
-					return NULL;
-					
+					return NULL;					
 				left->type = AST_ID;
 				if(!copyString((*cur)->data.str, &(left->data.str)))
 					return NULL;
@@ -1040,6 +1041,8 @@ struct astNode* parseCommand(struct toc** cur){
 				struct astNode* right = parseExpression(cur);
 				if(!right) 
 					return NULL;
+				Log("cmd: after expr", DEBUG, PARSER);
+				printTokenType(*cur);
 				
 				// vytvorit uzel prirazeni a vratit jej
 				struct astNode* asgn = makeNewAST();
@@ -1047,6 +1050,7 @@ struct astNode* parseCommand(struct toc** cur){
 				asgn->left = left;
 				asgn->right = right;
 				asgn->other = NULL;
+				Log("cmd: Returning asgn node", DEBUG, PARSER);
 				return asgn;
 			}
 			else {
@@ -1055,9 +1059,6 @@ struct astNode* parseCommand(struct toc** cur){
 				exit(synt);
 			}		
 			break;
-		}
-		case T_KW_END: {
-			return NULL;
 		}
 	}	
 	
@@ -1110,7 +1111,6 @@ struct astNode* ifStatement(struct toc** cur){
 /**
  * Parsuje WHILE statement
  * --------------------
- * Name:  Info
  */
 struct astNode* whileStatement(){
 	struct toc* cur;
@@ -1180,9 +1180,8 @@ struct astNode* repeatStatement(struct toc** cur){
 
 /**
  * Parsuje vyraz, aritmeticko-logicky
- * --------------------
- * endToken:
- *		urcuje, kterym tokenem ma nacitani skoncit
+ * ---------------------------------
+ * cur: odkaz na token z vyssi vrstvy
  */
 struct astNode* parseExpression(struct toc** cur){
 	Log("parseExpression", WARNING, PARSER);
@@ -1197,6 +1196,8 @@ struct astNode* parseExpression(struct toc** cur){
 	// <id>(
 	// <id> <operator> (
 	if((*cur)->type == T_ID){
+		Log("expr: TOKEN ID on the right side", DEBUG, PARSER);
+	
 		// odklad na ID token
 		struct toc* id = (*cur);
 		
@@ -1219,7 +1220,7 @@ struct astNode* parseExpression(struct toc** cur){
 			node->left = NULL;
 			node->right = NULL;
 			
-			if(!stackPush(aststack, id))
+			if(!stackPush(aststack, node))
 				return NULL;	
 		}	
 	}
@@ -1237,6 +1238,8 @@ struct astNode* parseExpression(struct toc** cur){
 	// 5. v pripade jineho tokenu -> vyprazdnovat zasobnik na vystup
 	// 		tokeny ;, THEN, DO by mely vesmes ukoncovat vyrazy	
 	while((*cur) != NULL){
+		Log("expr: new token", DEBUG, PARSER);
+		printTokenType(*cur);
 		switch((*cur)->type){
 			// leva zavorka
 			case T_LPAR: {
@@ -1258,12 +1261,15 @@ struct astNode* parseExpression(struct toc** cur){
 				}
 				
 				while(!stackEmpty(stack) && (t->type != T_LPAR)){
+					printTokenType(t);
 					// vybira operatory ze zasobniku a hrne je do zasobniku operandu
-					if(!makeAstFromToken(t, &aststack))
+					if(!makeAstFromToken(t, &aststack)){
+						Log("expr: maft failed", ERROR, PARSER);
 						return NULL;	
+					}
 					
 					t = (struct toc*)stackPop(stack);				
-					printTokenType(t);
+					//printTokenType(t);
 				}				
 				break;
 			}
@@ -1276,6 +1282,8 @@ struct astNode* parseExpression(struct toc** cur){
 			case T_KW_TRUE:
 			case T_KW_FALSE:{
 				Log("Literal comes", WARNING, PARSER);
+				printTokenType(*cur);
+				
 				struct astNode* node = makeNewAST();
 				
 				if((*cur)->type == T_ID){
@@ -1366,12 +1374,19 @@ struct astNode* parseExpression(struct toc** cur){
 				}	
 				break;
 			}
-			default:
+			case T_KW_END:
+			case T_SCOL:{
 				// vyprazdnit vsechny operatory v zasobniku a postavit nad nimi strom
+				Log("expr: Making node into", DEBUG, PARSER);
+				printTokenType(*cur);
+				
 				while(!stackEmpty(stack)){
 					struct toc* now = (struct toc*)stackPop(stack);
 					if(!makeAstFromToken(now, &aststack))
 						return NULL;
+						
+					Log("expr: stack state", DEBUG, PARSER);
+					printAstStack(stack);
 				}
 				
 			
@@ -1386,7 +1401,13 @@ struct astNode* parseExpression(struct toc** cur){
 				}
 			
 				// vrati vrchol 
-				return stackPop(aststack);				
+				Log("expression: Returning top layer", DEBUG, PARSER);
+				return stackPop(aststack);
+			}
+			default:
+				Log("expression: Syntax error - unsupported type of token", ERROR, PARSER);			
+				printTokenType(*cur);
+				exit(synt);
 		}
 		
 		// get next token
