@@ -428,6 +428,21 @@ getToc()
 	return toc;
 }
 
+int getChar()
+{
+	int ret = fgetc(global.src);
+	if('\n' == ret)
+		global.lineCounter++;
+	return ret;
+}
+
+void unGetChar(char c)
+{
+	if('\n' == c)
+		global.lineCounter--;
+	ungetc(c,global.src);
+}
+
 void
 tocInit(struct toc **toc)
 {

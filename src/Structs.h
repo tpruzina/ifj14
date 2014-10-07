@@ -141,6 +141,8 @@ struct mainAll {
 	struct gc* gc;
 	FILE* src;
 	
+	unsigned lineCounter;
+
 	struct astNode* program;
 	struct stack* symTable;
 	struct symbolTableNode* funcTable;
