@@ -391,6 +391,13 @@ int valid(struct astNode* left, struct astNode* right, int op){
 				exit(sem_komp);
 			}
 			break;
+		case AST_ASGN:
+			if(right == left)
+				return right->dataType;
+			else{
+				Log("valid: Semantic error - not same data types", ERROR, PARSER);
+				exit(sem_komp);
+			}
 		default:
 			Log("valid: Semantic error - unsupported operation", ERROR, PARSER);
 			datatypes(left->dataType, right->dataType);
@@ -1444,16 +1451,23 @@ struct astNode* parseCommand(struct toc** cur){
 				if(!left)
 					return NULL;					
 				left->type = AST_ID;
-				if(!copyString((*cur)->data.str, &(left->data.str)))
-					return NULL;
+				copyString((*cur)->data.str, &(left->data.str));
+				
+				// skopirovani informaci z tabulky symbolu
+				struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+				struct symbolTableNode* nd = search(&top, left->data.str);				
+				left->dataType = nd->dataType;
 				
 				// prava strana je vyraz
 				struct astNode* right = parseExpression(cur);
 				if(!right) 
 					return NULL;
-				Log("cmd: after expr", DEBUG, PARSER);
-				printTokenType(*cur);
-				
+			
+				if(left->dataType != right->dataType){
+					Log("cmd: Semantic error - L-value has not same value as R-value", ERROR, PARSER);
+					exit(sem_komp);
+				}
+								
 				// vytvorit uzel prirazeni a vratit jej
 				struct astNode* asgn = makeNewAST();
 				asgn->type = AST_ASGN;
@@ -1517,7 +1531,7 @@ struct astNode* parseExpression(struct toc** cur){
 			struct symbolTableNode* stable = (struct symbolTableNode*)stackTop(global.symTable);
 			struct symbolTableNode* nd = (struct symbolTableNode*)search(&stable, node->data.str);
 			
-			Log("!!!!expr: comparison: from symtable to node", ERROR, PARSER);
+			Log("expr: comparison: from symtable to node", ERROR, PARSER);
 			datatypes(nd->dataType, node->dataType);
 
 			node->dataType = nd->dataType;				
