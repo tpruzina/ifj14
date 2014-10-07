@@ -89,7 +89,7 @@ struct symbolTableNode* insertValue(struct symbolTableNode** table, struct Strin
 				if(!((*table)->left = makeNewNamedNode(name)))
 					return NULL;
 				
-				(*table)->dataType = dtype;
+				(*table)->left->dataType = dtype;
 				printSymbolTable((*table), 0);
 				return (*table)->left;				
 			}
@@ -102,7 +102,7 @@ struct symbolTableNode* insertValue(struct symbolTableNode** table, struct Strin
 				if(!((*table)->right = makeNewNamedNode(name)))
 					return NULL;	
 				
-				(*table)->dataType = dtype;
+				(*table)->right->dataType = dtype;
 				printSymbolTable((*table), 0);
 				return (*table)->right;				
 			}
