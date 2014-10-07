@@ -178,6 +178,8 @@ int copyTable(struct symbolTableNode* src, struct symbolTableNode** dest){
 	if(src != NULL){
 		(*dest) = makeNewNamedNode(src->name);
 		
+		
+		(*dest)->dataType = src->dataType;
 		// nemusi byt kopirovano nic		
 		if(src->data.str_data != NULL)
 			copyString(src->data.str_data, &((*dest)->data.str_data));	

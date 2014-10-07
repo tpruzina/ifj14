@@ -919,6 +919,9 @@ struct astNode* parseParams(){
 	// nelezl levou zavorku -> nacitat dokud nenarazi na pravou zavorku
 	cur = getToc();
 	if(cur->type != T_RPAR)	{
+		
+		struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+	
 		while(1){
 			if(cur->type == T_ID){
 				// zacina se cist parametr
@@ -1022,11 +1025,13 @@ struct astNode* parseFunction(){
 	
 	// sparsovat parametry
 	struct symbolTableNode* newlayer;
-	copyTable((struct symbolTableNode*)stackTop(global.symTable), &newlayer);
-	D("function: copy done");
+	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+	copyTable(top, &newlayer);
+	if(newlayer == NULL){
+		E("function: copy failed");
+		exit(intern);
+	}
 	stackPush(global.symTable, newlayer);
-	D("function: copy pushed");
-	printSymbolTable(newlayer, 0);
 	node->right = parseParams();
 	
 	cur = getToc();
@@ -1470,8 +1475,10 @@ struct astNode* parseCommand(struct toc** cur){
 				// skopirovani informaci z tabulky symbolu
 				struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
 				struct symbolTableNode* nd = search(&top, left->data.str);				
-				if(!nd)
+				if(!nd){
 					E("cmd: Syntax error - variable not found");
+					exit(synt);
+				}
 				left->dataType = nd->dataType;
 				
 				// prava strana je vyraz
