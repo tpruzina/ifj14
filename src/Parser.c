@@ -8,6 +8,9 @@
 #include "Parser.h"
 #include "SymbolTable.h"
 
+#define D(t) { Log(t, DEBUG, PARSER); }
+#define E(t) { Log(t, ERROR, PARSER); }
+#define W(t) { Log(t, WARNING, PARSER); }
 
 /**
  * Interni funkce parseru, podle tokenu vrati jeho prioritu.
@@ -253,24 +256,24 @@ int valid(struct astNode* left, struct astNode* right, int op){
 	if(left->type == AST_ID){
 		struct symbolTableNode* id = search(&symtable, left->data.str);
 		if(id == NULL){
-			Log("valid: ID not found in symtable", ERROR, PARSER);
+			E("valid: ID not found in symtable");
 			exit(intern);
 		}
 		
 		if(left->dataType != id->dataType){	
-			Log("valid: data types are not same", WARNING, PARSER);
+			W("valid: data types are not same");
 			left->dataType = id->dataType;
 		}
 	}
 	else if(left->type == AST_FUNC){
 		struct symbolTableNode* func = search(&global.funcTable, left->data.str);
 		if(func == NULL){
-			Log("valid: Function not found", ERROR, PARSER);
+			E("valid: Function not found");
 			exit(intern);
 		}
 		
 		if(left->dataType != func->dataType){
-			Log("valid: data types are not same (func)", WARNING, PARSER);
+			W("valid: data types are not same (func)");
 			left->dataType = func->dataType;
 		}
 	}
@@ -279,24 +282,24 @@ int valid(struct astNode* left, struct astNode* right, int op){
 	if(right->type == AST_ID){
 		struct symbolTableNode* id = search(&symtable, right->data.str);
 		if(id == NULL){
-			Log("valid: ID not found in symbol table", ERROR, PARSER);
+			E("valid: ID not found in symbol table");
 			exit(intern);
 		}
 		
 		if(right->dataType != id->dataType){
-			Log("valid: data types are not same", WARNING, PARSER);
-			right->dataType = id->dataType;
+			W("valid: data types are not same");
+			exit(sem_komp);
 		}
 	}
 	else if(right->type == AST_FUNC){
 		struct symbolTableNode* func = search(&global.funcTable, right->data.str);
 		if(func == NULL){
-			Log("valid: Function not found", ERROR, PARSER);
+			E("valid: Function not found");
 			exit(intern);
 		}
 		
 		if(right->dataType != func->dataType){
-			Log("valid: data types are not same", ERROR, PARSER);
+			E("valid: data types are not same");
 			right->dataType = func->dataType;
 		}
 	}
@@ -305,7 +308,7 @@ int valid(struct astNode* left, struct astNode* right, int op){
 	switch(op){
 		case AST_ADD:
 			if(left->dataType == DT_STR && right->dataType == DT_STR) {
-				Log("valid: String cat", WARNING, PARSER);
+				W("valid: String cat");
 				return DT_STR;
 			}
 		case AST_SUB:
@@ -326,7 +329,7 @@ int valid(struct astNode* left, struct astNode* right, int op){
 				}
 			} 
 			else {
-				Log("valid: Arithmetic operator needs INT or REAL data", ERROR, PARSER);
+				E("valid: Arithmetic operator needs INT or REAL data");
 				exit(sem_komp);			
 			}
 			break;
@@ -341,7 +344,7 @@ int valid(struct astNode* left, struct astNode* right, int op){
 			// hodnoty musi byt stejneho typu aby se mohly porovnavat	
 			if(left->dataType != right->dataType){
 				// pokud nemaji stejne typy
-				Log("valid: Semantic error - no same data types on both sides", ERROR, PARSER);
+				E("valid: Semantic error - no same data types on both sides");
 				datatypes(left->dataType, right->dataType);
 				exit(sem_komp);
 			}
@@ -357,7 +360,7 @@ int valid(struct astNode* left, struct astNode* right, int op){
 				else {
 					// ostatni operace - MATH operands < > <= >= 
 					if(left->dataType == DT_BOOL || left->dataType == DT_STR){
-						Log("valid: Semantic error - invalid operands", ERROR, PARSER);
+						E("valid: Semantic error - invalid operands");
 						datatypes(left->dataType, right->dataType);
 						exit(sem_komp);
 					}
@@ -367,7 +370,7 @@ int valid(struct astNode* left, struct astNode* right, int op){
 			}
 			else {
 				// v pripade nepodporovanych datovych typu
-				Log("valid: Semantic error - unsupported data types", ERROR, PARSER);
+				E("valid: Semantic error - unsupported data types");
 				datatypes(left->dataType, right->dataType);
 				exit(sem_komp);
 			}
@@ -380,13 +383,13 @@ int valid(struct astNode* left, struct astNode* right, int op){
 				return DT_BOOL;
 			}
 			
-			Log("valid: Semantic error - logic operators needs logic operands", ERROR, PARSER);
+			E("valid: Semantic error - logic operators needs logic operands");
 			datatypes(left->dataType, right->dataType);
 			exit(sem_komp);
 			break;
 		case AST_NOT:
 			if(right != NULL){
-				Log("valid: Semantic error - NOT operator has only one operand", ERROR, PARSER);
+				E("valid: Semantic error - NOT operator has only one operand");
 				datatypes(left->dataType, right->dataType);
 				exit(sem_komp);
 			}
@@ -395,17 +398,17 @@ int valid(struct astNode* left, struct astNode* right, int op){
 			if(right == left)
 				return right->dataType;
 			else{
-				Log("valid: Semantic error - not same data types", ERROR, PARSER);
+				E("valid: Semantic error - not same data types");
 				exit(sem_komp);
 			}
 		default:
-			Log("valid: Semantic error - unsupported operation", ERROR, PARSER);
+			E("valid: Semantic error - unsupported operation");
 			datatypes(left->dataType, right->dataType);
 			exit(sem_komp);
 			break;
 	}
 	
-	Log("valid: Semantic error - undefined combination of operands and operator", ERROR, PARSER);
+	E("valid: Semantic error - undefined combination of operands and operator");
 	datatypes(left->dataType, right->dataType);
 	exit(sem_komp);
 }
@@ -417,8 +420,7 @@ int valid(struct astNode* left, struct astNode* right, int op){
  * aststack: Urcuje zasobnik ze ktereho bude tahat data a kam bude ukladat vysledek
  */
 int makeAstFromToken(struct toc* token, struct stack** aststack){
-	fprintf(stderr, " [  MAFT  ] \t");
-	printTokenType(token);
+	//printTokenType(token);
 	printAstStack(*aststack);
 
 	struct astNode* node = makeNewAST();
@@ -428,7 +430,7 @@ int makeAstFromToken(struct toc* token, struct stack** aststack){
 		// operatory bez NOT
 		node->type = convertTokenToNode(token);
 		if((int)node->type == -1){
-			Log("Unsuported token type to convert", ERROR, PARSER);
+			E("Unsuported token type to convert");
 			return False;
 		}
 		
@@ -436,26 +438,26 @@ int makeAstFromToken(struct toc* token, struct stack** aststack){
 		node->left = (struct astNode*)stackPop(*aststack);
 		
 		// kontrola validity operace a operandu
-		printTokenType(token);
+		//printTokenType(token);
 		node->dataType = valid(node->left, node->right, node->type);
 		switch(node->dataType){
 			case DT_INT:
-				Log("maft: Valid operation by operand types - INTEGER", DEBUG, PARSER);
+				D("maft: Valid operation by operand types - INTEGER");
 				break;
 			case DT_REAL:
-				Log("maft: Valid operation by operand types - REAL", DEBUG, PARSER);
+				D("maft: Valid operation by operand types - REAL");
 				break;
 			case DT_STR:
-				Log("maft: Valid operation by operand types - STRING", DEBUG, PARSER);
+				D("maft: Valid operation by operand types - STRING");
 				break;
 			case DT_BOOL:
-				Log("maft: Valid operation by operand types - BOOLEAN", DEBUG, PARSER);
+				D("maft: Valid operation by operand types - BOOLEAN");
 				break;
 			case False:
-				Log("maft: Gets FALSE insted of data type", ERROR, PARSER);
+				E("maft: Gets FALSE insted of data type");
 				exit(sem_komp);
 			default:
-				Log("maft: Invalid data", ERROR, PARSER);
+				E("maft: Invalid data");
 				exit(sem_komp);
 		}
 	}
@@ -464,18 +466,18 @@ int makeAstFromToken(struct toc* token, struct stack** aststack){
 		node->type = AST_NOT;
 		node->left = (struct astNode*)stackPop(*aststack);
 		if(!node->left){
-			Log("maft: Semantic error - stack is empty, no operand for NOT", ERROR, PARSER);
+			E("maft: Semantic error - stack is empty, no operand for NOT");
 			exit(sem_komp);
 		}
 		
 		if(node->left->dataType != DT_BOOL){
-			Log("maft: Semantic error - expected bool return type of operand", ERROR, PARSER);
+			E("maft: Semantic error - expected bool return type of operand");
 			exit(sem_komp);
 		}		
 	}
 	else {
-		Log("Stack error - invalid data", WARNING, PARSER);
-		printTokenType(token);
+		W("Stack error - invalid data");
+		//printTokenType(token);
 		return False;						
 	}
 	
@@ -503,11 +505,11 @@ int parser(){
  * -------------------------------------------------------------------------------------
  */
 struct astNode* parseProgram(){
-	Log("parseProgram", WARNING, PARSER);
+	W("parseProgram");
 	struct toc* cur = getToc();
 
 	if(cur->type != T_KW_PROGRAM){
-		Log("Syntax error - expected PROGRAM keyword", ERROR, PARSER);
+		E("Syntax error - expected PROGRAM keyword");
 		global.errno = synt;
 		return NULL;
 	}
@@ -516,7 +518,7 @@ struct astNode* parseProgram(){
 	cur = getToc();
 	if(cur->type != T_ID){
 		// chyba, melo nasledovat oznaceni
-		Log("Syntax error - expected name of program", ERROR, PARSER);
+		E("Syntax error - expected name of program");
 		exit(synt);
 	}
 	
@@ -526,11 +528,11 @@ struct astNode* parseProgram(){
 	// kopirovani jmena programu
 	if(!(copyString(cur->data.str, &(program->data.str))))
 		return NULL;			
-	printString(program->data.str);
+	//printString(program->data.str);
 	
 	cur = getToc();
 	if(cur->type != T_SCOL){
-		Log("Syntax error - expected SEMICOLON", ERROR, PARSER);
+		E("Syntax error - expected SEMICOLON");
 		exit(synt);
 	}
 					
@@ -544,7 +546,7 @@ struct astNode* parseProgram(){
 		// vyskytla se chyba
 		return NULL;				
 	}
-	Log("program: back from VARS", DEBUG, PARSER);
+	D("program: back from VARS");
 	// lokalni promenne
 	program->other = vardef;
 		
@@ -558,7 +560,7 @@ struct astNode* parseProgram(){
 		cur = getToc();				
 	}
 	
-	printTokenType(cur);
+	//printTokenType(cur);
 	
 	// nasleduje telo programu
 	struct astNode* body = parseBody(&cur);		
@@ -566,10 +568,15 @@ struct astNode* parseProgram(){
 		return NULL;
 	program->left = body;
 	
+	if(cur->type != T_DOT){
+		E("program: Syntax error - expected END.");
+		exit(synt);
+	}
+	
 	cur = getToc();
 	if(cur->type != T_EOF){
-		Log("program: Syntax error - expected program end", ERROR, PARSER);
-		printTokenType(cur);
+		E("program: Syntax error - expected program end");
+		//printTokenType(cur);
 		exit(synt);
 	}
 			
@@ -581,14 +588,14 @@ struct astNode* parseProgram(){
  * ---------------------------------------------------------------------
  */
 struct astNode* parseBody(struct toc** cur){
-	Log("parseBody", WARNING, PARSER);
+	W("parseBody");
 	
 	if((*cur)->type != T_KW_BEGIN){ // nebyl nacten BEGIN
 		(*cur) = getToc();
 		
 		if((*cur)->type != T_KW_BEGIN){
-			Log("body: Syntax error - expected BEGIN keyword", ERROR, PARSER);
-			printTokenType(*cur);		
+			E("body: Syntax error - expected BEGIN keyword");
+			//printTokenType(*cur);		
 			exit(synt);
 		}
 	}
@@ -599,9 +606,8 @@ struct astNode* parseBody(struct toc** cur){
 	struct astNode* cmd = parseCommand(cur);
 	if((*cur)->type == T_KW_END){
 		// ukonceni bloku kodu
-		Log("body: returned END kw", DEBUG, PARSER);
 		if(cmd == NULL){
-			Log("body: WARNING - statement without effect", WARNING, PARSER);
+			W("body: WARNING - statement without effect");
 			
 			body->left = NULL;
 			return body;
@@ -609,7 +615,8 @@ struct astNode* parseBody(struct toc** cur){
 		
 		body->left = makeNewAST();
 		body->left->type = AST_CMD;
-		body->right = cmd;
+		body->left->left = NULL;
+		body->left->right = cmd;
 		
 		return body;		
 	}
@@ -625,8 +632,10 @@ struct astNode* parseBody(struct toc** cur){
 			item->left->right = cmd;
 		
 			// pokud narazi na END tak ukoncit hledani dalsich 
-			if((*cur)->type == T_KW_END || (*cur)->type == T_KW_ENDDOT)
+			if((*cur)->type == T_KW_END){
+				(*cur) = getToc();
 				break;
+			}
 			else if((*cur)->type == T_SCOL){
 				// hledat dalsi
 				cmd = parseCommand(cur);
@@ -634,14 +643,15 @@ struct astNode* parseBody(struct toc** cur){
 				continue;
 			}
 			else {
-				Log("body: Syntax error - unsupported token", ERROR, PARSER);
-				printTokenType(*cur);
+				E("body: Syntax error - expected END or SEMICOLON");
+				//printTokenType(*cur);
 				exit(synt);			
 			}			
 		}
 	}
 	if(!body)
 		return NULL;
+		
 	return body;
 }
 
@@ -650,7 +660,7 @@ struct astNode* parseBody(struct toc** cur){
  * ---------------------------------
  */
 struct astNode* parseVars(struct toc** cur){
-	Log("parseVars", WARNING, PARSER);
+	W("parseVars");
 	(*cur) = getToc();
 	if((*cur)->type == T_KW_VAR){
 		// zacinat parsovat promenne
@@ -668,14 +678,14 @@ struct astNode* parseVars(struct toc** cur){
 			
 				if(!(copyString((*cur)->data.str, &(var->data.str))))
 					return NULL;
-				printString((*cur)->data.str);
+				//printString((*cur)->data.str);
 			
 				// odkladiste pro nove promenne do tabulky symbolu				
 				struct symbolTableNode* new = NULL;
 				
 				(*cur) = getToc();
 				if((*cur)->type == T_COL){
-					printTokenType(*cur);
+					//printTokenType(*cur);
 					// dostal dvojtecku --> ocekavat typ
 														
 					(*cur) = getToc();
@@ -744,8 +754,8 @@ struct astNode* parseVars(struct toc** cur){
 								// leva [ -> ocekavat integer								
 								(*cur) = getToc();
 								if((*cur)->type != T_INT){
-									Log("vars: Syntax error - expected integer as lower range of array index", ERROR, PARSER);
-									printTokenType(*cur);
+									E("vars: Syntax error - expected integer as lower range of array index");
+									//printTokenType(*cur);
 									exit(synt);
 								}
 								dta->low = (*cur)->data.integer;
@@ -753,16 +763,16 @@ struct astNode* parseVars(struct toc** cur){
 								// interval - dve tecky mezi integery
 								(*cur) = getToc();
 								if((*cur)->type != T_DDOT){
-									Log("vars: Syntax error - expected two dots", ERROR, PARSER);
-									printTokenType(*cur);
+									E("vars: Syntax error - expected two dots");
+									//printTokenType(*cur);
 									exit(synt);
 								}
 								
 								// ocekavat druhy integer
 								(*cur) = getToc();
 								if((*cur)->type != T_INT){
-									Log("vars: Syntax error - expected integer as higher range of array index", ERROR, PARSER);
-									printTokenType(*cur);
+									E("vars: Syntax error - expected integer as higher range of array index");
+									//printTokenType(*cur);
 									exit(synt);
 								}
 								dta->high = (*cur)->data.integer;
@@ -770,16 +780,16 @@ struct astNode* parseVars(struct toc** cur){
 								// ocekavam konec intervalu
 								(*cur) = getToc();
 								if((*cur)->type != T_RBRC){
-									Log("vars: Syntax error - expected right brace", ERROR, PARSER);
-									printTokenType(*cur);
+									E("vars: Syntax error - expected right brace");
+									//printTokenType(*cur);
 									exit(synt);
 								}
 								
 								// ocekavat OF
 								(*cur) = getToc();
 								if((*cur)->type != T_OF){
-									Log("vars: Syntax error - expected OF for defining type of array", ERROR, PARSER);
-									printTokenType(*cur);
+									E("vars: Syntax error - expected OF for defining type of array");
+									//printTokenType(*cur);
 									exit(synt);
 								}
 								
@@ -803,8 +813,8 @@ struct astNode* parseVars(struct toc** cur){
 										break;
 									}
 									default:
-										Log("vars: Syntax error - unsupported type of array", ERROR, PARSER);
-										printTokenType(*cur);
+										E("vars: Syntax error - unsupported type of array");
+										//printTokenType(*cur);
 										exit(synt);
 								}
 								// ulozeni odkazu na strukturu dat
@@ -825,23 +835,23 @@ struct astNode* parseVars(struct toc** cur){
 								new->other = dta;								
 							}
 							else {
-								Log("vars: Syntax error - expected left brace", ERROR, PARSER);
-								printTokenType(*cur);
+								E("vars: Syntax error - expected left brace");
+								//printTokenType(*cur);
 								exit(synt);
 							}
 							
 							break;
 						}
 						default:
-							Log("vars: Syntax error - expected type", ERROR, PARSER);
+							E("vars: Syntax error - expected type");
 							exit(synt);	
 					}
 				}				
 				
 				(*cur) = getToc();
 				if((*cur)->type != T_SCOL){
-					Log("vars: Syntax error - expected semicolon after var deklaration", ERROR, PARSER);
-					printTokenType(*cur);
+					E("vars: Syntax error - expected semicolon after var deklaration");
+					//printTokenType(*cur);
 					exit(synt);
 				}
 								
@@ -869,11 +879,13 @@ struct astNode* parseVars(struct toc** cur){
 				break;				
 			}
 			else {
-				Log("vars: Syntax error - unsupported token", ERROR, PARSER);
-				printTokenType(*cur);
+				E("vars: Syntax error - unsupported token");
+				//printTokenType(*cur);
 				exit(synt);			
 			}
 		}
+		
+		printSymbolTable(top, 0);
 		
 		if(!stackPush(global.symTable, top))
 			return NULL;
@@ -890,7 +902,7 @@ struct astNode* parseVars(struct toc** cur){
  * ---------------------------------------------
  */
 struct astNode* parseParams(){
-	Log("parseParams", WARNING, PARSER);
+	W("parseParams");
 	
 	struct toc* cur = getToc();
 	struct astNode* params = makeNewAST();
@@ -899,8 +911,8 @@ struct astNode* parseParams(){
 		
 		
 	if(cur->type != T_LPAR){
-		Log("params: Syntax error - expected Left parenthesis", ERROR, PARSER);
-		printTokenType(cur);
+		E("params: Syntax error - expected Left parenthesis");
+		//printTokenType(cur);
 		exit(synt);	
 	}
 	
@@ -920,8 +932,8 @@ struct astNode* parseParams(){
 				// nacist dvojtecku
 				cur = getToc();
 				if(cur->type != T_COL){
-					Log("params: Syntax error - expected COLON after identificator", ERROR, PARSER);
-					printTokenType(cur);
+					E("params: Syntax error - expected COLON after identificator");
+					//printTokenType(cur);
 					exit(synt);				
 				}
 				
@@ -945,8 +957,8 @@ struct astNode* parseParams(){
 						break;
 					}
 					default:
-						Log("params: Syntax error - unsupported type of parameter", ERROR, PARSER);
-						printTokenType(cur);
+						E("params: Syntax error - unsupported type of parameter");
+						//printTokenType(cur);
 						exit(synt);
 				}
 				
@@ -960,6 +972,7 @@ struct astNode* parseParams(){
 				cur = getToc();				
 				if(cur->type == T_SCOL){
 					// oddelovac parametru
+					cur = getToc();
 					continue;				
 				}
 				else if(cur->type == T_RPAR){
@@ -968,7 +981,7 @@ struct astNode* parseParams(){
 				}			
 			}
 			else {
-				Log("params: Syntax error - expected identificator of parameter", ERROR, PARSER);
+				E("params: Syntax error - expected identificator of parameter");
 				printTokenType(cur);
 				exit(synt);	
 			}
@@ -988,7 +1001,7 @@ struct astNode* parseParams(){
  * --------------------------------------------
  */
 struct astNode* parseFunction(){
-	Log("parseFunction", WARNING, PARSER);
+	W("parseFunction");
 	// definice funkce / dopredna definice --- FUNCTION je uz nactene
 	// FUNCTION <id> <params>: <type>; <var_def> <body>     
 	// FUNCTION <id> <params>: <type>; FORWARD;
@@ -998,8 +1011,8 @@ struct astNode* parseFunction(){
 	
 	struct toc* cur = getToc();
 	if(cur->type != T_ID){
-		Log("function: Syntax error - expected ID after FUNCTION", ERROR, PARSER);
-		printTokenType(cur);
+		E("function: Syntax error - expected ID after FUNCTION");
+		//printTokenType(cur);
 		exit(synt);
 	}
 	
@@ -1008,12 +1021,18 @@ struct astNode* parseFunction(){
 		return NULL;
 	
 	// sparsovat parametry
+	struct symbolTableNode* newlayer;
+	copyTable((struct symbolTableNode*)stackTop(global.symTable), &newlayer);
+	D("function: copy done");
+	stackPush(global.symTable, newlayer);
+	D("function: copy pushed");
+	printSymbolTable(newlayer, 0);
 	node->right = parseParams();
 	
 	cur = getToc();
 	if(cur->type != T_COL){
-		Log("function: Syntax error - expected colon after function params", ERROR, PARSER);
-		printTokenType(cur);
+		E("function: Syntax error - expected colon after function params");
+		//printTokenType(cur);
 		exit(synt);	
 	}
 
@@ -1038,8 +1057,8 @@ struct astNode* parseFunction(){
 			break;
 		}
 		default: {
-			Log("function: Syntax error - unsupported returning type of function", ERROR, PARSER);
-			printTokenType(cur);
+			E("function: Syntax error - unsupported returning type of function");
+			//printTokenType(cur);
 			exit(synt);
 		}
 	}	
@@ -1051,13 +1070,13 @@ struct astNode* parseFunction(){
 	
 	cur = getToc();
 	if(cur->type == T_KW_FORW){
-		Log("function: FORWARD DECLARATION", DEBUG, PARSER);
+		D("function: FORWARD DECLARATION");
 		// dopredna deklarace - pokud ji najde ve funkcich je neco spatne
 	 	if(!dekl)
 		 	dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), node->data.str, node->dataType);
 		else {
 			// nalezl deklarovanou/definovanou funkci v tabulce - chyba!
-			Log("function: Syntax error - redefinition of forward declaration", ERROR, PARSER);
+			E("function: Syntax error - redefinition of forward declaration");
 			exit(synt);
 		}
 			
@@ -1068,7 +1087,7 @@ struct astNode* parseFunction(){
 	 	return node;
 	}
 	
-	Log("function: DEFINITION of function", DEBUG, PARSER);
+	D("function: DEFINITION of function");
 	
 	// TODO vyresit definici tela a promennych funkce!
 	// Pokud funkce bude nalezena - dopredna deklarace
@@ -1085,7 +1104,7 @@ struct astNode* parseFunction(){
 	if(dekl->other != NULL) {	
 		if(((struct symbolTableNode*)dekl->other)->left != NULL){
 			// telo uz bylo jednou definovane!!
-			Log("function: Syntax error - redefinition of function", ERROR, PARSER);
+			E("function: Syntax error - redefinition of function");
 			exit(sem_prog);
 		}
 	}
@@ -1108,7 +1127,7 @@ struct astNode* parseFunction(){
  * --------------------------------------------------------------------
  */
 struct astNode* parseCallParams(){
-	Log("parseCallParams", WARNING, PARSER);
+	W("parseCallParams");
 	// prochazi podel parametru a vytvari doleva jdouci strom z parametru
 	struct astNode* node = makeNewAST();
 	if(!node)
@@ -1175,8 +1194,8 @@ struct astNode* parseCallParams(){
 				break;
 			}
 			default:
-				Log("callPars: Syntax error - invalid parameter type", ERROR, PARSER);
-				printTokenType(cur);
+				E("callPars: Syntax error - invalid parameter type");
+				//printTokenType(cur);
 				exit(synt);
 		}
 		
@@ -1186,8 +1205,8 @@ struct astNode* parseCallParams(){
 			// nacetl carku - v poradku pokud nenasleduje T_RPAR
 			cur = getToc();
 			if(cur->type == T_RPAR){
-				Log("callPars: Syntax error - comma before right parenthesis", ERROR, PARSER);
-				printTokenType(cur);
+				E("callPars: Syntax error - comma before right parenthesis");
+				//printTokenType(cur);
 				exit(synt);
 			}
 		}
@@ -1210,7 +1229,7 @@ struct astNode* parseCallParams(){
  * id: Token ID se jmenem funkce
  */
 struct astNode* parseFuncCall(struct toc* id){
-	Log("parseFuncCall", WARNING, PARSER);
+	W("parseFuncCall");
 	// v cyklu nasel T_ID a nasledne T_LPAR --> pravdepodobne volani funkce
 	
 	struct astNode* node = makeNewAST();
@@ -1242,8 +1261,8 @@ struct astNode* ifStatement(struct toc** cur){
 		return NULL;
 		
 	if((*cur)->type != T_KW_THEN){
-		Log("if: Syntax error - expected THEN keyword at the end of condition", ERROR, PARSER);
-		printTokenType(*cur);
+		E("if: Syntax error - expected THEN keyword at the end of condition");
+		//printTokenType(*cur);
 		exit(synt);
 	}
 		
@@ -1283,8 +1302,8 @@ struct astNode* whileStatement(struct toc** cur){
 		return NULL;
 	
 	if((*cur)->type != T_KW_DO){
-		Log("while: Syntax error - expected DO keyword at the end of condition", ERROR, PARSER);
-		printTokenType(*cur);
+		E("while: Syntax error - expected DO keyword at the end of condition");
+		//printTokenType(*cur);
 		exit(synt);
 	}
 
@@ -1323,14 +1342,14 @@ struct astNode* repeatStatement(struct toc** cur){
 	// rpt->left == AST_CMD
 	// rpt->left->right == prikaz tela
 	if(rpt->left->right == NULL){
-		Log("repeat: Syntax error - repeat cycle must have at least one command in the body", ERROR, PARSER);
+		E("repeat: Syntax error - repeat cycle must have at least one command in the body");
 		exit(synt);
 	}
 	
 	(*cur) = getToc();
 	if((*cur)->type != T_UNTIL){
-		Log("repeat: Syntax error - expected UNTIL keyword", ERROR, PARSER);
-		printTokenType(*cur);
+		E("repeat: Syntax error - expected UNTIL keyword");
+		//printTokenType(*cur);
 		exit(synt);
 	}
 	
@@ -1347,14 +1366,14 @@ struct astNode* repeatStatement(struct toc** cur){
  * ------------------------------------------------------------------------------------
  */
 struct astNode* parseCommand(struct toc** cur){
-	Log("parseCommand", WARNING, PARSER);
+	W("parseCommand");
 	(*cur) = getToc();
 	
-	printTokenType(*cur);
+	//printTokenType(*cur);
 	switch((*cur)->type){
 		case T_KW_END: {
 			// narazil hned na END -> po stredniku nasledoval END chyba
-			Log("cmd: Syntax error - last command cannot be ended with semicolon", ERROR, PARSER);
+			E("cmd: Syntax error - last command cannot be ended with semicolon");
 			exit(synt);
 		}	
 		case T_KW_IF: {			
@@ -1366,11 +1385,9 @@ struct astNode* parseCommand(struct toc** cur){
 				*cur = getToc();
 				return ifstat;
 			}
-			else if((*cur)->type == T_KW_ENDDOT)
-				return ifstat;
 			else {
-				Log("cmd: Syntax error - expected END (if)", ERROR, PARSER);
-				printTokenType(*cur);
+				E("cmd: Syntax error - expected END (if)");
+				//printTokenType(*cur);
 				exit(synt);
 			}	
 		}
@@ -1383,11 +1400,9 @@ struct astNode* parseCommand(struct toc** cur){
 				*cur = getToc();
 				return whl;			
 			}
-			else if((*cur)->type == T_KW_ENDDOT)
-				return whl;
 			else {
-				Log("cmd: Syntax error - expected END (while)", ERROR, PARSER);			
-				printTokenType(*cur);
+				E("cmd: Syntax error - expected END (while)");			
+				//printTokenType(*cur);
 				exit(synt);
 			}
 		}
@@ -1400,11 +1415,9 @@ struct astNode* parseCommand(struct toc** cur){
 				*cur = getToc();
 				return rpt;
 			}
-			else if((*cur)->type == T_KW_ENDDOT)
-				return rpt;
 			else {
-				Log("cmd: Syntax error - expected END (repeat)", ERROR, PARSER);
-				printTokenType(*cur);
+				E("cmd: Syntax error - expected END (repeat)");
+				//printTokenType(*cur);
 				exit(synt);
 			}
 			return rpt;
@@ -1441,7 +1454,7 @@ struct astNode* parseCommand(struct toc** cur){
 			}
 			else if(next->type == T_ASGN){
 				// pravdepodobne prirazeni
-				Log("cmd: cur and next token", DEBUG, PARSER);
+				D("cmd: cur and next token");
 				printTokenType(*cur);
 				printTokenType(next);
 				
@@ -1452,19 +1465,23 @@ struct astNode* parseCommand(struct toc** cur){
 					return NULL;					
 				left->type = AST_ID;
 				copyString((*cur)->data.str, &(left->data.str));
+				D("cmd: After string copy")
 				
 				// skopirovani informaci z tabulky symbolu
 				struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
 				struct symbolTableNode* nd = search(&top, left->data.str);				
+				if(!nd)
+					E("cmd: Syntax error - variable not found");
 				left->dataType = nd->dataType;
 				
 				// prava strana je vyraz
 				struct astNode* right = parseExpression(cur);
 				if(!right) 
 					return NULL;
+				D("cmd: After expr parsing");
 			
 				if(left->dataType != right->dataType){
-					Log("cmd: Semantic error - L-value has not same value as R-value", ERROR, PARSER);
+					E("cmd: Semantic error - L-value has not same value as R-value");
 					exit(sem_komp);
 				}
 								
@@ -1474,12 +1491,12 @@ struct astNode* parseCommand(struct toc** cur){
 				asgn->left = left;
 				asgn->right = right;
 				asgn->other = NULL;
-				Log("cmd: Returning asgn node", DEBUG, PARSER);
+				D("cmd: Returning asgn node");
 				return asgn;
 			}
 			else {
-				Log("cmd: Syntax error - expected funcCall or assign", ERROR, PARSER);
-				printTokenType(*cur);
+				E("cmd: Syntax error - expected funcCall or assign");
+				//printTokenType(*cur);
 				exit(synt);
 			}		
 			break;
@@ -1495,7 +1512,7 @@ struct astNode* parseCommand(struct toc** cur){
  * cur: odkaz na token z vyssi vrstvy
  */
 struct astNode* parseExpression(struct toc** cur){
-	Log("parseExpression", WARNING, PARSER);
+	W("parseExpression");
 	// zasobnik pro operatory Shunting-yard algoritmu
 	struct stack* stack = makeNewStack();
 	// zasobnik pro chystani AST
@@ -1507,7 +1524,7 @@ struct astNode* parseExpression(struct toc** cur){
 	// <id>(
 	// <id> <operator> (
 	if((*cur)->type == T_ID){
-		Log("expr: TOKEN ID on the left side", DEBUG, PARSER);
+		D("expr: TOKEN ID on the left side");
 	
 		// odklad na ID token
 		struct toc* id = (*cur);
@@ -1531,14 +1548,11 @@ struct astNode* parseExpression(struct toc** cur){
 			struct symbolTableNode* stable = (struct symbolTableNode*)stackTop(global.symTable);
 			struct symbolTableNode* nd = (struct symbolTableNode*)search(&stable, node->data.str);
 			
-			Log("expr: comparison: from symtable to node", ERROR, PARSER);
-			datatypes(nd->dataType, node->dataType);
-
 			node->dataType = nd->dataType;				
 			node->left = NULL;
 			node->right = NULL;
 			
-			datatypes(nd->dataType, node->dataType);
+			//datatypes(nd->dataType, node->dataType);
 			stackPush(aststack, node);
 		}	
 	}
@@ -1556,12 +1570,12 @@ struct astNode* parseExpression(struct toc** cur){
 	// 5. v pripade jineho tokenu -> vyprazdnovat zasobnik na vystup
 	// 		tokeny ;, THEN, DO by mely vesmes ukoncovat vyrazy	
 	while((*cur) != NULL){
-		Log("expr: new token", DEBUG, PARSER);
-		printTokenType(*cur);
+		D("expr: new token");
+		////printTokenType(*cur);
 		switch((*cur)->type){
 			// leva zavorka
 			case T_LPAR: {
-				Log("T_LPAR comes", WARNING, PARSER);
+				W("T_LPAR comes");
 			
 				if(!stackPush(stack, (*cur)))
 					return NULL;
@@ -1569,25 +1583,25 @@ struct astNode* parseExpression(struct toc** cur){
 			}
 			// prava zavorka
 			case T_RPAR: {
-				Log("T_RPAR comes", WARNING, PARSER);
+				W("T_RPAR comes");
 			
 				struct toc* t = (struct toc*)stackPop(stack);
 				if(t == NULL){
 					// pravdepodobne chyba syntaxe
-					Log("expression: Syntax error - no Left parenthesis before Right parenthesis", ERROR, PARSER);
+					E("expression: Syntax error - no Left parenthesis before Right parenthesis");
 					exit(synt);
 				}
 				
 				while(!stackEmpty(stack) && (t->type != T_LPAR)){
-					printTokenType(t);
+					//printTokenType(t);
 					// vybira operatory ze zasobniku a hrne je do zasobniku operandu
 					if(!makeAstFromToken(t, &aststack)){
-						Log("expr: maft failed", ERROR, PARSER);
+						E("expr: maft failed");
 						return NULL;	
 					}
 					
 					t = (struct toc*)stackPop(stack);				
-					//printTokenType(t);
+					////printTokenType(t);
 				}				
 				break;
 			}
@@ -1599,8 +1613,8 @@ struct astNode* parseExpression(struct toc** cur){
 			case T_BOOL: 
 			case T_KW_TRUE:
 			case T_KW_FALSE:{
-				Log("Literal comes", WARNING, PARSER);
-				printTokenType(*cur);
+				W("Literal comes");
+				//printTokenType(*cur);
 				
 				struct astNode* node = makeNewAST();
 				
@@ -1612,32 +1626,32 @@ struct astNode* parseExpression(struct toc** cur){
 					// ziskani tabulky symbolu
 					struct symbolTableNode* stable = (struct symbolTableNode*)stackTop(global.symTable);
 					struct symbolTableNode* nd = search(&stable, node->data.str);
-					Log("expr: comparison between symtable node and ast node", DEBUG, PARSER);
+					D("expr: comparison between symtable node and ast node");
 					datatypes(nd->dataType, node->dataType);
 					
 					node->dataType = nd->dataType;					
-					Log("expr: making ID", DEBUG, PARSER);
+					D("expr: making ID");
 				}
 				else if((*cur)->type == T_INT){
 					node->type = AST_INT;
 					node->dataType = DT_INT;
 					node->data.integer = (*cur)->data.integer;	
 					
-					Log("expr: making INT", DEBUG, PARSER);			
+					D("expr: making INT");			
 				}
 				else if((*cur)->type == T_REAL){
 					node->type = AST_REAL;
 					node->dataType = DT_REAL;
 					node->data.real = (*cur)->data.real;
 					
-					Log("expr: making REAL", DEBUG, PARSER);
+					D("expr: making REAL");
 				}
 				else if((*cur)->type == T_BOOL){
 					node->type = AST_BOOL;
 					node->dataType = DT_BOOL;
 					node->data.boolean = (*cur)->data.boolean;
 					
-					Log("expr: making BOOL", DEBUG, PARSER);
+					D("expr: making BOOL");
 				}
 				else if((*cur)->type == T_STR){
 					node->type = AST_STR;
@@ -1645,24 +1659,24 @@ struct astNode* parseExpression(struct toc** cur){
 						return NULL;
 						
 					node->dataType = DT_STR;
-					Log("expr: making STR", DEBUG, PARSER);
+					D("expr: making STR");
 				}
 				else if((*cur)->type == T_KW_TRUE){
 					node->type = AST_BOOL;
 					node->dataType = DT_BOOL;
 					node->data.boolean = True;
 					
-					Log("expr: making TRUE", DEBUG, PARSER);
+					D("expr: making TRUE");
 				}
 				else if((*cur)->type == T_KW_FALSE){
 					node->type = AST_BOOL;
 					node->dataType = DT_BOOL;
 					node->data.boolean = False;
 					
-					Log("expr: making FALSE", DEBUG, PARSER);
+					D("expr: making FALSE");
 				}
 				else {
-					Log("expr: Unknown data type", ERROR, PARSER);
+					D("expr: Unknown data type");
 					exit(synt);
 				}
 
@@ -1685,8 +1699,8 @@ struct astNode* parseExpression(struct toc** cur){
 			case T_OR:
 			case T_XOR:
 			case T_NOT: {
-				Log("Operator comes", WARNING, PARSER);
-				printTokenType(*cur);
+				W("Operator comes");
+				//printTokenType(*cur);
 				// 3. operator:
 				// 		pokud je zasobnik prazdny
 				// 		pokud je na vrcholu leva zavorka
@@ -1728,36 +1742,36 @@ struct astNode* parseExpression(struct toc** cur){
 			case T_KW_DO:
 			case T_KW_THEN: {
 				// vyprazdnit vsechny operatory v zasobniku a postavit nad nimi strom
-				Log("expr: Making node into", DEBUG, PARSER);
-				printTokenType(*cur);
+				D("expr: Making node into");
+				//printTokenType(*cur);
 				
 				while(!stackEmpty(stack)){
 					struct toc* now = (struct toc*)stackPop(stack);
 					if(!makeAstFromToken(now, &aststack))
 						return NULL;
 						
-					Log("expr: stack state", DEBUG, PARSER);
+					D("expr: stack state");
 					printAstStack(stack);
 				}
 				
 			
 				// v pripade, ze je v zasobniku jen jeden prvek, vratit ho, je to vysledek SY algoritmu
 				if(aststack->Length > 1){
-					Log("expression: Shunting yard error - stack length is grather then 1", ERROR, PARSER);
+					E("expression: Shunting yard error - stack length is grather then 1");
 					exit(intern);
 				}
 				else if(aststack->Length == 0){
-					Log("expression: Shunting yard error - stack is empty", ERROR, PARSER);
+					E("expression: Shunting yard error - stack is empty");
 					exit(intern);
 				}
 			
 				// vrati vrchol 
-				Log("expression: Returning top layer", DEBUG, PARSER);
+				E("expression: Returning top layer");
 				return stackPop(aststack);
 			}
 			default:
-				Log("expression: Syntax error - bad token type", ERROR, PARSER);			
-				printTokenType(*cur);
+				E("expression: Syntax error - bad token type");			
+				//printTokenType(*cur);
 				exit(synt);
 		}
 		

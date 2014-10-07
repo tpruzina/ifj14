@@ -77,7 +77,7 @@ struct symbolTableNode* insertValue(struct symbolTableNode** table, struct Strin
 			return NULL;		
 		}		
 		(*table)->dataType = dtype;
-		printSymbolTable((*table), 0);
+		//printSymbolTable((*table), 0);
 		return (*table);
 	}
 	else {
@@ -90,7 +90,7 @@ struct symbolTableNode* insertValue(struct symbolTableNode** table, struct Strin
 					return NULL;
 				
 				(*table)->left->dataType = dtype;
-				printSymbolTable((*table), 0);
+				//printSymbolTable((*table), 0);
 				return (*table)->left;				
 			}
 			else 
@@ -103,7 +103,7 @@ struct symbolTableNode* insertValue(struct symbolTableNode** table, struct Strin
 					return NULL;	
 				
 				(*table)->right->dataType = dtype;
-				printSymbolTable((*table), 0);
+				//printSymbolTable((*table), 0);
 				return (*table)->right;				
 			}
 			else

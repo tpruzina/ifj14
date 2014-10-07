@@ -9,6 +9,7 @@
  
 #include <stdio.h>
 #include <stdlib.h>
+#include "Structs.h"
 #include "Log.h"
 
 #define PRINT 1
@@ -82,8 +83,8 @@ void Log(char* msg, int type, int frm){
 		}
 	}
 	
-	
-	
-	
-	fprintf(stderr, " %s%s\t%s %s%s%s\n", fcol, from, COLOR_NRM, mcol, msg, COLOR_NRM);
+	if(type == ERROR)	
+		fprintf(stderr, " %s%s\t%s %s%s%s \t %d\n", fcol, from, COLOR_NRM, mcol, msg, COLOR_NRM, global.lineCounter);
+	else
+		fprintf(stderr, " %s%s\t%s %s%s%s\n", fcol, from, COLOR_NRM, mcol, msg, COLOR_NRM);
 }
