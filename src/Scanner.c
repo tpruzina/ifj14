@@ -29,7 +29,7 @@ getToc()
 
 // makro na vratenie charu na vstup a return tokenu
 #define UNGETC_AND_RETURN_TOKEN() do {	\
-		ungetc(c,global.src); 			\
+		unGetChar(c); 			\
 		return toc;						\
 		} while(0)
 		
@@ -46,7 +46,7 @@ getToc()
 
 	while (true)
 	{
-		c = tolower(fgetc(global.src));
+		c = tolower(getChar());
 
 		switch(state)
 		{
@@ -352,7 +352,7 @@ getToc()
 					toc->type = T_KW_ELSE;
 				else if (!compareString(str,"end"))
 				{
-					if((c = fgetc(global.src)) == '.')	// mensi hack no rozlisenie END a END.
+					if((c = getChar()) == '.')	// mensi hack no rozlisenie END a END.
 						toc->type = T_KW_ENDDOT;
 					else
 						toc->type = T_KW_END;
@@ -430,7 +430,7 @@ getToc()
 
 int getChar()
 {
-	int ret = fgetc(global.src);
+	int ret = getChar();
 	if('\n' == ret)
 		global.lineCounter++;
 	return ret;
@@ -440,7 +440,7 @@ void unGetChar(char c)
 {
 	if('\n' == c)
 		global.lineCounter--;
-	ungetc(c,global.src);
+	unGetChar(c);
 }
 
 void
@@ -461,17 +461,17 @@ void skipWSandComments()
 	ASSERT(global.src);
 	int c;
 
-	while(EOF != (c = fgetc(global.src)))
+	while(EOF != (c = getChar()))
 	{
 		if(c == '{')
 		{
 			while(c != '}' && c != EOF )
-				c = fgetc(global.src);
+				c = getChar();
 		}
 		else if(!isspace(c))
 			break;
 	}
-	ungetc(c,global.src);
+	unGetChar(c);
 }
 
 // pomocne funkcie
