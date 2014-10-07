@@ -242,7 +242,7 @@ void datatypes(int left, int right){
 			break;
 	}
 	
-	fprintf(stderr, "Comparison between %s and %s\n", l, r);	
+	fprintf(stderr, "%s< Comparison between %s and %s >%s\n", ((right==left)?COLOR_LGRN:COLOR_LRED), l, r, COLOR_NRM);	
 	free(l);
 	free(r);
 }
@@ -355,8 +355,8 @@ int valid(struct astNode* left, struct astNode* right, int op){
 					return DT_BOOL;
 				}
 				else {
-					// ostatni operace - MATH operands
-					if(left->dataType != DT_BOOL && left->dataType != DT_STR){
+					// ostatni operace - MATH operands < > <= >= 
+					if(left->dataType == DT_BOOL || left->dataType == DT_STR){
 						Log("valid: Semantic error - invalid operands", ERROR, PARSER);
 						datatypes(left->dataType, right->dataType);
 						exit(sem_komp);
@@ -1514,19 +1514,18 @@ struct astNode* parseExpression(struct toc** cur){
 			if(!copyString(id->data.str, &(node->data.str)))
 				return NULL;
 				
-			struct symbolTableNode* stable = (struct symbolTableNode*)stackPop(global.symTable);
-			printSymbolTable(stable, 5);
+			struct symbolTableNode* stable = (struct symbolTableNode*)stackTop(global.symTable);
 			struct symbolTableNode* nd = (struct symbolTableNode*)search(&stable, node->data.str);
-			stackPush(global.symTable, stable);
 			
+			Log("!!!!expr: comparison: from symtable to node", ERROR, PARSER);
 			datatypes(nd->dataType, node->dataType);
 
 			node->dataType = nd->dataType;				
 			node->left = NULL;
 			node->right = NULL;
 			
-			if(!stackPush(aststack, node))
-				return NULL;	
+			datatypes(nd->dataType, node->dataType);
+			stackPush(aststack, node);
 		}	
 	}
 	
@@ -1599,6 +1598,7 @@ struct astNode* parseExpression(struct toc** cur){
 					// ziskani tabulky symbolu
 					struct symbolTableNode* stable = (struct symbolTableNode*)stackTop(global.symTable);
 					struct symbolTableNode* nd = search(&stable, node->data.str);
+					Log("expr: comparison between symtable node and ast node", DEBUG, PARSER);
 					datatypes(nd->dataType, node->dataType);
 					
 					node->dataType = nd->dataType;					
