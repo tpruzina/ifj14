@@ -120,7 +120,8 @@ struct gc
 /**
  * Chybove kody
  */
-enum errno { ok = 0, 
+enum errno { 
+	ok = 0, 
 	lex = 1, 		// chybna struktura aktualniho lexemu
 	synt = 2, 		// chybna syntaxe struktury programu
 	sem_prog = 3, 	// nedefinovana promenna/fukce, pokus o redefinici funkce/promenne
@@ -174,11 +175,11 @@ enum astNodeType {
 	AST_XOR,
 	AST_NOT,
 	AST_NUM,
-	AST_ID,
-	AST_INT,
-	AST_REAL,
-	AST_BOOL,
-	AST_STR,
+	AST_ID, // promenna
+	AST_INT, // literal
+	AST_REAL, // literal
+	AST_BOOL, // literal
+	AST_STR, // literal
 	AST_ARR,
 	AST_CMD
 };
@@ -187,13 +188,15 @@ enum astNodeType {
  * Jeden uzel AST
  */
 struct astNode {
+	// AST_XXX ONLY!!!
 	enum astNodeType type;
 	
 	struct astNode* left;
 	struct astNode* right;
 	
 	void* other;
-	
+
+	// data type enum -- ONLY	
 	int dataType;
 	union {
 		struct String* str;
@@ -203,14 +206,15 @@ struct astNode {
 	} data;
 };
 
-
 enum dataType { DT_NONE, DT_INT, DT_REAL, DT_BOOL, DT_STR, DT_ARR };
 /**
  * Uzel tabulky symbolu
  */
 struct symbolTableNode {
 	struct String* name;
-	int type;
+	
+	// data type enum --- ONLY
+	int dataType;
 	union {
 		struct String* str_data;
 		int int_data;

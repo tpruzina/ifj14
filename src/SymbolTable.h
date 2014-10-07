@@ -13,7 +13,7 @@
 struct symbolTableNode* makeNewSymbolTable();
 struct symbolTableNode* makeNewNamedNode(struct String*);
 struct symbolTableNode* search(struct symbolTableNode**, struct String*);
-struct symbolTableNode* insertValue(struct symbolTableNode**, struct String*);
+struct symbolTableNode* insertValue(struct symbolTableNode**, struct String*, int);
 int insertDataInteger(struct symbolTableNode** table, int value);
 int insertDataReal(struct symbolTableNode** table, double value);	
 int insertDataBoolean(struct symbolTableNode** table, bool value);	

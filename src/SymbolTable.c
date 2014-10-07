@@ -70,12 +70,13 @@ struct symbolTableNode* search(struct symbolTableNode** table, struct String* na
  * Vklada polozku do tabulky symbolu.
  * Rekurzivnim zpusobem se zanori az na potrebne misto a vytvori novy uzel
  */
-struct symbolTableNode* insertValue(struct symbolTableNode** table, struct String* name){
+struct symbolTableNode* insertValue(struct symbolTableNode** table, struct String* name, int dtype){
 	if((*table) == NULL){
 		// v pripade, ze se vklada do prazdne tabulky
 		if(!((*table) = makeNewNamedNode(name))){
 			return NULL;		
 		}		
+		(*table)->dataType = dtype;
 		printSymbolTable((*table), 0);
 		return (*table);
 	}
@@ -88,11 +89,12 @@ struct symbolTableNode* insertValue(struct symbolTableNode** table, struct Strin
 				if(!((*table)->left = makeNewNamedNode(name)))
 					return NULL;
 				
+				(*table)->dataType = dtype;
 				printSymbolTable((*table), 0);
 				return (*table)->left;				
 			}
 			else 
-				return insertValue(&((*table)->left), name);
+				return insertValue(&((*table)->left), name, dtype);
 		}
 		else if(key > 0){
 			// posun doprava || vytvoreni noveho uzlu
@@ -100,11 +102,12 @@ struct symbolTableNode* insertValue(struct symbolTableNode** table, struct Strin
 				if(!((*table)->right = makeNewNamedNode(name)))
 					return NULL;	
 				
+				(*table)->dataType = dtype;
 				printSymbolTable((*table), 0);
 				return (*table)->right;				
 			}
 			else
-				return insertValue(&((*table)->right), name);
+				return insertValue(&((*table)->right), name, dtype);
 		}
 		else {
 			Log("insertValue: Redefinition!", ERROR, SYMTABLE);
@@ -122,7 +125,7 @@ int insertDataInteger(struct symbolTableNode** table, int value){
 	if((*table) == NULL)
 		return False;
 		
-	(*table)->type = DT_INT;
+	(*table)->dataType = DT_INT;
 	(*table)->data.int_data = value;
 	return True;
 }
@@ -134,7 +137,7 @@ int insertDataReal(struct symbolTableNode** table, double value){
 	if((*table) == NULL)
 		return False;
 		
-	(*table)->type = DT_REAL;
+	(*table)->dataType = DT_REAL;
 	(*table)->data.real_data = value;
 	return True;
 }
@@ -146,7 +149,7 @@ int insertDataBoolean(struct symbolTableNode** table, bool value){
 	if((*table) == NULL)
 		return False;
 		
-	(*table)->type = DT_BOOL;
+	(*table)->dataType = DT_BOOL;
 	(*table)->data.bool_data = value;
 	return True;
 }
@@ -161,7 +164,7 @@ int insertDataString(struct symbolTableNode** table, struct String* value){
 	if(value == NULL)
 		return False;
 	
-	(*table)->type = DT_STR;
+	(*table)->dataType = DT_STR;
 	if(!(copyString(value, &((*table)->data.str_data))))
 		return False;
 	return True;
@@ -239,9 +242,25 @@ void printSymbolTable(struct symbolTableNode* table, int lvl){
 		
 		for (int i = 0; i < lvl; i++)
 			fprintf(stderr, "  ");
-		fprintf(stderr, "[ %s ]\n", table->name->Value);
-		
+		switch(table->dataType){
+			case DT_INT:
+				fprintf(stderr, "%s[ %s | %d | INT ]%s\n", COLOR_GRN, table->name->Value, table->data.int_data, COLOR_NRM);
+				break;
+			case DT_REAL:
+				fprintf(stderr, "%s[ %s | %g | REAL ]%s\n", COLOR_BLU, table->name->Value, table->data.real_data, COLOR_NRM);
+				break;
+			case DT_BOOL:
+				fprintf(stderr, "%s[ %s | %s | BOOL ]%s\n", COLOR_MAG, table->name->Value, (table->data.bool_data)?"True":"False", COLOR_NRM);
+				break;
+			case DT_STR:
+				fprintf(stderr, "%s[ %s | \"%s\" | STR ]%s\n", COLOR_YEL, table->name->Value, (table->data.str_data)?table->data.str_data->Value:"NULL", COLOR_NRM);
+				break;
+		}	
+			
 		if(table->right != NULL)
 			printSymbolTable(table->right, lvl+1);
+		
+		return;
 	}
+	fprintf(stderr,"%s empty %s\n", COLOR_LRED, COLOR_NRM);
 }

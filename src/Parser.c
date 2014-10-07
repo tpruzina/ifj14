@@ -165,7 +165,7 @@ struct tokennames tokennames[] = {
 	{NULL, 0}};
 	
 void printTokenType(struct toc* token){
-	for(int i=0; tokennames[i].str; i++)
+	for(int i=0; tokennames[i].str; i++){
 		if(token->type == tokennames[i].type){
 			fprintf(stderr, "Token: %s\n", tokennames[i].str);
 			
@@ -173,8 +173,8 @@ void printTokenType(struct toc* token){
 				fprintf(stderr, "\t%s\n", token->data.str->Value);
 			}
 		}
+	}
 }
-
 
 void printAstStack(struct stack* aststack){
 	fprintf(stderr, "AST STACK..\n");
@@ -188,6 +188,219 @@ void printAstStack(struct stack* aststack){
 			fprintf(stderr, "------------------------------\n");	
 	}	
 	fprintf(stderr, "AST STACK END\n");
+}
+
+void datatypes(int left, int right){
+	char* l = malloc(sizeof(char));
+	char* r = malloc(sizeof(char));
+	
+	switch(left){
+		case DT_INT:
+			sprintf(l, "DT_INT");
+			break;
+		case DT_REAL:
+			sprintf(l, "DT_REAL");
+			break;
+		case DT_BOOL:
+			sprintf(l, "DT_BOOL");
+			break;
+		case DT_STR:
+			sprintf(l, "DT_STR");
+			break;
+		case DT_NONE:
+			sprintf(l, "DT_NONE");
+			break;
+		case DT_ARR:
+			sprintf(l, "DT_ARR");
+			break;
+		default:
+			sprintf(l, "??????");
+			break;
+	}
+	
+	switch(right){
+		case DT_INT:
+			sprintf(r, "DT_INT");
+			break;
+		case DT_REAL:
+			sprintf(r, "DT_REAL");
+			break;
+		case DT_BOOL:
+			sprintf(r, "DT_BOOL");
+			break;
+		case DT_STR:
+			sprintf(r, "DT_STR");
+			break;
+		case DT_NONE:
+			sprintf(r, "DT_NONE");
+			break;
+		case DT_ARR:
+			sprintf(r, "DT_ARR");
+			break;
+		default:
+			sprintf(l, "??????");
+			break;
+	}
+	
+	fprintf(stderr, "Comparison between %s and %s\n", l, r);	
+	free(l);
+	free(r);
+}
+int valid(struct astNode* left, struct astNode* right, int op){	
+	struct symbolTableNode* symtable = (struct symbolTableNode*)stackTop(global.symTable);
+	
+	// dodatecne typy leve strany
+	if(left->type == AST_ID){
+		struct symbolTableNode* id = search(&symtable, left->data.str);
+		if(id == NULL){
+			Log("valid: ID not found in symtable", ERROR, PARSER);
+			exit(intern);
+		}
+		
+		if(left->dataType != id->dataType){	
+			Log("valid: data types are not same", WARNING, PARSER);
+			left->dataType = id->dataType;
+		}
+	}
+	else if(left->type == AST_FUNC){
+		struct symbolTableNode* func = search(&global.funcTable, left->data.str);
+		if(func == NULL){
+			Log("valid: Function not found", ERROR, PARSER);
+			exit(intern);
+		}
+		
+		if(left->dataType != func->dataType){
+			Log("valid: data types are not same (func)", WARNING, PARSER);
+			left->dataType = func->dataType;
+		}
+	}
+	
+	// Dodatecne typy prave strany
+	if(right->type == AST_ID){
+		struct symbolTableNode* id = search(&symtable, right->data.str);
+		if(id == NULL){
+			Log("valid: ID not found in symbol table", ERROR, PARSER);
+			exit(intern);
+		}
+		
+		if(right->dataType != id->dataType){
+			Log("valid: data types are not same", WARNING, PARSER);
+			right->dataType = id->dataType;
+		}
+	}
+	else if(right->type == AST_FUNC){
+		struct symbolTableNode* func = search(&global.funcTable, right->data.str);
+		if(func == NULL){
+			Log("valid: Function not found", ERROR, PARSER);
+			exit(intern);
+		}
+		
+		if(right->dataType != func->dataType){
+			Log("valid: data types are not same", ERROR, PARSER);
+			right->dataType = func->dataType;
+		}
+	}
+	
+	
+	switch(op){
+		case AST_ADD:
+			if(left->dataType == DT_STR && right->dataType == DT_STR) {
+				Log("valid: String cat", WARNING, PARSER);
+				return DT_STR;
+			}
+		case AST_SUB:
+		case AST_MUL:
+		case AST_DIV:
+			if((left->dataType == DT_INT || left->dataType == DT_REAL) && (right->dataType == DT_INT || right->dataType == DT_REAL)){
+				// MATH				
+				if(op == AST_DIV){
+					// operace deleni
+					return DT_REAL;
+				}			
+				else {
+					// ostatni operace - porovnani podle typu
+					if(left->dataType == DT_INT && right->dataType == DT_INT)
+						return DT_INT;
+					else 
+						return DT_REAL;		
+				}
+			} 
+			else {
+				Log("valid: Arithmetic operator needs INT or REAL data", ERROR, PARSER);
+				exit(sem_komp);			
+			}
+			break;
+		case AST_EQV:
+		case AST_NEQV:
+		case AST_LSS:
+		case AST_GRT:
+		case AST_LEQV:
+		case AST_GEQV:
+			// logicke operatory
+			// hodnoty ocekava matematicke, logicke i string
+			// hodnoty musi byt stejneho typu aby se mohly porovnavat	
+			if(left->dataType != right->dataType){
+				// pokud nemaji stejne typy
+				Log("valid: Semantic error - no same data types on both sides", ERROR, PARSER);
+				datatypes(left->dataType, right->dataType);
+				exit(sem_komp);
+			}
+			
+			// stejne typy na obou stranach
+			if(left->dataType == DT_INT || left->dataType == DT_REAL || left->dataType == DT_BOOL || left->dataType == DT_STR){
+				// vsechny moznosti
+				
+				if(op == AST_EQV || op == AST_NEQV){
+					// pro vsechny
+					return DT_BOOL;
+				}
+				else {
+					// ostatni operace - MATH operands
+					if(left->dataType != DT_BOOL && left->dataType != DT_STR){
+						Log("valid: Semantic error - invalid operands", ERROR, PARSER);
+						datatypes(left->dataType, right->dataType);
+						exit(sem_komp);
+					}
+					
+					return DT_BOOL;
+				}			
+			}
+			else {
+				// v pripade nepodporovanych datovych typu
+				Log("valid: Semantic error - unsupported data types", ERROR, PARSER);
+				datatypes(left->dataType, right->dataType);
+				exit(sem_komp);
+			}
+			
+			break;
+		case AST_AND:
+		case AST_OR:
+		case AST_XOR:
+			if(left->dataType == DT_BOOL && left->dataType == right->dataType){
+				return DT_BOOL;
+			}
+			
+			Log("valid: Semantic error - logic operators needs logic operands", ERROR, PARSER);
+			datatypes(left->dataType, right->dataType);
+			exit(sem_komp);
+			break;
+		case AST_NOT:
+			if(right != NULL){
+				Log("valid: Semantic error - NOT operator has only one operand", ERROR, PARSER);
+				datatypes(left->dataType, right->dataType);
+				exit(sem_komp);
+			}
+			break;
+		default:
+			Log("valid: Semantic error - unsupported operation", ERROR, PARSER);
+			datatypes(left->dataType, right->dataType);
+			exit(sem_komp);
+			break;
+	}
+	
+	Log("valid: Semantic error - undefined combination of operands and operator", ERROR, PARSER);
+	datatypes(left->dataType, right->dataType);
+	exit(sem_komp);
 }
 
 /**
@@ -205,7 +418,6 @@ int makeAstFromToken(struct toc* token, struct stack** aststack){
 	// vytazeny operator
 	int prio = getPriority(token);
 	if(prio > 0 && prio < 10){
-		Log("maft: dyadic operators", DEBUG, PARSER);
 		// operatory bez NOT
 		node->type = convertTokenToNode(token);
 		if((int)node->type == -1){
@@ -215,11 +427,44 @@ int makeAstFromToken(struct toc* token, struct stack** aststack){
 		
 		node->right = (struct astNode*)stackPop(*aststack);
 		node->left = (struct astNode*)stackPop(*aststack);
+		
+		// kontrola validity operace a operandu
+		printTokenType(token);
+		node->dataType = valid(node->left, node->right, node->type);
+		switch(node->dataType){
+			case DT_INT:
+				Log("maft: Valid operation by operand types - INTEGER", DEBUG, PARSER);
+				break;
+			case DT_REAL:
+				Log("maft: Valid operation by operand types - REAL", DEBUG, PARSER);
+				break;
+			case DT_STR:
+				Log("maft: Valid operation by operand types - STRING", DEBUG, PARSER);
+				break;
+			case DT_BOOL:
+				Log("maft: Valid operation by operand types - BOOLEAN", DEBUG, PARSER);
+				break;
+			case False:
+				Log("maft: Gets FALSE insted of data type", ERROR, PARSER);
+				exit(sem_komp);
+			default:
+				Log("maft: Invalid data", ERROR, PARSER);
+				exit(sem_komp);
+		}
 	}
 	else if(prio == 0){
 		// not
 		node->type = AST_NOT;
 		node->left = (struct astNode*)stackPop(*aststack);
+		if(!node->left){
+			Log("maft: Semantic error - stack is empty, no operand for NOT", ERROR, PARSER);
+			exit(sem_komp);
+		}
+		
+		if(node->left->dataType != DT_BOOL){
+			Log("maft: Semantic error - expected bool return type of operand", ERROR, PARSER);
+			exit(sem_komp);
+		}		
 	}
 	else {
 		Log("Stack error - invalid data", WARNING, PARSER);
@@ -227,6 +472,7 @@ int makeAstFromToken(struct toc* token, struct stack** aststack){
 		return False;						
 	}
 	
+	// ulozeni zpatky na zasobnik
 	int ret = stackPush(*aststack, node);
 	printAst((struct astNode*)stackTop(*aststack));
 	return ret;
@@ -345,7 +591,7 @@ struct astNode* parseBody(struct toc** cur){
 	struct astNode* body = makeNewAST();
 	struct astNode* cmd = parseCommand(cur);
 	if((*cur)->type == T_KW_END){
-		// ukonceni tela
+		// ukonceni bloku kodu
 		Log("body: returned END kw", DEBUG, PARSER);
 		if(cmd == NULL){
 			Log("body: WARNING - statement without effect", WARNING, PARSER);
@@ -372,7 +618,7 @@ struct astNode* parseBody(struct toc** cur){
 			item->left->right = cmd;
 		
 			// pokud narazi na END tak ukoncit hledani dalsich 
-			if((*cur)->type == T_KW_END)
+			if((*cur)->type == T_KW_END || (*cur)->type == T_KW_ENDDOT)
 				break;
 			else if((*cur)->type == T_SCOL){
 				// hledat dalsi
@@ -405,6 +651,7 @@ struct astNode* parseVars(struct toc** cur){
 		struct astNode* node = NULL;
 		
 		struct symbolTableNode* top = (struct symbolTableNode*)stackPop(global.symTable);
+		
 		while(1){
 			// definice promennych
 			struct astNode* var = makeNewAST();
@@ -428,42 +675,52 @@ struct astNode* parseVars(struct toc** cur){
 					switch((*cur)->type){
 						case T_KW_INT: {
 							var->type = AST_INT;
+							
 							// vytvorit novy zaznam v tabulce
-							new = insertValue(&top, var->data.str);
+							new = insertValue(&top, var->data.str, DT_INT);
+								
 							if(!new)
 								return NULL;
 							
-							new->type = DT_INT;													
+							new->dataType = DT_INT;													
+							
+							stackPush(global.symTable, top);
 							break;
 						}
 						case T_KW_REAL: {
 							var->type = AST_REAL;
-						
-							new = insertValue(&top, var->data.str);
+							
+							new = insertValue(&top, var->data.str, DT_REAL);
 							if(!new)
 								return NULL;
 								
-							new->type = DT_REAL;
+							new->dataType = DT_REAL;
+							
+							stackPush(global.symTable, top);
 							break;
 						}
 						case T_KW_BOOLEAN: {
 							var->type = AST_BOOL;
-						
-							new = insertValue(&top, var->data.str);
+											
+							new = insertValue(&top, var->data.str, DT_BOOL);
 							if(!new)
 								return NULL;
 								
-							new->type = DT_BOOL;
+							new->dataType = DT_BOOL;
+							
+							stackPush(global.symTable, top);
 							break;
 						}
 						case T_KW_STRING: {
 							var->type = AST_STR;
-							
-							new = insertValue(&top, var->data.str);
+														
+							new = insertValue(&top, var->data.str, DT_STR);
 							if(!new)
 								return NULL;
 								
-							new->type = DT_STR;
+							new->dataType = DT_STR;
+							
+							stackPush(global.symTable, top);
 							break;
 						}
 						case T_ARR: {
@@ -546,13 +803,19 @@ struct astNode* parseVars(struct toc** cur){
 								// ulozeni odkazu na strukturu dat
 								var->other = dta;		
 								
+								if(top == NULL){
+									top = makeNewSymbolTable();
+									stackPush(global.symTable, top);	
+								}
+								
 								// vlozeni nazev pole do tabulky
-								new = insertValue(&top, var->data.str);
+								new = insertValue(&top, var->data.str, DT_ARR);
 								if(!new)
 									return NULL;
 								
 								// nastaveni ze se jedna o pole
-								new->type = DT_ARR;													
+								new->dataType = DT_ARR;					
+								new->other = dta;								
 							}
 							else {
 								Log("vars: Syntax error - expected left brace", ERROR, PARSER);
@@ -562,9 +825,11 @@ struct astNode* parseVars(struct toc** cur){
 							
 							break;
 						}
-					}	
-				}
-				
+						default:
+							Log("vars: Syntax error - expected type", ERROR, PARSER);
+							exit(synt);	
+					}
+				}				
 				
 				(*cur) = getToc();
 				if((*cur)->type != T_SCOL){
@@ -572,8 +837,7 @@ struct astNode* parseVars(struct toc** cur){
 					printTokenType(*cur);
 					exit(synt);
 				}
-				
-				
+								
 				// vytvoreni noveho AST v pripade, ze jeste nebyl vytvoren
 				if(node == NULL){
 					if(!(node = makeNewAST()))
@@ -780,9 +1044,10 @@ struct astNode* parseFunction(){
 	
 	cur = getToc();
 	if(cur->type == T_KW_FORW){
+		Log("function: FORWARD DECLARATION", DEBUG, PARSER);
 		// dopredna deklarace - pokud ji najde ve funkcich je neco spatne
 	 	if(!dekl)
-		 	dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), node->data.str);
+		 	dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), node->data.str, node->dataType);
 		else {
 			// nalezl deklarovanou/definovanou funkci v tabulce - chyba!
 			Log("function: Syntax error - redefinition of forward declaration", ERROR, PARSER);
@@ -790,11 +1055,13 @@ struct astNode* parseFunction(){
 		}
 			
 	 	// nastaveni navratovy typ
-	 	dekl->type = node->dataType;
+	 	dekl->dataType = node->dataType;
 	 	// v node->right jsou parametry
 	 	dekl->other = node;
 	 	return node;
 	}
+	
+	Log("function: DEFINITION of function", DEBUG, PARSER);
 	
 	// TODO vyresit definici tela a promennych funkce!
 	// Pokud funkce bude nalezena - dopredna deklarace
@@ -804,7 +1071,7 @@ struct astNode* parseFunction(){
 	// 			pak nahrat telo a promenne do uzlu
 	if(!(dekl)) {
 		// nebyla nalezena - vlozit novy uzel
-		if(!(dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), node->data.str)))
+		if(!(dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), node->data.str, node->dataType)))
 			return NULL;
 	}
 		
@@ -957,6 +1224,118 @@ struct astNode* parseFuncCall(struct toc* id){
 }
 
 /**
+ * Parsuje IF statement	
+ * --------------------
+ * cur: pokud bude cur nastavene na strednik nebo end
+ */
+struct astNode* ifStatement(struct toc** cur){
+	// nasleduje podminka
+	struct astNode* condition = parseExpression(cur);
+	if(!condition)
+		return NULL;
+		
+	if((*cur)->type != T_KW_THEN){
+		Log("if: Syntax error - expected THEN keyword at the end of condition", ERROR, PARSER);
+		printTokenType(*cur);
+		exit(synt);
+	}
+		
+	// vytvoreni nove polozky
+	struct astNode* ifnode = makeNewAST();
+	if(!ifnode)
+		return NULL;
+	// nastaveni znamych informaci
+	ifnode->type = AST_IF;
+	ifnode->other = condition;
+	
+	// telo true
+	ifnode->left = parseBody(cur);
+	if(!ifnode->left)
+		return NULL;
+			
+	// ulozeni dalsiho tokenu
+	(*cur) = getToc();
+	
+	// pokud else pak pokracovat telem
+	if((*cur)->type == T_KW_ELSE){
+		ifnode->right = parseBody(cur);
+		if(!ifnode->right)
+			return NULL;
+	}
+		
+	return ifnode;
+}
+
+/**
+ * Parsuje WHILE statement
+ * --------------------
+ */
+struct astNode* whileStatement(struct toc** cur){
+	struct astNode* condition = parseExpression(cur);
+	if(!condition)
+		return NULL;
+	
+	if((*cur)->type != T_KW_DO){
+		Log("while: Syntax error - expected DO keyword at the end of condition", ERROR, PARSER);
+		printTokenType(*cur);
+		exit(synt);
+	}
+
+	struct astNode* node = makeNewAST();				
+	if(!node)
+		return NULL;
+	// ulozeni podminky
+	node->other = condition;
+	node->type = AST_WHILE;
+	
+	// kompletace tela
+	node->left = parseBody(cur);
+	if(!node->left)
+		return NULL;
+	node->right = NULL;
+	
+	// navraceni stromu 
+	return node;
+}
+
+/**
+ * Parsuje REPEAT cyklus
+ * --------------------
+ * cur: Vraci tudy posledni nacteny token
+ */
+struct astNode* repeatStatement(struct toc** cur){
+	struct astNode* rpt = makeNewAST();
+	if(!rpt)
+		return NULL;
+	
+	// telo cyklu
+	rpt->left = parseBody(cur);
+	if(!rpt->left)
+		return NULL;
+		
+	// rpt->left == AST_CMD
+	// rpt->left->right == prikaz tela
+	if(rpt->left->right == NULL){
+		Log("repeat: Syntax error - repeat cycle must have at least one command in the body", ERROR, PARSER);
+		exit(synt);
+	}
+	
+	(*cur) = getToc();
+	if((*cur)->type != T_UNTIL){
+		Log("repeat: Syntax error - expected UNTIL keyword", ERROR, PARSER);
+		printTokenType(*cur);
+		exit(synt);
+	}
+	
+	// nacetl UNTIL
+	rpt->other = parseExpression(cur);
+	if(!rpt->other)
+		return NULL;
+	
+	return rpt;
+}
+
+/**
  * Vyhodnoti vsechny moznosti prikazu, ktere se muzou vyskytovat v tele funkce/programu
  * ------------------------------------------------------------------------------------
  */
@@ -975,21 +1354,52 @@ struct astNode* parseCommand(struct toc** cur){
 			struct astNode* ifstat = ifStatement(cur);
 			if(!ifstat)
 				return NULL;
-
-			return ifstat;			
+				
+			if((*cur)->type == T_KW_END){			
+				*cur = getToc();
+				return ifstat;
+			}
+			else if((*cur)->type == T_KW_ENDDOT)
+				return ifstat;
+			else {
+				Log("cmd: Syntax error - expected END (if)", ERROR, PARSER);
+				printTokenType(*cur);
+				exit(synt);
+			}	
 		}
 		case T_KW_WHILE: {
-			struct astNode* whl = whileStatement();
+			struct astNode* whl = whileStatement(cur);
 			if(!whl)
 				return NULL;
-				
-			return whl;			
+			
+			if((*cur)->type == T_KW_END){
+				*cur = getToc();
+				return whl;			
+			}
+			else if((*cur)->type == T_KW_ENDDOT)
+				return whl;
+			else {
+				Log("cmd: Syntax error - expected END (while)", ERROR, PARSER);			
+				printTokenType(*cur);
+				exit(synt);
+			}
 		}
 		case T_RPT: {
 			struct astNode* rpt = repeatStatement(cur);
 			if(!rpt)
 				return NULL;
-				
+			
+			if((*cur)->type == T_KW_END){
+				*cur = getToc();
+				return rpt;
+			}
+			else if((*cur)->type == T_KW_ENDDOT)
+				return rpt;
+			else {
+				Log("cmd: Syntax error - expected END (repeat)", ERROR, PARSER);
+				printTokenType(*cur);
+				exit(synt);
+			}
 			return rpt;
 		}
 		case T_KW_WRT: {
@@ -1066,119 +1476,6 @@ struct astNode* parseCommand(struct toc** cur){
 }
 
 /**
- * Parsuje IF statement	
- * --------------------
- * cur: pokud bude cur nastavene na strednik nebo end
- */
-struct astNode* ifStatement(struct toc** cur){
-	// nasleduje podminka
-	struct astNode* condition = parseExpression(cur);
-	if(!condition)
-		return NULL;
-		
-	if((*cur)->type != T_KW_THEN){
-		Log("if: Syntax error - expected THEN keyword at the end of condition", ERROR, PARSER);
-		printTokenType(*cur);
-		exit(synt);
-	}
-		
-	// vytvoreni nove polozky
-	struct astNode* ifnode = makeNewAST();
-	if(!ifnode)
-		return NULL;
-	// nastaveni znamych informaci
-	ifnode->type = AST_IF;
-	ifnode->other = condition;
-	
-	// telo true
-	ifnode->left = parseBody(cur);
-	if(!ifnode->left)
-		return NULL;
-			
-	// ulozeni dalsiho tokenu
-	(*cur) = getToc();
-	
-	// pokud else pak pokracovat telem
-	if((*cur)->type == T_KW_ELSE){
-		ifnode->right = parseBody(cur);
-		if(!ifnode->right)
-			return NULL;
-	}
-		
-	return ifnode;
-}
-
-/**
- * Parsuje WHILE statement
- * --------------------
- */
-struct astNode* whileStatement(){
-	struct toc* cur;
-	struct astNode* condition = parseExpression(&cur);
-	if(!condition)
-		return NULL;
-	
-	if(cur->type != T_KW_DO){
-		Log("while: Syntax error - expected DO keyword at the end of condition", ERROR, PARSER);
-		printTokenType(cur);
-		exit(synt);
-	}
-
-	struct astNode* node = makeNewAST();				
-	if(!node)
-		return NULL;
-	// ulozeni podminky
-	node->other = condition;
-	node->type = AST_WHILE;
-	
-	// kompletace tela
-	node->left = parseBody(&cur);
-	if(!node->left)
-		return NULL;
-	node->right = NULL;
-	
-	// navraceni stromu 
-	return node;
-}
-
-/**
- * Parsuje REPEAT cyklus
- * --------------------
- * cur: Vraci tudy posledni nacteny token
- */
-struct astNode* repeatStatement(struct toc** cur){
-	struct astNode* rpt = makeNewAST();
-	if(!rpt)
-		return NULL;
-	
-	// telo cyklu
-	rpt->left = parseBody(cur);
-	if(!rpt->left)
-		return NULL;
-		
-	// rpt->left == AST_CMD
-	// rpt->left->right == prikaz tela
-	if(rpt->left->right == NULL){
-		Log("repeat: Syntax error - repeat cycle must have at least one command in the body", ERROR, PARSER);
-		exit(synt);
-	}
-	
-	(*cur) = getToc();
-	if((*cur)->type != T_UNTIL){
-		Log("repeat: Syntax error - expected UNTIL keyword", ERROR, PARSER);
-		printTokenType(*cur);
-		exit(synt);
-	}
-	
-	// nacetl UNTIL
-	rpt->other = parseExpression(cur);
-	if(!rpt->other)
-		return NULL;
-	
-	return rpt;
-}
-
-/**
  * Parsuje vyraz, aritmeticko-logicky
  * ---------------------------------
  * cur: odkaz na token z vyssi vrstvy
@@ -1196,7 +1493,7 @@ struct astNode* parseExpression(struct toc** cur){
 	// <id>(
 	// <id> <operator> (
 	if((*cur)->type == T_ID){
-		Log("expr: TOKEN ID on the right side", DEBUG, PARSER);
+		Log("expr: TOKEN ID on the left side", DEBUG, PARSER);
 	
 		// odklad na ID token
 		struct toc* id = (*cur);
@@ -1217,6 +1514,14 @@ struct astNode* parseExpression(struct toc** cur){
 			if(!copyString(id->data.str, &(node->data.str)))
 				return NULL;
 				
+			struct symbolTableNode* stable = (struct symbolTableNode*)stackPop(global.symTable);
+			printSymbolTable(stable, 5);
+			struct symbolTableNode* nd = (struct symbolTableNode*)search(&stable, node->data.str);
+			stackPush(global.symTable, stable);
+			
+			datatypes(nd->dataType, node->dataType);
+
+			node->dataType = nd->dataType;				
 			node->left = NULL;
 			node->right = NULL;
 			
@@ -1289,33 +1594,62 @@ struct astNode* parseExpression(struct toc** cur){
 				if((*cur)->type == T_ID){
 					node->type = AST_ID;
 					// kopie jmena
-					if(!copyString((*cur)->data.str, &(node->data.str)))
-						return NULL;
+					copyString((*cur)->data.str, &(node->data.str));
+					
+					// ziskani tabulky symbolu
+					struct symbolTableNode* stable = (struct symbolTableNode*)stackTop(global.symTable);
+					struct symbolTableNode* nd = search(&stable, node->data.str);
+					datatypes(nd->dataType, node->dataType);
+					
+					node->dataType = nd->dataType;					
+					Log("expr: making ID", DEBUG, PARSER);
 				}
 				else if((*cur)->type == T_INT){
 					node->type = AST_INT;
-					node->data.integer = (*cur)->data.integer;				
+					node->dataType = DT_INT;
+					node->data.integer = (*cur)->data.integer;	
+					
+					Log("expr: making INT", DEBUG, PARSER);			
 				}
 				else if((*cur)->type == T_REAL){
 					node->type = AST_REAL;
+					node->dataType = DT_REAL;
 					node->data.real = (*cur)->data.real;
+					
+					Log("expr: making REAL", DEBUG, PARSER);
 				}
 				else if((*cur)->type == T_BOOL){
 					node->type = AST_BOOL;
+					node->dataType = DT_BOOL;
 					node->data.boolean = (*cur)->data.boolean;
+					
+					Log("expr: making BOOL", DEBUG, PARSER);
 				}
 				else if((*cur)->type == T_STR){
 					node->type = AST_STR;
 					if(!copyString((*cur)->data.str, &(node->data.str)))
 						return NULL;
+						
+					node->dataType = DT_STR;
+					Log("expr: making STR", DEBUG, PARSER);
 				}
 				else if((*cur)->type == T_KW_TRUE){
 					node->type = AST_BOOL;
+					node->dataType = DT_BOOL;
 					node->data.boolean = True;
+					
+					Log("expr: making TRUE", DEBUG, PARSER);
 				}
 				else if((*cur)->type == T_KW_FALSE){
 					node->type = AST_BOOL;
+					node->dataType = DT_BOOL;
 					node->data.boolean = False;
+					
+					Log("expr: making FALSE", DEBUG, PARSER);
+				}
+				else {
+					Log("expr: Unknown data type", ERROR, PARSER);
+					exit(synt);
 				}
 
 				// pushnout vysledek
@@ -1375,7 +1709,10 @@ struct astNode* parseExpression(struct toc** cur){
 				break;
 			}
 			case T_KW_END:
-			case T_SCOL:{
+			case T_KW_ENDDOT:
+			case T_SCOL:
+			case T_KW_DO:
+			case T_KW_THEN: {
 				// vyprazdnit vsechny operatory v zasobniku a postavit nad nimi strom
 				Log("expr: Making node into", DEBUG, PARSER);
 				printTokenType(*cur);
@@ -1405,7 +1742,7 @@ struct astNode* parseExpression(struct toc** cur){
 				return stackPop(aststack);
 			}
 			default:
-				Log("expression: Syntax error - unsupported type of token", ERROR, PARSER);			
+				Log("expression: Syntax error - bad token type", ERROR, PARSER);			
 				printTokenType(*cur);
 				exit(synt);
 		}
