@@ -352,11 +352,13 @@ getToc()
 					toc->type = T_KW_ELSE;
 				else if (!compareString(str,"end"))
 				{
+				/*
 					if((c = getChar()) == '.')	// mensi hack no rozlisenie END a END.
 						toc->type = T_KW_ENDDOT;
-					else
-						toc->type = T_KW_END;
-					ungetc(c, global.src);
+					else*/
+					
+					toc->type = T_KW_END;
+					//ungetc(c, global.src);
 				}
 				else if (!compareString(str,"false"))
 					toc->type = T_KW_FALSE;
@@ -430,7 +432,7 @@ getToc()
 
 int getChar()
 {
-	int ret = getChar();
+	int ret = fgetc(global.src);
 	if('\n' == ret)
 		global.lineCounter++;
 	return ret;
@@ -440,7 +442,7 @@ void unGetChar(char c)
 {
 	if('\n' == c)
 		global.lineCounter--;
-	unGetChar(c);
+	ungetc(c, global.src);
 }
 
 void
