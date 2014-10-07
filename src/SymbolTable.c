@@ -180,16 +180,27 @@ int copyTable(struct symbolTableNode* src, struct symbolTableNode** dest){
 		
 		
 		(*dest)->dataType = src->dataType;
-		// nemusi byt kopirovano nic		
-		if(src->data.str_data != NULL)
-			copyString(src->data.str_data, &((*dest)->data.str_data));	
-		else
-			(*dest)->data.str_data = NULL;
-	
-		(*dest)->data.int_data = src->data.int_data;
-		(*dest)->data.real_data = src->data.real_data;
-		(*dest)->data.bool_data = src->data.bool_data;
-
+		switch(src->dataType){
+			case DT_STR:	
+				// nemusi byt kopirovano nic		
+				if(src->data.str_data != NULL)
+					copyString(src->data.str_data, &((*dest)->data.str_data));	
+				else
+					(*dest)->data.str_data = NULL;
+				break;
+			case DT_INT:	
+				(*dest)->data.int_data = src->data.int_data;
+				break;
+			case DT_REAL:
+				(*dest)->data.real_data = src->data.real_data;
+				break;
+			case DT_BOOL:
+				(*dest)->data.bool_data = src->data.bool_data;
+				break;
+			default:
+				Log("copy: Invalid data type", ERROR, PARSER);
+				exit(sem_komp);
+		}
 		copyTable(src->left, &((*dest)->left));
 		copyTable(src->right, &((*dest)->right));	
 	}

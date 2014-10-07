@@ -916,12 +916,13 @@ struct astNode* parseParams(){
 		exit(synt);	
 	}
 	
+	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+	if(top == NULL)
+		W("params: top layer is empty");
+	
 	// nelezl levou zavorku -> nacitat dokud nenarazi na pravou zavorku
 	cur = getToc();
 	if(cur->type != T_RPAR)	{
-		
-		struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
-	
 		while(1){
 			if(cur->type == T_ID){
 				// zacina se cist parametr
@@ -969,7 +970,9 @@ struct astNode* parseParams(){
 				struct astNode* item = params;
 				while(item->left != NULL)
 					item = item->left;
-				item->left = par;				
+				item->left = par;		
+				
+				insertValue(&top, par->data.str, par->dataType);	
 				
 				// ukonceni parametru
 				cur = getToc();				
@@ -994,6 +997,9 @@ struct astNode* parseParams(){
 	}
 	// pouze v pripade, ze byla zadana prava zavorka vratit seznam
 	if(cur->type == T_RPAR){
+		D("params: Printing current top layer of symbol table");		
+		printSymbolTable(top, 0);
+		stackPush(global.symTable, top);
 		return params;	
 	}
 	return NULL;	
@@ -1034,6 +1040,8 @@ struct astNode* parseFunction(){
 	stackPush(global.symTable, newlayer);
 	node->right = parseParams();
 	
+	top = (struct symbolTableNode*)stackTop(global.symTable);
+	
 	cur = getToc();
 	if(cur->type != T_COL){
 		E("function: Syntax error - expected colon after function params");
@@ -1068,7 +1076,11 @@ struct astNode* parseFunction(){
 		}
 	}	
 	// typ OK
-
+	
+	// ulozit do tabulky zastupnou promennou za return
+	D("function: Inserting function name into symTable");
+	insertValue(&top, node->data.str, node->dataType);
+	printSymbolTable(top, 0);
 	
 	// prohledani tabulky funkci
 	struct symbolTableNode* dekl = (struct symbolTableNode*)search(&(global.funcTable), node->data.str);
@@ -1085,6 +1097,13 @@ struct astNode* parseFunction(){
 			exit(synt);
 		}
 			
+		// v pripade dopredne deklarace neni nutne pouzivat parametry
+		stackPop(global.symTable);
+		top = (struct symbolTableNode*)stackTop(global.symTable);
+		D("function: Printing FORWARD declaration symbol table");
+		printSymbolTable(top, 0);
+		
+				
 	 	// nastaveni navratovy typ
 	 	dekl->dataType = node->dataType;
 	 	// v node->right jsou parametry
@@ -1123,7 +1142,14 @@ struct astNode* parseFunction(){
 		
 	// ocekavat telo
 	node->left = parseBody(&cur);	
-			
+	
+	// odstranit vrchol s parametry a return promennou
+	D("function: Popping top layer for function definition");
+	stackPop(global.symTable);			
+	top = (struct symbolTableNode*)stackTop(global.symTable);
+	D("function: Printing stable top layer after deleting parameters");
+	printSymbolTable(top, 0);
+
 	return node;
 }
 
@@ -1773,7 +1799,7 @@ struct astNode* parseExpression(struct toc** cur){
 				}
 			
 				// vrati vrchol 
-				E("expression: Returning top layer");
+				D("expression: Returning top layer");
 				return stackPop(aststack);
 			}
 			default:
