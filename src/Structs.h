@@ -217,7 +217,7 @@ struct varspars {
 	
 	int parsCount;
 	struct queue* pars;
-}
+};
 
 enum dataType { DT_NONE, DT_INT, DT_REAL, DT_BOOL, DT_STR, DT_ARR };
 /**
