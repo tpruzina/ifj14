@@ -12,9 +12,9 @@
 #include "Structs.h"
 #include "Log.h"
 
-#define PRINT 1
-#define DBG 1
-#define WRG 1
+#define PRINT 0
+#define DBG 0
+#define WRG 0
 
 /**
  * Pise chybovou zpravu, cervene

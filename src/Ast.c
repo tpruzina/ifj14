@@ -64,7 +64,9 @@ void printAst(struct astNode* ast){
 		"[ AST_INT ]",
 		"[ AST_REAL ]",
 		"[ AST_BOOL ]",
-		"[ AST_STR ]"};
+		"[ AST_STR ]",
+		"[ AST_ARR ]",
+		"[ AST_CMD ]",};
 	
 	prtAst(ast, 0, nodes);
 }
