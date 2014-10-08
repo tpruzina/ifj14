@@ -9,6 +9,9 @@
 /*
  * Definice barev
  */
+#ifndef _LOGH_
+#define _LOGH_
+
 #define COLOR_NRM  "\x1B[0m"
 #define COLOR_RED  "\x1B[31m"
 #define COLOR_GRN  "\x1B[32m"
@@ -32,3 +35,4 @@ enum LogType { DEBUG, ERROR, WARNING };
  */
 void Log(char*, int, int);
 
+#endif
