@@ -2,7 +2,7 @@ program jmeno;
 var 
 	x: integer;
 	a: real;
-	m: boolean;
+	m: integer;
 	text: string;
 	
 begin
@@ -11,12 +11,7 @@ begin
 	while x < 10 do
 	begin
 		x := x + 1
-	end;
-	{m := a;}
-	
-	if (m > x) and (m = x) then
-	begin
-		m := 5 * x
 	end
+	{m := a;}
 	
 end.
