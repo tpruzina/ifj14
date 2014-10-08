@@ -12,10 +12,6 @@
 #include "Structs.h"
 #include "Log.h"
 
-#define PRINT 1
-#define DBG 1
-#define WRG 1
-
 /**
  * Pise chybovou zpravu, cervene
  */

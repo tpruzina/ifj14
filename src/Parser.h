@@ -10,11 +10,11 @@ int parser();
 
 struct astNode* parseProgram();
 struct astNode* parseBody(struct toc**);
-struct astNode* parseVars(struct toc**);
+struct queue* parseVars(struct toc**);
 struct queue* parseParams();
 struct astNode* parseFunction();
-struct astNode* parseCallParams();
-struct astNode* parseFuncCall(struct toc*);
+struct queue* parseCallParams(struct toc**);
+struct astNode* parseFuncCall(struct toc**);
 
 struct astNode* ifStatement(struct toc**);
 struct astNode* whileStatement(struct toc**);

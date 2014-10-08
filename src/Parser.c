@@ -168,6 +168,8 @@ struct tokennames tokennames[] = {
 	{NULL, 0}};
 	
 void printTokenType(struct toc* token){
+	if(!PRT) return;
+
 	for(int i=0; tokennames[i].str; i++){
 		if(token->type == tokennames[i].type){
 			fprintf(stderr, "Token: %s\n", tokennames[i].str);
@@ -180,6 +182,8 @@ void printTokenType(struct toc* token){
 }
 
 void printAstStack(struct stack* aststack){
+	if(!PRT) return;
+
 	fprintf(stderr, "AST STACK..\n");
 	
 	struct stackItem* item = aststack->Top;
@@ -191,6 +195,40 @@ void printAstStack(struct stack* aststack){
 			fprintf(stderr, "------------------------------\n");	
 	}	
 	fprintf(stderr, "AST STACK END\n");
+}
+
+void printVarsPars(struct varspars* vp){
+	if(!PRT) return;
+	
+	struct queueItem* item;
+	// vars
+	if(vp->vars != NULL){
+		fprintf(stderr, "%s===== Vars queue =====%s\n", COLOR_LBLU, COLOR_NRM);
+		item = vp->vars->start;
+		while(item != NULL){
+			printAst((struct astNode*)item->value);
+		
+			item = item->next;
+		
+			if(item != NULL)
+				fprintf(stderr, "%s======================%s\n", COLOR_LBLU, COLOR_NRM);
+		}
+		fprintf(stderr, "%s=== Vars queue END ===%s\n", COLOR_LBLU, COLOR_NRM);
+		}
+	// pars
+	if(vp->pars != NULL){
+		fprintf(stderr, "%s===== Pars queue =====%s\n", COLOR_LCYN, COLOR_NRM);
+		item = vp->pars->start;
+		while(item != NULL){
+			printAst((struct astNode*)item->value);
+		
+			item = item->next;
+		
+			if(item != NULL)
+				fprintf(stderr, "%s======================%s\n", COLOR_LCYN, COLOR_NRM);
+		}
+		fprintf(stderr, "%s=== Pars queue END ===%s\n", COLOR_LCYN, COLOR_NRM);
+	}
 }
 
 void datatypes(int left, int right){
@@ -483,7 +521,6 @@ int makeAstFromToken(struct toc* token, struct stack** aststack){
 	
 	// ulozeni zpatky na zasobnik
 	int ret = stackPush(*aststack, node);
-	D("Pushing new ast to STACK");
 	printAst((struct astNode*)stackTop(*aststack));
 	return ret;
 }
@@ -563,27 +600,29 @@ struct astNode* parseProgram(){
 	// funkci/dopredne definice funkci			
 	// pokud bude nasledujici token BEGIN pak ctu telo
 	// pokud bude nasledujici VAR pak jsou to lokalni 
-	struct astNode* vardef = parseVars(&cur);
-	
-	// muze vratit null, ale jen pokud bude nastaveny chybovy kod, 
-	// jedna se o chybu
-	if(vardef == NULL && global.errno != ok){
-		// vyskytla se chyba
-		return NULL;				
-	}
-	D("program: back from VARS");
+	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
+	vp->vars = parseVars(&cur);
 	// lokalni promenne
-	program->other = vardef;
-		
+	program->other = vp;
+	printVarsPars(vp);
+	
+
 	// prochazet definice funkci a vkladat je s telem do tabulky symbolu
 	while(cur->type == T_KW_FUNC){
+		D("Another function");
 		struct astNode* func = parseFunction();				
 		if(!func)
 			return NULL;
 		
 		// muze nacitat 
-		cur = getToc();				
+		cur = getToc();		
+		if(cur->type == T_SCOL)
+			cur = getToc();
+				
+		printTokenType(cur);		
 	}
+	D("!!!! after Function reading - gets");
+	printTokenType(cur);
 	
 	//printTokenType(cur);
 	
@@ -593,8 +632,10 @@ struct astNode* parseProgram(){
 		return NULL;
 	program->left = body;
 	
+	cur = getToc();
 	if(cur->type != T_DOT){
 		E("program: Syntax error - expected END.");
+		printTokenType(cur);
 		exit(synt);
 	}
 	
@@ -620,7 +661,7 @@ struct astNode* parseBody(struct toc** cur){
 		
 		if((*cur)->type != T_KW_BEGIN){
 			E("body: Syntax error - expected BEGIN keyword");
-			//printTokenType(*cur);		
+			printTokenType(*cur);		
 			exit(synt);
 		}
 	}
@@ -644,6 +685,8 @@ struct astNode* parseBody(struct toc** cur){
 		body->left->left = NULL;
 		body->left->right = cmd;
 		
+		D("Returning body");
+		printTokenType(*cur);
 		return body;		
 	}
 	else if((*cur)->type == T_SCOL){	
@@ -678,6 +721,8 @@ struct astNode* parseBody(struct toc** cur){
 	if(!body)
 		return NULL;
 		
+	D("Returning body");
+	printTokenType(*cur);
 	return body;
 }
 
@@ -685,26 +730,31 @@ struct astNode* parseBody(struct toc** cur){
  * Parsuje var sekci funkce/programu
  * ---------------------------------
  */
-struct astNode* parseVars(struct toc** cur){
+struct queue* parseVars(struct toc** cur){
 	W("parseVars");
-	(*cur) = getToc();
+	
+	if((*cur)->type != T_KW_VAR)
+		(*cur) = getToc();
+		
 	if((*cur)->type == T_KW_VAR){
 		// zacinat parsovat promenne
 		
-		struct astNode* node = NULL;
-		
+		struct queue* vars = makeNewQueue();		
 		struct symbolTableNode* top = (struct symbolTableNode*)stackPop(global.symTable);
 		
 		while(1){
 			// definice promennych
 			struct astNode* var = makeNewAST();
+			
+			
 			(*cur) = getToc();
 			if((*cur)->type == T_ID){
 				// dostal jsem ID -> ocekavam dvoutecku
 			
-				if(!(copyString((*cur)->data.str, &(var->data.str))))
-					return NULL;
-				//printString((*cur)->data.str);
+				// kopie jmena promenne
+				struct String* name = makeNewString();
+				copyString((*cur)->data.str, &name);
+				var->other = name;
 			
 				// odkladiste pro nove promenne do tabulky symbolu				
 				struct symbolTableNode* new = NULL;
@@ -720,7 +770,7 @@ struct astNode* parseVars(struct toc** cur){
 							var->type = AST_INT;
 							
 							// vytvorit novy zaznam v tabulce
-							new = insertValue(&top, var->data.str, DT_INT);
+							new = insertValue(&top, name, DT_INT);
 								
 							if(!new)
 								return NULL;
@@ -731,7 +781,7 @@ struct astNode* parseVars(struct toc** cur){
 						case T_KW_REAL: {
 							var->type = AST_REAL;
 							
-							new = insertValue(&top, var->data.str, DT_REAL);
+							new = insertValue(&top, name, DT_REAL);
 							if(!new)
 								return NULL;
 								
@@ -741,7 +791,7 @@ struct astNode* parseVars(struct toc** cur){
 						case T_KW_BOOLEAN: {
 							var->type = AST_BOOL;
 											
-							new = insertValue(&top, var->data.str, DT_BOOL);
+							new = insertValue(&top, name, DT_BOOL);
 							if(!new)
 								return NULL;
 								
@@ -751,7 +801,7 @@ struct astNode* parseVars(struct toc** cur){
 						case T_KW_STRING: {
 							var->type = AST_STR;
 														
-							new = insertValue(&top, var->data.str, DT_STR);
+							new = insertValue(&top, name, DT_STR);
 							if(!new)
 								return NULL;
 								
@@ -839,7 +889,7 @@ struct astNode* parseVars(struct toc** cur){
 								var->other = dta;		
 															
 								// vlozeni nazev pole do tabulky
-								new = insertValue(&top, var->data.str, DT_ARR);
+								new = insertValue(&top, name, DT_ARR);
 								if(!new)
 									return NULL;
 								
@@ -868,20 +918,9 @@ struct astNode* parseVars(struct toc** cur){
 					exit(synt);
 				}
 								
-				// vytvoreni noveho AST v pripade, ze jeste nebyl vytvoren
-				if(node == NULL){
-					if(!(node = makeNewAST()))
-						return NULL;
-				}
-				
+								
 				// vlozit prvek
-				struct astNode* item = node;
-				while(item->left != NULL){
-					item = item->left;
-				}
-				item->left = makeNewAST();
-				item->type = AST_NONE;
-				item->right = var;
+				queuePush(vars, var);
 			}
 			else if((*cur)->type == T_KW_BEGIN){
 				// zacina telo 	
@@ -898,14 +937,15 @@ struct astNode* parseVars(struct toc** cur){
 			}
 		}
 		
-		printSymbolTable(top, 0);
-		
+		printSymbolTable(top, 0);		
 		stackPush(global.symTable, top);
 				
 		// vratit seznam promennych
-		return node;
+		return vars;
 	}
  
+ 	D("returning null");
+ 	printTokenType(*cur);
 	return NULL;
 }
 
@@ -943,9 +983,9 @@ struct queue* parseParams(){
 				
 				// skopirovani jmena parametru
 				struct String* name = makeNewString();
-				par->other = name;
 				copyString(cur->data.str, &name);
-					
+				par->other = name;
+				
 				// nacist dvojtecku
 				cur = getToc();
 				if(cur->type != T_COL){
@@ -984,7 +1024,7 @@ struct queue* parseParams(){
 				}
 				
 				// ulozit do seznamu a pokracovat
-				insertValue(&top, ((struct String*)par->other), par->dataType);	
+				insertValue(&top, name, par->dataType);	
 				queuePush(params, par);
 				
 				// ukonceni parametru
@@ -1039,6 +1079,7 @@ struct astNode* parseFunction(){
 	// skopirovani jmena
 	struct String* name = makeNewString();
 	copyString(cur->data.str, &name);
+	printString(name);
 	node->other = name;
 
 	// sparsovat parametry
@@ -1050,12 +1091,14 @@ struct astNode* parseFunction(){
 		exit(intern);
 	}
 	stackPush(global.symTable, newlayer);
+	
 	// vyhodnoti parametry a vytvori frontu
-	//node->right = parseParams();
+	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
+	vp->pars = parseParams();
 	
 	// ziska top
 	top = (struct symbolTableNode*)stackTop(global.symTable);
-	
+		
 	cur = getToc();
 	if(cur->type != T_COL){
 		E("function: Syntax error - expected colon after function params");
@@ -1090,20 +1133,33 @@ struct astNode* parseFunction(){
 		}
 	}	
 	// typ OK
+	cur = getToc();
+	if(cur->type != T_SCOL){
+		E("function: Syntax error - expected semicolon after returning type");
+		exit(synt);
+	}
+	
 	
 	// ulozit do tabulky zastupnou promennou za return
-	insertValue(&top, node->data.str, node->dataType);
+	insertValue(&top, name, node->dataType);
 	
+
 	// prohledani tabulky funkci
-	struct symbolTableNode* dekl = (struct symbolTableNode*)search(&(global.funcTable), node->data.str);
+	struct symbolTableNode* dekl = (struct symbolTableNode*)search(&(global.funcTable), name);
 	
 	cur = getToc();
 	if(cur->type == T_KW_FORW){
+		cur = getToc();
+		if(cur->type != T_SCOL){
+			E("function: Syntax error - expected semicolon after FORWARD keyword");
+			exit(synt);
+		}
+	
 		// dopredna deklarace - pokud ji najde ve funkcich je neco spatne
 	 	if(!dekl)
-		 	dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), node->data.str, node->dataType);
+		 	dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), name, node->dataType);
 		else {
-			// nalezl deklarovanou/definovanou funkci v tabulce - chyba!
+			// nalezl deklarovanou/definovanou funkci v tabulce
 			E("function: Syntax error - redefinition of forward declaration");
 			exit(synt);
 		}
@@ -1114,70 +1170,108 @@ struct astNode* parseFunction(){
 						
 	 	// nastaveni navratovy typ
 	 	dekl->dataType = node->dataType;
+	 	
 	 	// v node->right jsou parametry
+	 	
+	 	
 	 	dekl->other = node;
+	 	D("FORWARD declaration");
+	 	
+	 	printSymbolTable(dekl,0);
 	 	return node;
 	}
-	
-	// TODO vyresit definici tela a promennych funkce!
-	// Pokud funkce bude nalezena - dopredna deklarace
-	// 			pak nahrat telo a promenne do uzlu
-	// Pokud funkce nebude nalezena - jedna se rovnou o definici funkce
-	// 			vytvorit novy uzel v tabulce symbolu
-	// 			pak nahrat telo a promenne do uzlu
-	if(!(dekl)) {
-		// nebyla nalezena - vlozit novy uzel
-		if(!(dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), node->data.str, node->dataType)))
-			return NULL;
+	else {
+		D("after params");
+		printTokenType(cur);
 	}
-		
-	if(dekl->other != NULL) {	
-		if(((struct symbolTableNode*)dekl->other)->left != NULL){
-			// telo uz bylo jednou definovane!!
-			E("function: Syntax error - redefinition of function");
-			exit(sem_prog);
+	
+	if(cur->type == T_KW_VAR || cur->type == T_KW_BEGIN){
+		// TODO vyresit definici tela a promennych funkce!
+		// Pokud funkce bude nalezena - dopredna deklarace
+		// 			pak nahrat telo a promenne do uzlu
+		// Pokud funkce nebude nalezena - jedna se rovnou o definici funkce
+		// 			vytvorit novy uzel v tabulce symbolu
+		// 			pak nahrat telo a promenne do uzlu
+		if(!(dekl)) {
+			// nebyla nalezena - vlozit novy uzel
+			dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), name, node->dataType);
+			if(!dekl){
+				E("function: insertion failed");
+				exit(intern);
+			}
 		}
+		
+		if(dekl->other != NULL) {
+			struct astNode* telo = (struct astNode*)(dekl->other);
+		
+			if(telo->left != NULL){
+				// telo uz bylo jednou definovane!!
+				E("function: Syntax error - redefinition of function");
+				exit(sem_prog);
+			}
+		}
+	
+		if(cur->type == T_KW_VAR){
+			// ocekavat var-def --> other
+			vp->vars = parseVars(&cur);
+			D("parseVars end");
+			// po definici promennych MUSI nasledovat telo, tedy begin
+			if(cur->type != T_KW_BEGIN){
+				E("function: Syntax error - expected BEGIN keyword");
+				printTokenType(cur);
+				exit(synt);
+			}
+		}
+		node->other = vp;
+		printVarsPars(vp);
+		// ocekavat telo
+		D("Body expectation");
+		node->left = parseBody(&cur);	
+		
+		cur = getToc();
+		if(cur->type != T_SCOL){
+			E("function: Syntax error - expected semicolon after function definition");
+			printTokenType(cur);
+			exit(synt);
+		}
+		
+		// odstranit vrchol s parametry a return promennou
+		stackPop(global.symTable);			
+		return node;
 	}
 	
-	
-	// ocekavat var-def --> other
-	node->other = parseVars(&cur);
-	// po definici promennych MUSI nasledovat telo, tedy begin
-	if(cur->type != T_KW_BEGIN)
-		return NULL;
-		
-	// ocekavat telo
-	node->left = parseBody(&cur);	
-	
-	// odstranit vrchol s parametry a return promennou
-	stackPop(global.symTable);			
-	return node;
+	E("function: Syntax error - definition of function without body");
+	exit(synt);
 }
 
 /**
  * Parsuje parametry volani funkce a vklada je do stromu, smerem doleva
  * --------------------------------------------------------------------
  */
-struct astNode* parseCallParams(){
+struct queue* parseCallParams(struct toc** cur){
 	W("parseCallParams");
 	// prochazi podel parametru a vytvari doleva jdouci strom z parametru
-	struct astNode* node = makeNewAST();
-	if(!node)
-		return NULL;
+	struct queue* pars = makeNewQueue();
 	
-	struct toc* cur = getToc();
-	while(cur->type != T_RPAR){
+	(*cur) = getToc();
+	while((*cur)->type != T_RPAR){
 		struct astNode* nd;
 		
-		switch(cur->type){
+		switch((*cur)->type){
 			case T_ID: {
 				// predana promenna
+				
+				struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+				if(!search(&top, (*cur)->data.str)){
+					E("callPars: Undefined variable");
+					exit(sem_prog);
+				}
 								
 				if(!(nd = makeNewAST()))
 					return NULL;
 				
 				nd->type = AST_ID;
-				if(!(copyString(cur->data.str, &(nd->data.str))))
+				if(!(copyString((*cur)->data.str, &(nd->data.str))))
 					return NULL;
 
 				break;
@@ -1190,7 +1284,7 @@ struct astNode* parseCallParams(){
 				
 				nd->type = AST_INT;
 				nd->dataType = DT_INT;
-				nd->data.integer = cur->data.integer;
+				nd->data.integer = (*cur)->data.integer;
 							
 				break;
 			}
@@ -1200,7 +1294,7 @@ struct astNode* parseCallParams(){
 					return NULL;
 				
 				nd->type = AST_REAL;
-				nd->data.real = cur->data.real;
+				nd->data.real = (*cur)->data.real;
 				
 				break;
 			}
@@ -1210,7 +1304,7 @@ struct astNode* parseCallParams(){
 					return NULL;
 				
 				nd->type = AST_BOOL;
-				nd->data.boolean = cur->data.boolean;
+				nd->data.boolean = (*cur)->data.boolean;
 				
 				break;
 			}
@@ -1220,39 +1314,33 @@ struct astNode* parseCallParams(){
 					return NULL;
 				
 				nd->type = AST_STR;
-				if(!(copyString(cur->data.str, &(nd->data.str))))
+				if(!(copyString((*cur)->data.str, &(nd->data.str))))
 					return NULL;
 		
 				break;
 			}
 			default:
 				E("callPars: Syntax error - invalid parameter type");
-				//printTokenType(cur);
+				//printTokenType((*cur));
 				exit(synt);
 		}
 		
 		// nacteni oddelovace
-		cur = getToc();
-		if(cur->type == T_COM){
+		(*cur) = getToc();
+		if((*cur)->type == T_COM){
 			// nacetl carku - v poradku pokud nenasleduje T_RPAR
-			cur = getToc();
-			if(cur->type == T_RPAR){
+			(*cur) = getToc();
+			if((*cur)->type == T_RPAR){
 				E("callPars: Syntax error - comma before right parenthesis");
-				//printTokenType(cur);
+				//printTokenType((*cur));
 				exit(synt);
 			}
 		}
 		
 		// vytvoreni polozky a vlozeni polozky do node
-		struct astNode* item = node;
-		while(item->left != NULL){
-			item = item->left;
-		}
-		// vlozeni do praveho uzlu parametr
-		item->left = makeNewAST();
-		item->left = nd;
+		queuePush(pars, nd);
 	}
-	return node;
+	return pars;
 }
 
 /**
@@ -1260,23 +1348,41 @@ struct astNode* parseCallParams(){
  * --------------------
  * id: Token ID se jmenem funkce
  */
-struct astNode* parseFuncCall(struct toc* id){
+struct astNode* parseFuncCall(struct toc** id){
 	W("parseFuncCall");
 	// v cyklu nasel T_ID a nasledne T_LPAR --> pravdepodobne volani funkce
 	
 	struct astNode* node = makeNewAST();
-	if(!node)
-		return NULL;
+	
+	node->type = AST_CALL;		
 		
 	// skopirovani jmena promenne
-	if(!(copyString(id->data.str, &(node->data.str))))
-		return NULL;
+	struct String* name = makeNewString();
+	copyString((*id)->data.str, &name);
+	node->other = name;
 	
-	if(!(node->right = parseCallParams()))
-		return NULL;
+	// hledani funkce, jestli vubec byla definovana
+	struct symbolTableNode* func = search(&global.funcTable, name);
+	if(!func){
+		E("call: Semantic error - nondefined function");
+		exit(sem_prog);	
+	}
+	// z definice vytahnout navratovy typ
+	node->dataType = func->dataType;	
+	
+	//TODO doprava patri AST_NONE a do other varspars
+	node->right = makeNewAST();
+	
+	// parametry volani
+	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
+	vp->vars = NULL;
+	vp->pars = parseCallParams(id);
+	node->right->other = vp;
+	
 	node->left = NULL;
-	node->other = NULL;
-	node->type = AST_CALL;
+
+	D("LPAR control");
+	printTokenType(*id);
 	
 	return node;
 }
@@ -1482,7 +1588,7 @@ struct astNode* parseCommand(struct toc** cur){
 			struct toc* next = getToc();
 			if(next->type == T_LPAR){
 				// pravdepodobne volani funkce
-				return parseFuncCall(*cur);
+				return parseFuncCall(cur);
 			}
 			else if(next->type == T_ASGN){
 				// pravdepodobne prirazeni
@@ -1497,7 +1603,6 @@ struct astNode* parseCommand(struct toc** cur){
 					return NULL;					
 				left->type = AST_ID;
 				copyString((*cur)->data.str, &(left->data.str));
-				D("cmd: After string copy")
 				
 				// skopirovani informaci z tabulky symbolu
 				struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
@@ -1515,6 +1620,7 @@ struct astNode* parseCommand(struct toc** cur){
 				D("cmd: After expr parsing");
 			
 				if(left->dataType != right->dataType){
+					datatypes(left->dataType, right->dataType);
 					E("cmd: Semantic error - L-value has not same value as R-value");
 					exit(sem_komp);
 				}
@@ -1566,9 +1672,9 @@ struct astNode* parseExpression(struct toc** cur){
 		(*cur) = getToc();
 		if((*cur)->type == T_LPAR){
 			// volani funkce -> za ID pokracovala leva zavorka	
-			
+			*cur = id;
 			// <id>(.....	
-			return parseFuncCall(id);
+			return parseFuncCall(cur);
 		}
 		else {
 			// v pripade, ze po ID nebyla zavorka

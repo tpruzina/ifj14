@@ -131,9 +131,10 @@ int queuePush(struct queue* que, void* value){
 		return False;
 		
 	struct queueItem* item = (struct queueItem*)gcMalloc(sizeof(struct queueItem));
-	if(item == NULL)
-	  	return False;
-	  	
+	if(item == NULL){
+		Log("queue: Allocation error", ERROR, STACK);
+		exit(intern);
+	} 	
 	item->value = value;
 	item->next = NULL;
 	

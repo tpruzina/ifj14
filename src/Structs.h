@@ -214,8 +214,6 @@ struct astNode {
  */
 struct varspars {
 	struct queue* vars;
-	
-	int parsCount;
 	struct queue* pars;
 };
 
