@@ -157,7 +157,7 @@ enum astNodeType {
 	AST_START,
 	AST_END,
 	AST_FUNC,
-	AST_FORW,
+	AST_CALL,
 	AST_IF,
 	AST_WHILE,
 	AST_REPEAT,
@@ -207,6 +207,17 @@ struct astNode {
 		bool boolean;	
 	} data;
 };
+
+/**
+ * Promenna pro definici funkci, obsahuje lokalni promenne a parametry
+ * -------------------------------------------------------------------
+ */
+struct varspars {
+	struct queue* vars;
+	
+	int parsCount;
+	struct queue* pars;
+}
 
 enum dataType { DT_NONE, DT_INT, DT_REAL, DT_BOOL, DT_STR, DT_ARR };
 /**

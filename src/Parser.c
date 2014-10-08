@@ -483,8 +483,30 @@ int makeAstFromToken(struct toc* token, struct stack** aststack){
 	
 	// ulozeni zpatky na zasobnik
 	int ret = stackPush(*aststack, node);
+	D("Pushing new ast to STACK");
 	printAst((struct astNode*)stackTop(*aststack));
 	return ret;
+}
+
+/**
+ * Tiskne obsah zasobniku tabulky symbolu
+ * --------------------------------------
+ */
+void printSymbolTableStack(){
+	fprintf(stderr, "=====================  STACK  ====================\n");
+
+	struct stackItem* item = global.symTable->Top;
+	while(item != NULL){
+		struct symbolTableNode* top = (struct symbolTableNode*)item->Value;
+	
+		printSymbolTable(top, 0);
+		
+		item = item->Next;
+		if(item != NULL)
+			fprintf(stderr, "==================================================\n");
+	}
+
+	fprintf(stderr, "===================  END STACK  ==================\n");
 }
 
 /**
@@ -501,8 +523,9 @@ int parser(){
 }
 
 /**
- * Kontroluje zacatek programu, existenci tokenu program, jmeno programu a nasledne telo
- * -------------------------------------------------------------------------------------
+ * Kontroluje zacatek programu, existenci tokenu program, 
+ * jmeno programu a nasledne telo
+ * -----------------------------------------------------
  */
 struct astNode* parseProgram(){
 	W("parseProgram");
@@ -536,12 +559,14 @@ struct astNode* parseProgram(){
 		exit(synt);
 	}
 					
-	// ok -> nasleduje telo programu nebo definice promennych nebo definice funkci/dopredne definice funkci			
+	// ok -> nasleduje telo programu nebo definice promennych nebo definice 
+	// funkci/dopredne definice funkci			
 	// pokud bude nasledujici token BEGIN pak ctu telo
 	// pokud bude nasledujici VAR pak jsou to lokalni 
 	struct astNode* vardef = parseVars(&cur);
 	
-	// muze vratit null, ale jen pokud bude nastaveny chybovy kod, jedna se o chybu
+	// muze vratit null, ale jen pokud bude nastaveny chybovy kod, 
+	// jedna se o chybu
 	if(vardef == NULL && global.errno != ok){
 		// vyskytla se chyba
 		return NULL;				
@@ -603,6 +628,7 @@ struct astNode* parseBody(struct toc** cur){
 	// zacatek tela -> spustit prikazy
 	// ukladat je doleva za sebe do typu AST_CMD
 	struct astNode* body = makeNewAST();
+	body->type = AST_CMD;
 	struct astNode* cmd = parseCommand(cur);
 	if((*cur)->type == T_KW_END){
 		// ukonceni bloku kodu
@@ -700,8 +726,6 @@ struct astNode* parseVars(struct toc** cur){
 								return NULL;
 							
 							new->dataType = DT_INT;													
-							
-							stackPush(global.symTable, top);
 							break;
 						}
 						case T_KW_REAL: {
@@ -712,8 +736,6 @@ struct astNode* parseVars(struct toc** cur){
 								return NULL;
 								
 							new->dataType = DT_REAL;
-							
-							stackPush(global.symTable, top);
 							break;
 						}
 						case T_KW_BOOLEAN: {
@@ -724,8 +746,6 @@ struct astNode* parseVars(struct toc** cur){
 								return NULL;
 								
 							new->dataType = DT_BOOL;
-							
-							stackPush(global.symTable, top);
 							break;
 						}
 						case T_KW_STRING: {
@@ -736,8 +756,6 @@ struct astNode* parseVars(struct toc** cur){
 								return NULL;
 								
 							new->dataType = DT_STR;
-							
-							stackPush(global.symTable, top);
 							break;
 						}
 						case T_ARR: {
@@ -819,12 +837,7 @@ struct astNode* parseVars(struct toc** cur){
 								}
 								// ulozeni odkazu na strukturu dat
 								var->other = dta;		
-								
-								if(top == NULL){
-									top = makeNewSymbolTable();
-									stackPush(global.symTable, top);	
-								}
-								
+															
 								// vlozeni nazev pole do tabulky
 								new = insertValue(&top, var->data.str, DT_ARR);
 								if(!new)
@@ -887,8 +900,7 @@ struct astNode* parseVars(struct toc** cur){
 		
 		printSymbolTable(top, 0);
 		
-		if(!stackPush(global.symTable, top))
-			return NULL;
+		stackPush(global.symTable, top);
 				
 		// vratit seznam promennych
 		return node;
@@ -901,11 +913,11 @@ struct astNode* parseVars(struct toc** cur){
  * Parsuje parametry v definici/deklaraci funkce
  * ---------------------------------------------
  */
-struct astNode* parseParams(){
+struct queue* parseParams(){
 	W("parseParams");
 	
 	struct toc* cur = getToc();
-	struct astNode* params = makeNewAST();
+	struct queue* params = makeNewQueue();
 	if(!params)
 		return NULL;
 		
@@ -916,7 +928,7 @@ struct astNode* parseParams(){
 		exit(synt);	
 	}
 	
-	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+	struct symbolTableNode* top = (struct symbolTableNode*)stackPop(global.symTable);
 	if(top == NULL)
 		W("params: top layer is empty");
 	
@@ -930,9 +942,10 @@ struct astNode* parseParams(){
 				struct astNode* par = makeNewAST();
 				
 				// skopirovani jmena parametru
-				if(!(copyString(cur->data.str, &(par->data.str))))
-					return NULL;
-				
+				struct String* name = makeNewString();
+				par->other = name;
+				copyString(cur->data.str, &name);
+					
 				// nacist dvojtecku
 				cur = getToc();
 				if(cur->type != T_COL){
@@ -945,34 +958,34 @@ struct astNode* parseParams(){
 				cur = getToc();
 				switch(cur->type){
 					case T_KW_INT: {
+						par->type = AST_INT;
 						par->dataType = DT_INT;
 						break;
 					}
 					case T_KW_REAL: {
+						par->type = AST_REAL;
 						par->dataType = DT_REAL;
 						break;
 					}
 					case T_KW_BOOLEAN: {
+						par->type = AST_BOOL;
 						par->dataType = DT_BOOL;
 						break;
 					}
 					case T_KW_STRING: {
+						par->type = AST_STR;
 						par->dataType = DT_STR;
 						break;
 					}
 					default:
 						E("params: Syntax error - unsupported type of parameter");
-						//printTokenType(cur);
+						printTokenType(cur);
 						exit(synt);
 				}
 				
 				// ulozit do seznamu a pokracovat
-				struct astNode* item = params;
-				while(item->left != NULL)
-					item = item->left;
-				item->left = par;		
-				
-				insertValue(&top, par->data.str, par->dataType);	
+				insertValue(&top, ((struct String*)par->other), par->dataType);	
+				queuePush(params, par);
 				
 				// ukonceni parametru
 				cur = getToc();				
@@ -997,8 +1010,6 @@ struct astNode* parseParams(){
 	}
 	// pouze v pripade, ze byla zadana prava zavorka vratit seznam
 	if(cur->type == T_RPAR){
-		D("params: Printing current top layer of symbol table");		
-		printSymbolTable(top, 0);
 		stackPush(global.symTable, top);
 		return params;	
 	}
@@ -1026,9 +1037,10 @@ struct astNode* parseFunction(){
 	}
 	
 	// skopirovani jmena
-	if(!(copyString(cur->data.str, &(node->data.str))))
-		return NULL;
-	
+	struct String* name = makeNewString();
+	copyString(cur->data.str, &name);
+	node->other = name;
+
 	// sparsovat parametry
 	struct symbolTableNode* newlayer;
 	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
@@ -1038,8 +1050,10 @@ struct astNode* parseFunction(){
 		exit(intern);
 	}
 	stackPush(global.symTable, newlayer);
-	node->right = parseParams();
+	// vyhodnoti parametry a vytvori frontu
+	//node->right = parseParams();
 	
+	// ziska top
 	top = (struct symbolTableNode*)stackTop(global.symTable);
 	
 	cur = getToc();
@@ -1078,16 +1092,13 @@ struct astNode* parseFunction(){
 	// typ OK
 	
 	// ulozit do tabulky zastupnou promennou za return
-	D("function: Inserting function name into symTable");
 	insertValue(&top, node->data.str, node->dataType);
-	printSymbolTable(top, 0);
 	
 	// prohledani tabulky funkci
 	struct symbolTableNode* dekl = (struct symbolTableNode*)search(&(global.funcTable), node->data.str);
 	
 	cur = getToc();
 	if(cur->type == T_KW_FORW){
-		D("function: FORWARD DECLARATION");
 		// dopredna deklarace - pokud ji najde ve funkcich je neco spatne
 	 	if(!dekl)
 		 	dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), node->data.str, node->dataType);
@@ -1100,18 +1111,13 @@ struct astNode* parseFunction(){
 		// v pripade dopredne deklarace neni nutne pouzivat parametry
 		stackPop(global.symTable);
 		top = (struct symbolTableNode*)stackTop(global.symTable);
-		D("function: Printing FORWARD declaration symbol table");
-		printSymbolTable(top, 0);
-		
-				
+						
 	 	// nastaveni navratovy typ
 	 	dekl->dataType = node->dataType;
 	 	// v node->right jsou parametry
 	 	dekl->other = node;
 	 	return node;
 	}
-	
-	D("function: DEFINITION of function");
 	
 	// TODO vyresit definici tela a promennych funkce!
 	// Pokud funkce bude nalezena - dopredna deklarace
@@ -1144,12 +1150,7 @@ struct astNode* parseFunction(){
 	node->left = parseBody(&cur);	
 	
 	// odstranit vrchol s parametry a return promennou
-	D("function: Popping top layer for function definition");
 	stackPop(global.symTable);			
-	top = (struct symbolTableNode*)stackTop(global.symTable);
-	D("function: Printing stable top layer after deleting parameters");
-	printSymbolTable(top, 0);
-
 	return node;
 }
 
@@ -1275,7 +1276,7 @@ struct astNode* parseFuncCall(struct toc* id){
 		return NULL;
 	node->left = NULL;
 	node->other = NULL;
-	node->type = AST_FUNC;
+	node->type = AST_CALL;
 	
 	return node;
 }
