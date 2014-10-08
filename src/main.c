@@ -32,6 +32,10 @@ int init(char* srcpath){
 	global.gc->listLength = 0;
 
 	global.src = fopen(srcpath, "r");
+	if(!global.src)
+	{
+		fprintf(stderr, "Failed to open a file %s\n", srcpath);
+	}
 	global.errno = ok;
 	global.lineCounter = 0;
 	
@@ -61,45 +65,36 @@ int main(int argc, char** argv)
 		return False;
 	}
 	
-	//struct mainAll global = {0};
-	
 	if(init(argv[1]) != True){
 		Log("main: main_all struct dont allocated garbage collector..", ERROR, MAIN);
 		return False;
 	}
 	
-	
+	struct toc *tmp;
 	
 
 	if(!compareCharArrays(argv[2], "--stack")){
 		// spusteni cteni - lexikalni anal-lyzator
 		struct stack* stack = makeNewStack();
 		struct String* str = makeNewString();
-		char c = ' ';
 		while(!feof(global.src)){
 			c = fgetc(global.src);
+	const char *str;
+	while(true)
+	{
+		tmp = getToc();
+		str = returnTypeAsStr(tmp->type);
 
-			if(c == ' ' || c == '\n' || c == '\r' || c == '\t'){
-				// separator - konec tokenu
-				if(str->Length != 0){
-					//printString(str);
-					//emptyString(&ma, str);
-				
-					if(stackPush(stack, str)){
-						Log("Value pushed", DEBUG, MAIN);
-						printString(str);
-					}
-
-					str = makeNewString();
-				}
-			}
+		if(str)
+		{
+			if(tmp->type == T_INT)
+				printf("%s(%d)\n",str,tmp->data.integer);
+			else if(tmp->type == T_REAL)
+				printf("%s(%f)\n",str,tmp->data.real);
+			else if(tmp->type == T_STR)
+				printf("%s(%s)\n",str,tmp->data.str->Value);
 			else
-				addChar(str, c);
-		}	
-		Log("READING....", DEBUG, MAIN);
-		while(!stackEmpty(stack)){
-			struct String* s = (struct String*)stackPop(stack);
-			printString(s);	
+				printf("%s\n",str);
 		}
 		Log("END", DEBUG, MAIN);
 	}
@@ -171,9 +166,6 @@ int main(int argc, char** argv)
 			printSymbolTable(global.funcTable, 0);
 		}	
 	}
-	
-	
-	fprintf(stderr, "Error code: %d\n", (int)global.errno);
 	
 	atexit(quit);
 	return global.errno;

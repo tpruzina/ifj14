@@ -64,8 +64,6 @@ enum KA_STATES
 	//here the fun begins
 	KA_SHARP,			// #
 
-
-
 	KA_EQ,		// =
 	KA_GRT,		// >
 	KA_GEQV,	// >=

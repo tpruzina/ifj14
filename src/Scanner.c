@@ -11,7 +11,6 @@
 #include "Scanner.h"
 #include "Log.h"
 
-
 /* get_toc - cita zo suboru dalsi token
  * @vstup:	otvoreny file descriptor
  * @vystup:	vraci alokovany token
@@ -237,6 +236,7 @@ getToc()
 			}
 			else
 			{
+				addChar(str,'\0');
 				// inak hotovo
 				toc->type = T_STR;
 				toc->data.str = str;

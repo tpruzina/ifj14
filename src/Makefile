@@ -1,7 +1,7 @@
 MAIN=main
 CFLAGS=-std=c99 -g -Wall -pedantic -Wextra
 
-all: main interpret
+all: interpret
 
 main: *.[c,h]
 	$(CC) $(CFLAGS) GC.c Log.c String.c Stack.c Ast.c SymbolTable.c Scanner.c Parser.c $(MAIN).c -o $(MAIN)
