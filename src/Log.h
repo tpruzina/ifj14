@@ -25,10 +25,15 @@
 #define COLOR_LMGN "\033[01;35m"
 #define COLOR_LCYN "\033[01;36m"
 
-enum LogFrom { MAIN, GC, STRING, STACK, AST, SYMTABLE, OTHER };
+#define PRINT 1
+#define DBG 1
+#define WRG 1
+#define PRT 1
+
+enum LogFrom { MAIN, GC, STRING, STACK, AST, SYMTABLE, PARSER };
 enum LogType { DEBUG, ERROR, WARNING };
 /*
  * Definice funkci knihovny Log
  */
-void Log(char*, enum LogType, enum LogFrom);
+void Log(char*, int, int);
 

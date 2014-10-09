@@ -13,8 +13,7 @@ struct stack* makeNewStack(){
 	struct stack* stc = (struct stack*)gcMalloc(sizeof(struct stack));
 	if(stc == NULL){
 		Log("Allocation error", ERROR, STACK);
-		global.errno = intern;
-		return NULL;
+		exit(intern);
 	}	
 	
 	// Nastaveni hodnot
@@ -29,17 +28,15 @@ struct stack* makeNewStack(){
 int stackPush(struct stack* stack, void* val){
 	// kontroly na parametr se zasobnikem
 	if(stack == NULL){
-		Log("Stack == NULL", ERROR, STACK);
-		global.errno = intern;
-		return False;
+		Log("stackPush: Stack == NULL", ERROR, STACK);
+		exit(intern);
 	}
 	
 	// vytvoreni nove polozky, naplneni daty a provazani s vrcholem
 	struct stackItem* newitem = (struct stackItem*) gcMalloc(sizeof(struct stackItem));
 	if(newitem == NULL){
-		Log("Allocation error", ERROR, STACK);
-		global.errno = intern;
-		return False;	
+		Log("stackPush: Allocation error", ERROR, STACK);
+		exit(intern);	
 	}
 	newitem->Value = val;
 	newitem->Next = stack->Top;
@@ -54,9 +51,8 @@ int stackPush(struct stack* stack, void* val){
 void* stackPop(struct stack* stack){
 	// kontroly na parametr se zasobnikem
 	if(stack == NULL){
-		Log("Stack == NULL", ERROR, STACK);
-		global.errno = intern;
-		return NULL;
+		Log("stackPop: Stack == NULL", ERROR, STACK);
+		exit(intern);
 	}
 	
 	if(stack->Top != NULL){
@@ -73,7 +69,7 @@ void* stackPop(struct stack* stack){
 		return val;
 	}
 	else {
-		Log("Stack is empty...", WARNING, STACK);
+		Log("stackPop: Stack is empty...", WARNING, STACK);
 		return NULL;	
 	}
 }
@@ -83,9 +79,8 @@ void* stackPop(struct stack* stack){
 void* stackTop(struct stack* stack){
 	// kontroly na parametr se zasobnikem
 	if(stack == NULL){
-		Log("Stack == NULL", ERROR, STACK);
-		global.errno = intern;
-		return NULL;
+		Log("stackTop: Stack == NULL", ERROR, STACK);
+		exit(intern);
 	}
 	
 	if(stack->Top != NULL){
@@ -93,7 +88,7 @@ void* stackTop(struct stack* stack){
 		return stack->Top->Value;
 	}
 	else {
-		Log("Stack is empty...", WARNING, STACK);
+		Log("stackTop: Stack is empty...", WARNING, STACK);
 		return NULL;
 	}	
 }
@@ -103,9 +98,8 @@ void* stackTop(struct stack* stack){
 int stackEmpty(struct stack* stack){
 	// kontroly na parametr se zasobnikem
 	if(stack == NULL){
-		Log("Stack == NULL", ERROR, STACK);
-		global.errno = intern;
-		return False;
+		Log("stackEmpty: Stack == NULL", ERROR, STACK);
+		exit(intern);
 	}
 
 	return (stack->Length == 0);
@@ -118,9 +112,8 @@ int stackEmpty(struct stack* stack){
 struct queue* makeNewQueue(){
 	struct queue* que = (struct queue*)gcMalloc(sizeof(struct queue));
 	if(que == NULL){
-		Log("Allocation error", ERROR, STACK);
-		global.errno = intern;
-		return NULL;
+		Log("queue: Allocation error", ERROR, STACK);
+		exit(intern);
 	}
 
 	que->start = NULL;
@@ -138,9 +131,10 @@ int queuePush(struct queue* que, void* value){
 		return False;
 		
 	struct queueItem* item = (struct queueItem*)gcMalloc(sizeof(struct queueItem));
-	if(item == NULL)
-	  	return False;
-	  	
+	if(item == NULL){
+		Log("queue: Allocation error", ERROR, STACK);
+		exit(intern);
+	} 	
 	item->value = value;
 	item->next = NULL;
 	

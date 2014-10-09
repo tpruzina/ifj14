@@ -38,6 +38,8 @@ enum tokenType {
 	T_KW_WHILE, 	// while
 	T_KW_WRT,		// write
 	T_KW_PROGRAM,
+	T_KW_LENGTH,
+	T_KW_COPY,
 	// neni v zadani ako klucove slovo - ??? 
 	T_RPT,	// repeat
 	T_UNTIL,	// until
@@ -48,6 +50,7 @@ enum tokenType {
 	T_INT,
 	T_REAL,		// real
 	T_STR,		// string
+	T_BOOL,
 	T_ARR,		// array
 	// obecne
 	T_OF,		// of
@@ -68,6 +71,7 @@ enum tokenType {
 	T_MOD,		// mod
 	T_AND,		// and
 	T_OR,		// or
+	T_XOR,
 	T_NOT,		// not
 	// specialni znaky
 	T_SCOL,		// ;
@@ -116,17 +120,18 @@ struct gc
 /**
  * Chybove kody
  */
-enum errno { ok = 0, 
+enum errno { 
+	ok = 0, 
 	lex = 1, 		// chybna struktura aktualniho lexemu
 	synt = 2, 		// chybna syntaxe struktury programu
 	sem_prog = 3, 	// nedefinovana promenna/fukce, pokus o redefinici funkce/promenne
-	sem_komp = 4, 
-	sem_else = 5, 
-	run_num = 6, 
-	run_ninit = 7, 
-	run_div = 8, 
-	run_else = 9, 
-	intern = 99 };
+	sem_komp = 4, //chyba typove kompatibility v aritmetickych, retezcovych a relacnich vyrazech, pripadne spatny pocet ci typ parametru u volani funkce
+	sem_else = 5, // ostatni semanticke chyby
+	run_num = 6, // nacitani ciselne hodnoty ze vstupu
+	run_ninit = 7, // neinicializovana promenna
+	run_div = 8, // deleni nulou
+	run_else = 9, // ostatni behove chyby
+	intern = 99 }; // alokace, chyba otvirani souboru, spatne parametry prikazove radky
 
 /**
  * Vsechny hlavni soucasti.
@@ -135,6 +140,12 @@ enum errno { ok = 0,
 struct mainAll {
 	struct gc* gc;
 	FILE* src;
+	
+	unsigned lineCounter;
+
+	struct astNode* program;
+	struct stack* symTable;
+	struct symbolTableNode* funcTable;
 	int errno;
 };
 extern struct mainAll global;
@@ -146,7 +157,7 @@ enum astNodeType {
 	AST_START,
 	AST_END,
 	AST_FUNC,
-	AST_FORW,
+	AST_CALL,
 	AST_IF,
 	AST_WHILE,
 	AST_REPEAT,
@@ -166,27 +177,55 @@ enum astNodeType {
 	AST_XOR,
 	AST_NOT,
 	AST_NUM,
-	AST_STR,
-	AST_ID
+	AST_ID, // promenna
+	AST_INT, // literal
+	AST_REAL, // literal
+	AST_BOOL, // literal
+	AST_STR, // literal
+	AST_ARR,
+	AST_CMD
 };
 
 /**
  * Jeden uzel AST
  */
 struct astNode {
+	// AST_XXX ONLY!!!
 	enum astNodeType type;
 	
 	struct astNode* left;
 	struct astNode* right;
 	
-	void* value;
+	void* other;
+
+	// data type enum -- ONLY	
+	int dataType;
+	union {
+		struct String* str;
+		int integer;
+		double real;
+		bool boolean;	
+	} data;
 };
 
+/**
+ * Promenna pro definici funkci, obsahuje lokalni promenne a parametry
+ * -------------------------------------------------------------------
+ */
+struct varspars {
+	struct queue* vars;
+	struct queue* pars;
+};
+
+enum dataType { DT_NONE, DT_INT, DT_REAL, DT_BOOL, DT_STR, DT_ARR };
 /**
  * Uzel tabulky symbolu
  */
 struct symbolTableNode {
 	struct String* name;
+	
+	// data type enum --- ONLY
+	int dataType;
 	union {
 		struct String* str_data;
 		int int_data;
@@ -194,8 +233,18 @@ struct symbolTableNode {
 		bool bool_data;
 	} data;
 	
+	// pro odkaz na astNode s telem funkce
+	void* other;
+	
 	struct symbolTableNode* left;
 	struct symbolTableNode* right;	
+};
+
+struct dataTypeArray {
+	int low;
+	int high;
+	int type;
+	struct String* id;
 };
 
 // struktura potrebna na reverzny string z token typu

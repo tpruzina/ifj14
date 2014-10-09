@@ -1,8 +1,9 @@
-CC=gcc
+MAIN=main
+GCC=gcc
 CFLAGS=-std=c99 -g -Wall -pedantic -Wextra
 
-all: 
-	$(CC) $(CFLAGS) Ast.c main.c Scanner.c GC.c Log.c String.c -o test 
-
+all:
+	$(GCC) $(CFLAGS) GC.c Log.c String.c Stack.c Ast.c SymbolTable.c Scanner.c Parser.c $(MAIN).c -o $(MAIN)
+	
 clean:
 	rm -fv *.o *.gch

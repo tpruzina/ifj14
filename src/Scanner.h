@@ -28,6 +28,11 @@ void skipWSandComments();
 // napriklad T_NOT vrati "not"
 const char *returnTypeAsStr(int type);
 
+// pomocne funkcie ktore taktiez pocitaju pocet '\n'
+int getChar();
+void unGetChar(char);
+
+
 // pomocna premenna pre stringove literaly
 int ascii(unsigned char);
 
