@@ -168,6 +168,8 @@ struct tokennames tokennames[] = {
 	{NULL, 0}};
 	
 void printTokenType(struct toc* token){
+	if(!PRT) return;
+
 	for(int i=0; tokennames[i].str; i++){
 		if(token->type == tokennames[i].type){
 			fprintf(stderr, "Token: %s\n", tokennames[i].str);
@@ -180,6 +182,8 @@ void printTokenType(struct toc* token){
 }
 
 void printAstStack(struct stack* aststack){
+	if(!PRT) return;
+
 	fprintf(stderr, "AST STACK..\n");
 	
 	struct stackItem* item = aststack->Top;
@@ -191,6 +195,40 @@ void printAstStack(struct stack* aststack){
 			fprintf(stderr, "------------------------------\n");	
 	}	
 	fprintf(stderr, "AST STACK END\n");
+}
+
+void printVarsPars(struct varspars* vp){
+	if(!PRT) return;
+	
+	struct queueItem* item;
+	// vars
+	if(vp->vars != NULL){
+		fprintf(stderr, "%s===== Vars queue =====%s\n", COLOR_LBLU, COLOR_NRM);
+		item = vp->vars->start;
+		while(item != NULL){
+			printAst((struct astNode*)item->value);
+		
+			item = item->next;
+		
+			if(item != NULL)
+				fprintf(stderr, "%s======================%s\n", COLOR_LBLU, COLOR_NRM);
+		}
+		fprintf(stderr, "%s=== Vars queue END ===%s\n", COLOR_LBLU, COLOR_NRM);
+		}
+	// pars
+	if(vp->pars != NULL){
+		fprintf(stderr, "%s===== Pars queue =====%s\n", COLOR_LCYN, COLOR_NRM);
+		item = vp->pars->start;
+		while(item != NULL){
+			printAst((struct astNode*)item->value);
+		
+			item = item->next;
+		
+			if(item != NULL)
+				fprintf(stderr, "%s======================%s\n", COLOR_LCYN, COLOR_NRM);
+		}
+		fprintf(stderr, "%s=== Pars queue END ===%s\n", COLOR_LCYN, COLOR_NRM);
+	}
 }
 
 void datatypes(int left, int right){
@@ -488,21 +526,65 @@ int makeAstFromToken(struct toc* token, struct stack** aststack){
 }
 
 /**
+ * Tiskne obsah zasobniku tabulky symbolu
+ * --------------------------------------
+ */
+void printSymbolTableStack(){
+	fprintf(stderr, "=====================  STACK  ====================\n");
+
+	struct stackItem* item = global.symTable->Top;
+	while(item != NULL){
+		struct symbolTableNode* top = (struct symbolTableNode*)item->Value;
+	
+		printSymbolTable(top, 0);
+		
+		item = item->Next;
+		if(item != NULL)
+			fprintf(stderr, "==================================================\n");
+	}
+
+	fprintf(stderr, "===================  END STACK  ==================\n");
+}
+
+/**
  * Hlavni funkce parseru - spousti rekurzivni pruchod
  * --------------------
  */
 int parser(){
 	struct astNode* prog = parseProgram();
-	if(!prog)
+	if(!prog){
+		E("parser: Ended with false");
 		return False;
+	}
+	
+	checkFunctionDeclarations(global.funcTable);
 	
 	global.program = prog;
 	return True;
 }
 
+int checkFunctionDeclarations(struct symbolTableNode* gft){
+	if(gft == NULL){
+		return False;
+	}
+	
+	if(gft->other == NULL){
+		E("Function without body definition");
+		exit(sem_prog);
+	}
+	
+	if(gft->left != NULL)
+		return checkFunctionDeclarations(gft->left);
+	if(gft->right != NULL)
+		return checkFunctionDeclarations(gft->right);
+		
+	return True;
+}
+
 /**
- * Kontroluje zacatek programu, existenci tokenu program, jmeno programu a nasledne telo
- * -------------------------------------------------------------------------------------
+ * Kontroluje zacatek programu, existenci tokenu program, 
+ * jmeno programu a nasledne telo
+ * -----------------------------------------------------
  */
 struct astNode* parseProgram(){
 	W("parseProgram");
@@ -514,51 +596,58 @@ struct astNode* parseProgram(){
 		return NULL;
 	}
 	
+	
+	struct astNode* program = makeNewAST();
+	program->type = AST_START;
+
+
 	// nalezen start
 	cur = getToc();
 	if(cur->type != T_ID){
 		// chyba, melo nasledovat oznaceni
-		E("Syntax error - expected name of program");
-		exit(synt);
+		W("Warning - expected name of program");
+	}
+	else {	
+		// kopirovani jmena programu
+		copyString(cur->data.str, &(program->data.str));
+	
+		// v pripade, ze bylo nactene jmeno, nacist dalsi
+		cur = getToc();
 	}
 	
-	// jmeno programu
-	struct astNode* program = makeNewAST();
-	program->type = AST_START;
-	// kopirovani jmena programu
-	if(!(copyString(cur->data.str, &(program->data.str))))
-		return NULL;			
-	//printString(program->data.str);
-	
-	cur = getToc();
 	if(cur->type != T_SCOL){
 		E("Syntax error - expected SEMICOLON");
 		exit(synt);
 	}
 					
-	// ok -> nasleduje telo programu nebo definice promennych nebo definice funkci/dopredne definice funkci			
+	// ok -> nasleduje telo programu nebo definice promennych nebo definice 
+	// funkci/dopredne definice funkci			
 	// pokud bude nasledujici token BEGIN pak ctu telo
 	// pokud bude nasledujici VAR pak jsou to lokalni 
-	struct astNode* vardef = parseVars(&cur);
-	
-	// muze vratit null, ale jen pokud bude nastaveny chybovy kod, jedna se o chybu
-	if(vardef == NULL && global.errno != ok){
-		// vyskytla se chyba
-		return NULL;				
-	}
-	D("program: back from VARS");
+	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
+	vp->vars = parseVars(&cur);
 	// lokalni promenne
-	program->other = vardef;
-		
+	program->other = vp;
+	printVarsPars(vp);
+	
+
 	// prochazet definice funkci a vkladat je s telem do tabulky symbolu
 	while(cur->type == T_KW_FUNC){
+		D("Another function");
 		struct astNode* func = parseFunction();				
 		if(!func)
 			return NULL;
+		printAst(func);
 		
 		// muze nacitat 
-		cur = getToc();				
+		cur = getToc();		
+		if(cur->type == T_SCOL)
+			cur = getToc();
+				
+		printTokenType(cur);		
 	}
+	D("!!!! after Function reading - gets");
+	printTokenType(cur);
 	
 	//printTokenType(cur);
 	
@@ -568,8 +657,13 @@ struct astNode* parseProgram(){
 		return NULL;
 	program->left = body;
 	
+	D("program: after body");
+	printTokenType(cur);
+	
+	cur = getToc();
 	if(cur->type != T_DOT){
 		E("program: Syntax error - expected END.");
+		printTokenType(cur);
 		exit(synt);
 	}
 	
@@ -595,7 +689,7 @@ struct astNode* parseBody(struct toc** cur){
 		
 		if((*cur)->type != T_KW_BEGIN){
 			E("body: Syntax error - expected BEGIN keyword");
-			//printTokenType(*cur);		
+			printTokenType(*cur);		
 			exit(synt);
 		}
 	}
@@ -603,6 +697,7 @@ struct astNode* parseBody(struct toc** cur){
 	// zacatek tela -> spustit prikazy
 	// ukladat je doleva za sebe do typu AST_CMD
 	struct astNode* body = makeNewAST();
+	body->type = AST_CMD;
 	struct astNode* cmd = parseCommand(cur);
 	if((*cur)->type == T_KW_END){
 		// ukonceni bloku kodu
@@ -617,7 +712,6 @@ struct astNode* parseBody(struct toc** cur){
 		body->left->type = AST_CMD;
 		body->left->left = NULL;
 		body->left->right = cmd;
-		
 		return body;		
 	}
 	else if((*cur)->type == T_SCOL){	
@@ -632,26 +726,22 @@ struct astNode* parseBody(struct toc** cur){
 			item->left->right = cmd;
 		
 			// pokud narazi na END tak ukoncit hledani dalsich 
-			if((*cur)->type == T_KW_END){
-				(*cur) = getToc();
+			if((*cur)->type == T_KW_END)
 				break;
-			}
 			else if((*cur)->type == T_SCOL){
 				// hledat dalsi
 				cmd = parseCommand(cur);
-			
 				continue;
 			}
 			else {
 				E("body: Syntax error - expected END or SEMICOLON");
-				//printTokenType(*cur);
+				printTokenType(*cur);
 				exit(synt);			
 			}			
 		}
 	}
 	if(!body)
 		return NULL;
-		
 	return body;
 }
 
@@ -659,26 +749,31 @@ struct astNode* parseBody(struct toc** cur){
  * Parsuje var sekci funkce/programu
  * ---------------------------------
  */
-struct astNode* parseVars(struct toc** cur){
+struct queue* parseVars(struct toc** cur){
 	W("parseVars");
-	(*cur) = getToc();
+	
+	if((*cur)->type != T_KW_VAR)
+		(*cur) = getToc();
+		
 	if((*cur)->type == T_KW_VAR){
 		// zacinat parsovat promenne
 		
-		struct astNode* node = NULL;
-		
+		struct queue* vars = makeNewQueue();		
 		struct symbolTableNode* top = (struct symbolTableNode*)stackPop(global.symTable);
 		
 		while(1){
 			// definice promennych
 			struct astNode* var = makeNewAST();
+			
+			
 			(*cur) = getToc();
 			if((*cur)->type == T_ID){
 				// dostal jsem ID -> ocekavam dvoutecku
 			
-				if(!(copyString((*cur)->data.str, &(var->data.str))))
-					return NULL;
-				//printString((*cur)->data.str);
+				// kopie jmena promenne
+				struct String* name = makeNewString();
+				copyString((*cur)->data.str, &name);
+				var->other = name;
 			
 				// odkladiste pro nove promenne do tabulky symbolu				
 				struct symbolTableNode* new = NULL;
@@ -694,50 +789,42 @@ struct astNode* parseVars(struct toc** cur){
 							var->type = AST_INT;
 							
 							// vytvorit novy zaznam v tabulce
-							new = insertValue(&top, var->data.str, DT_INT);
+							new = insertValue(&top, name, DT_INT);
 								
 							if(!new)
 								return NULL;
 							
 							new->dataType = DT_INT;													
-							
-							stackPush(global.symTable, top);
 							break;
 						}
 						case T_KW_REAL: {
 							var->type = AST_REAL;
 							
-							new = insertValue(&top, var->data.str, DT_REAL);
+							new = insertValue(&top, name, DT_REAL);
 							if(!new)
 								return NULL;
 								
 							new->dataType = DT_REAL;
-							
-							stackPush(global.symTable, top);
 							break;
 						}
 						case T_KW_BOOLEAN: {
 							var->type = AST_BOOL;
 											
-							new = insertValue(&top, var->data.str, DT_BOOL);
+							new = insertValue(&top, name, DT_BOOL);
 							if(!new)
 								return NULL;
 								
 							new->dataType = DT_BOOL;
-							
-							stackPush(global.symTable, top);
 							break;
 						}
 						case T_KW_STRING: {
 							var->type = AST_STR;
 														
-							new = insertValue(&top, var->data.str, DT_STR);
+							new = insertValue(&top, name, DT_STR);
 							if(!new)
 								return NULL;
 								
 							new->dataType = DT_STR;
-							
-							stackPush(global.symTable, top);
 							break;
 						}
 						case T_ARR: {
@@ -819,14 +906,9 @@ struct astNode* parseVars(struct toc** cur){
 								}
 								// ulozeni odkazu na strukturu dat
 								var->other = dta;		
-								
-								if(top == NULL){
-									top = makeNewSymbolTable();
-									stackPush(global.symTable, top);	
-								}
-								
+															
 								// vlozeni nazev pole do tabulky
-								new = insertValue(&top, var->data.str, DT_ARR);
+								new = insertValue(&top, name, DT_ARR);
 								if(!new)
 									return NULL;
 								
@@ -855,20 +937,9 @@ struct astNode* parseVars(struct toc** cur){
 					exit(synt);
 				}
 								
-				// vytvoreni noveho AST v pripade, ze jeste nebyl vytvoren
-				if(node == NULL){
-					if(!(node = makeNewAST()))
-						return NULL;
-				}
-				
+								
 				// vlozit prvek
-				struct astNode* item = node;
-				while(item->left != NULL){
-					item = item->left;
-				}
-				item->left = makeNewAST();
-				item->type = AST_NONE;
-				item->right = var;
+				queuePush(vars, var);
 			}
 			else if((*cur)->type == T_KW_BEGIN){
 				// zacina telo 	
@@ -885,15 +956,15 @@ struct astNode* parseVars(struct toc** cur){
 			}
 		}
 		
-		printSymbolTable(top, 0);
-		
-		if(!stackPush(global.symTable, top))
-			return NULL;
+		printSymbolTable(top, 0);		
+		stackPush(global.symTable, top);
 				
 		// vratit seznam promennych
-		return node;
+		return vars;
 	}
  
+ 	D("returning null");
+ 	printTokenType(*cur);
 	return NULL;
 }
 
@@ -901,11 +972,11 @@ struct astNode* parseVars(struct toc** cur){
  * Parsuje parametry v definici/deklaraci funkce
  * ---------------------------------------------
  */
-struct astNode* parseParams(){
+struct queue* parseParams(){
 	W("parseParams");
 	
 	struct toc* cur = getToc();
-	struct astNode* params = makeNewAST();
+	struct queue* params = makeNewQueue();
 	if(!params)
 		return NULL;
 		
@@ -916,7 +987,7 @@ struct astNode* parseParams(){
 		exit(synt);	
 	}
 	
-	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+	struct symbolTableNode* top = (struct symbolTableNode*)stackPop(global.symTable);
 	if(top == NULL)
 		W("params: top layer is empty");
 	
@@ -930,8 +1001,9 @@ struct astNode* parseParams(){
 				struct astNode* par = makeNewAST();
 				
 				// skopirovani jmena parametru
-				if(!(copyString(cur->data.str, &(par->data.str))))
-					return NULL;
+				struct String* name = makeNewString();
+				copyString(cur->data.str, &name);
+				par->other = name;
 				
 				// nacist dvojtecku
 				cur = getToc();
@@ -945,34 +1017,34 @@ struct astNode* parseParams(){
 				cur = getToc();
 				switch(cur->type){
 					case T_KW_INT: {
+						par->type = AST_INT;
 						par->dataType = DT_INT;
 						break;
 					}
 					case T_KW_REAL: {
+						par->type = AST_REAL;
 						par->dataType = DT_REAL;
 						break;
 					}
 					case T_KW_BOOLEAN: {
+						par->type = AST_BOOL;
 						par->dataType = DT_BOOL;
 						break;
 					}
 					case T_KW_STRING: {
+						par->type = AST_STR;
 						par->dataType = DT_STR;
 						break;
 					}
 					default:
 						E("params: Syntax error - unsupported type of parameter");
-						//printTokenType(cur);
+						printTokenType(cur);
 						exit(synt);
 				}
 				
 				// ulozit do seznamu a pokracovat
-				struct astNode* item = params;
-				while(item->left != NULL)
-					item = item->left;
-				item->left = par;		
-				
-				insertValue(&top, par->data.str, par->dataType);	
+				insertValue(&top, name, par->dataType);	
+				queuePush(params, par);
 				
 				// ukonceni parametru
 				cur = getToc();				
@@ -997,8 +1069,6 @@ struct astNode* parseParams(){
 	}
 	// pouze v pripade, ze byla zadana prava zavorka vratit seznam
 	if(cur->type == T_RPAR){
-		D("params: Printing current top layer of symbol table");		
-		printSymbolTable(top, 0);
 		stackPush(global.symTable, top);
 		return params;	
 	}
@@ -1026,9 +1096,11 @@ struct astNode* parseFunction(){
 	}
 	
 	// skopirovani jmena
-	if(!(copyString(cur->data.str, &(node->data.str))))
-		return NULL;
-	
+	struct String* name = makeNewString();
+	copyString(cur->data.str, &name);
+	printString(name);
+	node->other = name;
+
 	// sparsovat parametry
 	struct symbolTableNode* newlayer;
 	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
@@ -1038,10 +1110,14 @@ struct astNode* parseFunction(){
 		exit(intern);
 	}
 	stackPush(global.symTable, newlayer);
-	node->right = parseParams();
 	
+	// vyhodnoti parametry a vytvori frontu
+	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
+	vp->pars = parseParams();
+	
+	// ziska top
 	top = (struct symbolTableNode*)stackTop(global.symTable);
-	
+		
 	cur = getToc();
 	if(cur->type != T_COL){
 		E("function: Syntax error - expected colon after function params");
@@ -1076,23 +1152,34 @@ struct astNode* parseFunction(){
 		}
 	}	
 	// typ OK
+	cur = getToc();
+	if(cur->type != T_SCOL){
+		E("function: Syntax error - expected semicolon after returning type");
+		exit(synt);
+	}
+	
 	
 	// ulozit do tabulky zastupnou promennou za return
-	D("function: Inserting function name into symTable");
-	insertValue(&top, node->data.str, node->dataType);
-	printSymbolTable(top, 0);
+	insertValue(&top, name, node->dataType);
 	
+
 	// prohledani tabulky funkci
-	struct symbolTableNode* dekl = (struct symbolTableNode*)search(&(global.funcTable), node->data.str);
+	struct symbolTableNode* dekl = (struct symbolTableNode*)search(&(global.funcTable), name);
 	
+	// DOPREDNA DEKLARACE FUNKCE
 	cur = getToc();
 	if(cur->type == T_KW_FORW){
-		D("function: FORWARD DECLARATION");
+		cur = getToc();
+		if(cur->type != T_SCOL){
+			E("function: Syntax error - expected semicolon after FORWARD keyword");
+			exit(synt);
+		}
+	
 		// dopredna deklarace - pokud ji najde ve funkcich je neco spatne
 	 	if(!dekl)
-		 	dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), node->data.str, node->dataType);
+		 	dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), name, node->dataType);
 		else {
-			// nalezl deklarovanou/definovanou funkci v tabulce - chyba!
+			// nalezl deklarovanou/definovanou funkci v tabulce
 			E("function: Syntax error - redefinition of forward declaration");
 			exit(synt);
 		}
@@ -1100,85 +1187,114 @@ struct astNode* parseFunction(){
 		// v pripade dopredne deklarace neni nutne pouzivat parametry
 		stackPop(global.symTable);
 		top = (struct symbolTableNode*)stackTop(global.symTable);
-		D("function: Printing FORWARD declaration symbol table");
-		printSymbolTable(top, 0);
-		
-				
+						
 	 	// nastaveni navratovy typ
 	 	dekl->dataType = node->dataType;
-	 	// v node->right jsou parametry
+	 		 	
+	 	node->right = makeNewAST();
+	 	node->right->other = vp;
+	 	printAst(node);	 	
+	 		 	
 	 	dekl->other = node;
+	 	D("FORWARD declaration");
+	 	
+	 	printSymbolTable(dekl,0);
 	 	return node;
 	}
 	
-	D("function: DEFINITION of function");
-	
-	// TODO vyresit definici tela a promennych funkce!
-	// Pokud funkce bude nalezena - dopredna deklarace
-	// 			pak nahrat telo a promenne do uzlu
-	// Pokud funkce nebude nalezena - jedna se rovnou o definici funkce
-	// 			vytvorit novy uzel v tabulce symbolu
-	// 			pak nahrat telo a promenne do uzlu
-	if(!(dekl)) {
-		// nebyla nalezena - vlozit novy uzel
-		if(!(dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), node->data.str, node->dataType)))
-			return NULL;
-	}
-		
-	if(dekl->other != NULL) {	
-		if(((struct symbolTableNode*)dekl->other)->left != NULL){
-			// telo uz bylo jednou definovane!!
-			E("function: Syntax error - redefinition of function");
-			exit(sem_prog);
+	// zacatek definice
+	if(cur->type == T_KW_VAR || cur->type == T_KW_BEGIN){
+		if(!(dekl)) {
+			// nebyla nalezena - vlozit novy uzel
+			dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), name, node->dataType);
+			if(!dekl){
+				E("function: insertion failed");
+				exit(intern);
+			}
 		}
+		
+		if(dekl->other != NULL) {
+			struct astNode* telo = (struct astNode*)(dekl->other);
+			struct astNode* vpnode = telo->right;
+			if(!vpnode){
+				E("Right subnode is empty");
+				exit(intern);
+			}
+			struct varspars* deklpars = (struct varspars*)vpnode->other;
+			controlDefinitionParams(vp->pars, deklpars->pars);
+	 	
+			if(telo->left != NULL){
+				// telo uz bylo jednou definovane!!
+				E("function: Syntax error - redefinition of function");
+				exit(sem_prog);
+			}
+		}
+	
+		if(cur->type == T_KW_VAR){
+			// ocekavat var-def --> other
+			vp->vars = parseVars(&cur);
+			D("parseVars end");
+			// po definici promennych MUSI nasledovat telo, tedy begin
+			if(cur->type != T_KW_BEGIN){
+				E("function: Syntax error - expected BEGIN keyword");
+				printTokenType(cur);
+				exit(synt);
+			}
+		}
+		node->other = vp;
+		printVarsPars(vp);
+		// ocekavat telo
+		D("Body expectation");
+		node->left = parseBody(&cur);	
+		
+		cur = getToc();
+		if(cur->type != T_SCOL){
+			E("function: Syntax error - expected semicolon after function definition");
+			printTokenType(cur);
+			exit(synt);
+		}
+		
+		// odstranit vrchol s parametry a return promennou
+		stackPop(global.symTable);			
+		return node;
 	}
 	
-	
-	// ocekavat var-def --> other
-	node->other = parseVars(&cur);
-	// po definici promennych MUSI nasledovat telo, tedy begin
-	if(cur->type != T_KW_BEGIN)
-		return NULL;
-		
-	// ocekavat telo
-	node->left = parseBody(&cur);	
-	
-	// odstranit vrchol s parametry a return promennou
-	D("function: Popping top layer for function definition");
-	stackPop(global.symTable);			
-	top = (struct symbolTableNode*)stackTop(global.symTable);
-	D("function: Printing stable top layer after deleting parameters");
-	printSymbolTable(top, 0);
-
-	return node;
+	E("function: Syntax error - definition of function without body");
+	exit(synt);
 }
 
 /**
  * Parsuje parametry volani funkce a vklada je do stromu, smerem doleva
  * --------------------------------------------------------------------
  */
-struct astNode* parseCallParams(){
+struct queue* parseCallParams(struct toc** cur){
 	W("parseCallParams");
 	// prochazi podel parametru a vytvari doleva jdouci strom z parametru
-	struct astNode* node = makeNewAST();
-	if(!node)
-		return NULL;
+	struct queue* pars = makeNewQueue();
 	
-	struct toc* cur = getToc();
-	while(cur->type != T_RPAR){
+	(*cur) = getToc();
+	while((*cur)->type != T_RPAR){
 		struct astNode* nd;
 		
-		switch(cur->type){
+		switch((*cur)->type){
 			case T_ID: {
 				// predana promenna
+				
+				struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+				struct symbolTableNode* id = search(&top, (*cur)->data.str);
+				if(!id){
+					E("callPars: Undefined variable");
+					exit(sem_prog);
+				}
 								
 				if(!(nd = makeNewAST()))
 					return NULL;
 				
 				nd->type = AST_ID;
-				if(!(copyString(cur->data.str, &(nd->data.str))))
-					return NULL;
-
+				copyString((*cur)->data.str, &(nd->data.str));
+				nd->dataType = id->dataType;
+				datatypes(nd->dataType, id->dataType);
+				
 				break;
 			}
 			case T_INT: {
@@ -1189,7 +1305,7 @@ struct astNode* parseCallParams(){
 				
 				nd->type = AST_INT;
 				nd->dataType = DT_INT;
-				nd->data.integer = cur->data.integer;
+				nd->data.integer = (*cur)->data.integer;
 							
 				break;
 			}
@@ -1199,7 +1315,7 @@ struct astNode* parseCallParams(){
 					return NULL;
 				
 				nd->type = AST_REAL;
-				nd->data.real = cur->data.real;
+				nd->data.real = (*cur)->data.real;
 				
 				break;
 			}
@@ -1209,7 +1325,7 @@ struct astNode* parseCallParams(){
 					return NULL;
 				
 				nd->type = AST_BOOL;
-				nd->data.boolean = cur->data.boolean;
+				nd->data.boolean = (*cur)->data.boolean;
 				
 				break;
 			}
@@ -1219,39 +1335,144 @@ struct astNode* parseCallParams(){
 					return NULL;
 				
 				nd->type = AST_STR;
-				if(!(copyString(cur->data.str, &(nd->data.str))))
-					return NULL;
-		
+				copyString((*cur)->data.str, &(nd->data.str));		
 				break;
 			}
 			default:
 				E("callPars: Syntax error - invalid parameter type");
-				//printTokenType(cur);
+				//printTokenType((*cur));
 				exit(synt);
 		}
 		
 		// nacteni oddelovace
-		cur = getToc();
-		if(cur->type == T_COM){
+		(*cur) = getToc();
+		if((*cur)->type == T_COM){
 			// nacetl carku - v poradku pokud nenasleduje T_RPAR
-			cur = getToc();
-			if(cur->type == T_RPAR){
+			(*cur) = getToc();
+			if((*cur)->type == T_RPAR){
 				E("callPars: Syntax error - comma before right parenthesis");
-				//printTokenType(cur);
+				//printTokenType((*cur));
 				exit(synt);
 			}
 		}
 		
 		// vytvoreni polozky a vlozeni polozky do node
-		struct astNode* item = node;
-		while(item->left != NULL){
-			item = item->left;
-		}
-		// vlozeni do praveho uzlu parametr
-		item->left = makeNewAST();
-		item->left = nd;
+		D("Pushing into call queue");
+		printAst(nd);
+		queuePush(pars, nd);
 	}
-	return node;
+	D("Expected data - no received");
+	return pars;
+}
+/**
+ * Porovnava data z definovanch parametru s predanymi
+ * --------------------
+ * callParams: parametry z volani
+ * funcParams: parametry z definice
+ */
+void controlCallParams(struct queue* callParams, struct queue* funcParams){
+	W("controlCallParams");
+	if(callParams == NULL || funcParams == NULL){
+		E("control: NULL parameters queue");
+		exit(intern);
+	}
+	
+	struct queueItem* qi1,* qi2;
+	qi1 = callParams->start;
+	qi2 = funcParams->start;
+	
+	while(qi2 != NULL){
+		// dokud sedi parametry podle deklarace
+		struct astNode* qi1ast = (struct astNode*)qi1->value;
+		struct astNode* qi2ast = (struct astNode*)qi2->value;
+		
+		// porovnani typu parametru
+		if(qi1ast->dataType != qi2ast->dataType){
+			E("Semantic error - not same types of parameter");
+			datatypes(qi1ast->dataType, qi2ast->dataType);
+			exit(sem_komp);
+		}
+		
+		// nastaveni na dalsi parametr
+		qi1 = qi1->next;
+		qi2 = qi2->next;
+		
+		// podminky na pocet parametru
+		if(qi2 != NULL){
+			if(qi1 != NULL){
+				// ok
+				continue;
+			}
+			else {
+				// mene parametru
+				E("Semantic error - few parameters for func call");
+				exit(sem_komp);
+			}
+		}
+		else {
+			if(qi1 != NULL){
+			 	// vic parametru nez definovanych
+			 	E("Semantic error - too many parameters");
+			 	exit(sem_komp);
+			}
+		}
+	}
+}
+/**
+ * Kontroluje parametry dopredne deklarace oproti definici
+ * --------------------
+ * defPars: Parametry z definice
+ * decPars: Parametry z dopredne deklarace
+ */
+void controlDefinitionParams(struct queue* defPars, struct queue* decPars){
+	W("controlDefinitionParams");
+	if(defPars == NULL || decPars == NULL){
+		E("control: NULL parameters queue");
+		exit(intern);
+	}
+	
+	struct queueItem* defs = defPars->start;
+	struct queueItem* decs = decPars->start;
+
+	while(decs != NULL){
+		struct astNode* def = (struct astNode*)defs->value;
+		struct astNode* dec = (struct astNode*)decs->value;
+	
+		struct String* defname = (struct String*)def->other;
+		struct String* decname = (struct String*)dec->other;
+				
+		// porovnani nazvu promennych
+		if(compareStrings(defname, decname) != 0){
+			E("Semantic error - expected same parameter name");
+			exit(sem_komp);
+		}
+	
+		// porovnani datovych typu
+		if(def->dataType != dec->dataType){
+			// nesedi datove typy
+			E("Semantic error - expected same parameter type");
+			exit(sem_komp);
+		}
+	
+		defs = defs->next;
+		decs = decs->next;
+		if(decs != NULL){
+			if(defs == NULL){
+				// malo parametru predanych
+				E("Semantic error - few parameters");
+				exit(sem_komp);
+			}
+			else {
+				continue;
+			}
+		}
+		else {
+			if(defs != NULL){
+				E("Semantic error - too many parameters");
+				exit(sem_komp);
+			}
+		}
+	}	
 }
 
 /**
@@ -1259,23 +1480,54 @@ struct astNode* parseCallParams(){
  * --------------------
  * id: Token ID se jmenem funkce
  */
-struct astNode* parseFuncCall(struct toc* id){
+struct astNode* parseFuncCall(struct toc** id){
 	W("parseFuncCall");
 	// v cyklu nasel T_ID a nasledne T_LPAR --> pravdepodobne volani funkce
 	
 	struct astNode* node = makeNewAST();
-	if(!node)
-		return NULL;
-		
-	// skopirovani jmena promenne
-	if(!(copyString(id->data.str, &(node->data.str))))
-		return NULL;
 	
-	if(!(node->right = parseCallParams()))
-		return NULL;
+	node->type = AST_CALL;		
+	
+	// skopirovani jmena promenne
+	struct String* name = makeNewString();
+	copyString((*id)->data.str, &name);
+	node->other = name;
+	
+	// hledani funkce, jestli vubec byla definovana
+	struct symbolTableNode* func = search(&global.funcTable, name);
+	if(!func){
+		E("call: Semantic error - nondefined function");
+		exit(sem_prog);	
+	}
+	
+	// z definice vytahnout navratovy typ
+	node->dataType = func->dataType;	
+	
+	// ulozeni parametru a promennych
+	node->right = makeNewAST();
+	// parametry volani
+	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
+	vp->vars = NULL;
+	vp->pars = parseCallParams(id);
+	node->right->other = vp;
+	
+	struct astNode* fnode = (struct astNode*)func->other;
+	if(!fnode){
+		E("Semantic error - calling undefined function");
+		exit(sem_prog);
+	}
+	struct astNode* vpnode = fnode->right;
+	struct varspars* vpfunc = (struct varspars*)vpnode->other;
+	
+	D("vp call");
+	printVarsPars(vp);
+	D("vp func");
+	printVarsPars(vpfunc);
+	controlCallParams(vp->pars, vpfunc->pars);
 	node->left = NULL;
-	node->other = NULL;
-	node->type = AST_FUNC;
+
+	*id = getToc();
+	printTokenType(*id);
 	
 	return node;
 }
@@ -1481,7 +1733,7 @@ struct astNode* parseCommand(struct toc** cur){
 			struct toc* next = getToc();
 			if(next->type == T_LPAR){
 				// pravdepodobne volani funkce
-				return parseFuncCall(*cur);
+				return parseFuncCall(cur);
 			}
 			else if(next->type == T_ASGN){
 				// pravdepodobne prirazeni
@@ -1496,7 +1748,6 @@ struct astNode* parseCommand(struct toc** cur){
 					return NULL;					
 				left->type = AST_ID;
 				copyString((*cur)->data.str, &(left->data.str));
-				D("cmd: After string copy")
 				
 				// skopirovani informaci z tabulky symbolu
 				struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
@@ -1512,8 +1763,10 @@ struct astNode* parseCommand(struct toc** cur){
 				if(!right) 
 					return NULL;
 				D("cmd: After expr parsing");
+				printTokenType(*cur);
 			
 				if(left->dataType != right->dataType){
+					datatypes(left->dataType, right->dataType);
 					E("cmd: Semantic error - L-value has not same value as R-value");
 					exit(sem_komp);
 				}
@@ -1565,9 +1818,9 @@ struct astNode* parseExpression(struct toc** cur){
 		(*cur) = getToc();
 		if((*cur)->type == T_LPAR){
 			// volani funkce -> za ID pokracovala leva zavorka	
-			
+			*cur = id;
 			// <id>(.....	
-			return parseFuncCall(id);
+			return parseFuncCall(cur);
 		}
 		else {
 			// v pripade, ze po ID nebyla zavorka

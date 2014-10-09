@@ -10,18 +10,21 @@ int parser();
 
 struct astNode* parseProgram();
 struct astNode* parseBody(struct toc**);
-struct astNode* parseVars(struct toc**);
-struct astNode* parseParams();
+struct queue* parseVars(struct toc**);
+struct queue* parseParams();
 struct astNode* parseFunction();
-struct astNode* parseCallParams();
-struct astNode* parseFuncCall(struct toc*);
+struct queue* parseCallParams(struct toc**);
+struct astNode* parseFuncCall(struct toc**);
 
 struct astNode* ifStatement(struct toc**);
-struct astNode* whileStatement();
+struct astNode* whileStatement(struct toc**);
 struct astNode* repeatStatement(struct toc**);
 
 struct astNode* parseCommand();
 struct astNode* parseExpression(struct toc**);
 
+void controlCallParams(struct queue*, struct queue*);
+void controlDefinitionParams(struct queue*, struct queue*);
+int checkFunctionDeclarations(struct symbolTableNode*);
 #endif /* __PARSER_H__ */
 

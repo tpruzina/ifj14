@@ -24,6 +24,11 @@ struct symbolTableNode* makeNewSymbolTable(){
 	if(table->name == NULL)
 		return NULL;
 	
+	table->data.str_data = NULL;
+	table->data.int_data = 0;
+	table->data.real_data = 0;
+	table->data.bool_data = False;
+	
 	table->left = NULL;
 	table->right = NULL;
 	
@@ -249,6 +254,8 @@ int deleteTable(struct symbolTableNode** table){
  * Vytiskne graficky vzhled tabulky symbolu.
  */
 void printSymbolTable(struct symbolTableNode* table, int lvl){
+	if(!PRT) return;
+
 	if(table != NULL){
 		if(table->left != NULL)
 			printSymbolTable(table->left, lvl+1);

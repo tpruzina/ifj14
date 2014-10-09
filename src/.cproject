@@ -21,12 +21,10 @@
 							<builder id="cdt.managedbuild.target.gnu.builder.base.139703695" managedBuildOn="false" name="Gnu Make Builder.Default" superClass="cdt.managedbuild.target.gnu.builder.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.2064385871" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.2101027346" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base"/>
-<<<<<<< HEAD
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.base.322562847" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.base.1180277274" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.190279189" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.base.1021051149" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base"/>
-=======
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.base.322562847" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1039030091" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -40,7 +38,6 @@
 							<tool id="cdt.managedbuild.tool.gnu.assembler.base.1021051149" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base">
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.833312913" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
->>>>>>> scanner
 						</toolChain>
 					</folderInfo>
 				</configuration>
@@ -55,8 +52,6 @@
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-<<<<<<< HEAD
-=======
 	<storageModule moduleId="refreshScope"/>
->>>>>>> scanner
+	<storageModule moduleId="refreshScope"/>
 </cproject>
