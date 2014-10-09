@@ -20,6 +20,7 @@ int interpret()
 		exit(intern);
 
 	printf("##################INTERPRET############################\n");
+	return 0;
 }
 
 #define NODE_LEFT_TYPE(node,type) ((node)->left) && ((node)->left->type == (type)))
@@ -27,7 +28,8 @@ int interpret()
 void *run_tree(struct astNode *curr)
 {
 	if(!curr)
-		exit(intern);
+		return NULL;
+//		exit(intern);
 
 	struct symbolTableNode *left = NULL;		//toto by mali byt void pointre, ale fuck my life (resp. typecasty)
 	struct symbolTableNode *right = NULL;
@@ -43,13 +45,16 @@ void *run_tree(struct astNode *curr)
 		break;
 
 	case AST_CMD:
-		if(curr->left && curr->left->type == AST_CMD)
-			run_tree(curr->left);
-		else if(curr->right && curr->right->type == AST_ASGN)
+		if(curr->right)				//	<command>
 			run_tree(curr->right);
+
+		if(curr->left && curr->left->type == AST_CMD)	// <command list>
+			run_tree(curr->left);
+
+		return NULL; //commandy boli zparsovane
 		break;
 
-	case AST_ASGN:
+	case AST_ASGN:	// <command>: <assign>
 		if(curr->left && curr->right)
 		{
 			top = stackTop(global.symTable);
@@ -62,7 +67,7 @@ void *run_tree(struct astNode *curr)
 					left->dataType == DT_INT
 			)
 			{
-				exit(1);
+				return NULL;	//todo
 			}
 		}
 		else
@@ -160,7 +165,8 @@ void *run_tree(struct astNode *curr)
 
 	default:
 	case AST_NONE:
-		exit(intern);
+//		exit(intern);
+		return NULL;
 	}
 	return NULL;
 }

@@ -160,7 +160,11 @@ int main(int argc, char** argv)
 run:
 		// pokud vse probehlo OK, tak zobrazit strom
 		if(parser()){
-			printAst(global.program);	
+			Log("Printing PROGRAM",DEBUG,MAIN);
+			printAst(global.program);
+			fflush(stderr);
+			fflush(stdout);
+			Log("Printing PROGRAM",DEBUG,MAIN);
 			
 			Log("Printing symbol table top layer", DEBUG, MAIN);
 			struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
