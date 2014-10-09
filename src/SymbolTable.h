@@ -22,4 +22,8 @@ int copyTable(struct symbolTableNode*, struct symbolTableNode**);
 int deleteTable(struct symbolTableNode**);
 
 void printSymbolTable(struct symbolTableNode*, int);
+
+
+struct String *generateUniqueID(void);
+
 #endif

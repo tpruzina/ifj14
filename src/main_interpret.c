@@ -62,6 +62,7 @@ int main(int argc, char** argv)
 		Log("main: main_all struct dont allocated garbage collector..", ERROR, MAIN);
 		return False;
 	}
+	atexit(quit);
 	
 	if(argc == 2)
 		goto run;
@@ -171,8 +172,4 @@ run:
 		}	
 	}
 	
-	fprintf(stderr, "Error code: %d\n", (int)global.errno);
-	
-	atexit(quit);
-	return global.errno;
 }

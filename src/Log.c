@@ -80,7 +80,7 @@ void Log(char* msg, int type, int frm){
 	}
 	
 	if(type == ERROR)	
-		fprintf(stderr, " %s%s\t%s %s%s%s \t %d\n", fcol, from, COLOR_NRM, mcol, msg, COLOR_NRM, global.lineCounter);
+		fprintf(stderr, " %s\t %s \t %d\n", from, msg,  global.lineCounter);
 	else
-		fprintf(stderr, " %s%s\t%s %s%s%s\n", fcol, from, COLOR_NRM, mcol, msg, COLOR_NRM);
+		fprintf(stdout, " %s\t %s\n", from, msg);
 }

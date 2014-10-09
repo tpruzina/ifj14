@@ -284,3 +284,26 @@ void printSymbolTable(struct symbolTableNode* table, int lvl){
 	}
 	fprintf(stderr,"%s empty %s\n", COLOR_LRED, COLOR_NRM);
 }
+
+
+/*
+ * Vygeneruje unikatny string (potrebne pre tmp premenne v interprete)
+ *
+ */
+
+struct String *
+generateUniqueID(void)
+{
+	static int counter=1;
+	struct String *tmp = makeNewString();
+	addChar(tmp,'$');
+
+	int i = counter;
+	while(i != 0)
+	{
+		addChar(tmp, (char)(i % 10 + '0'));
+		i /= 10;
+	}
+	counter++;
+	return tmp;
+}
