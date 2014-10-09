@@ -552,10 +552,32 @@ void printSymbolTableStack(){
  */
 int parser(){
 	struct astNode* prog = parseProgram();
-	if(!prog)
+	if(!prog){
+		E("parser: Ended with false");
 		return False;
+	}
+	
+	checkFunctionDeclarations(global.funcTable);
 	
 	global.program = prog;
+	return True;
+}
+
+int checkFunctionDeclarations(struct symbolTableNode* gft){
+	if(gft == NULL){
+		return False;
+	}
+	
+	if(gft->other == NULL){
+		E("Function without body definition");
+		exit(sem_prog);
+	}
+	
+	if(gft->left != NULL)
+		return checkFunctionDeclarations(gft->left);
+	if(gft->right != NULL)
+		return checkFunctionDeclarations(gft->right);
+		
 	return True;
 }
 
@@ -615,6 +637,7 @@ struct astNode* parseProgram(){
 		struct astNode* func = parseFunction();				
 		if(!func)
 			return NULL;
+		printAst(func);
 		
 		// muze nacitat 
 		cur = getToc();		
