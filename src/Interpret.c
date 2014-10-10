@@ -7,15 +7,10 @@ int interpret()
 
 	printf("##################INTERPRET############################\n");
 
-	// result of previous operation
-	void *result;
-
-	// pointer to current node
-	struct astNode *curr;
-	curr = global.program;
+	struct astNode *curr = global.program;
 
 	if(curr->type == AST_START)
-		run_tree(curr);
+		runTree(curr);
 	else
 		exit(intern);
 
@@ -25,31 +20,32 @@ int interpret()
 
 #define NODE_LEFT_TYPE(node,type) ((node)->left) && ((node)->left->type == (type)))
 
-void *run_tree(struct astNode *curr)
+void *runTree(struct astNode *curr)
 {
 	if(!curr)
-		return NULL;
-//		exit(intern);
+		exit(intern);
 
 	struct symbolTableNode *left = NULL;		//toto by mali byt void pointre, ale fuck my life (resp. typecasty)
 	struct symbolTableNode *right = NULL;
-	void *tmp = NULL;
 
-	struct symbolTableNode* top = NULL;	//kvoli blbej derefencii, C nepodporuje vytvorenie tmp premennej v switchi
+	struct symbolTableNode *tmp = NULL;
+
+	// stack top je cheap operace, nech to nemusime riesit v KA, bude to v kazdej iteracii - resp. TODO
+	struct symbolTableNode* top = stackTop(global.symTable);
 
 	switch(curr->type)
 	{
 	case AST_START:
 		if(curr->left && curr->left->type == AST_CMD)
-			run_tree(curr->left);
+			runTree(curr->left);
 		break;
 
 	case AST_CMD:
 		if(curr->right)				//	<command>
-			run_tree(curr->right);
+			runTree(curr->right);
 
 		if(curr->left && curr->left->type == AST_CMD)	// <command list>
-			run_tree(curr->left);
+			runTree(curr->left);
 
 		return NULL; //commandy boli zparsovane
 		break;
@@ -57,18 +53,15 @@ void *run_tree(struct astNode *curr)
 	case AST_ASGN:	// <command>: <assign>
 		if(curr->left && curr->right)
 		{
-			top = stackTop(global.symTable);
-			left = search(&top, run_tree(curr->left));			//ocekavame string* ("x") -> vyhledej
+			left = search(&top, runTree(curr->left));	// x :=
+			// ak je left null tak mame neinicializovanu premennu - todo: check!!!
 
-			right = run_tree(curr->right);			//ocekavame symtabnode (tmp premenna...)
+			right = runTree(curr->right);			//ocekavame symtabnode (tmp premenna...)
 
-			if(
-					right->dataType == DT_INT &&
-					left->dataType == DT_INT
-			)
-			{
-				return NULL;	//todo
-			}
+			if(right->dataType == DT_INT && left->dataType == DT_INT)
+				insertDataInteger(&left, right->data.int_data);
+
+			return right;
 		}
 		else
 			exit(intern);
@@ -88,6 +81,13 @@ void *run_tree(struct astNode *curr)
 		break;
 
 	case AST_WHILE:
+		if(curr->left && curr->other)
+		{
+			while(runTree(curr->other)) //overenie <condition>
+				runTree(curr->left);	// ak true, tak bezime telo
+		}
+		else
+			exit(intern);
 		break;
 
 	case AST_REPEAT:
@@ -104,6 +104,17 @@ void *run_tree(struct astNode *curr)
 		break;
 
 	case AST_LSS:
+		if(curr->left && curr->right)
+		{
+			//curr->left --> id
+			tmp = search(&top,curr->left->data.str);
+			//curr->right --> int
+
+			if(tmp->data.int_data < curr->right->data.integer)
+				return tmp;
+			else
+				return NULL;
+		}
 		break;
 
 	case AST_GEQV:
@@ -113,6 +124,20 @@ void *run_tree(struct astNode *curr)
 		break;
 
 	case AST_ADD:
+		if(curr->left && curr->right)
+		{
+			//curr->left -> id
+			tmp = search(&top,curr->left->data.str);	//vyhledame si lokalnu verziu premennej
+
+			//curr->right -> int, str....
+			insertDataInteger(&tmp,
+					(tmp->data.int_data + curr->right->data.integer)
+			);
+
+			return tmp;
+		}
+		else
+			exit(intern);
 	case AST_SUB:
 	case AST_MUL:
 	case AST_DIV:
@@ -142,12 +167,15 @@ void *run_tree(struct astNode *curr)
 		break;
 
 	case AST_INT:
-		top = stackTop(global.symTable);
-		return insertValue(
+		// pridavame novu lokalnu premennu do tabulky a priradime jej hodnotu z node
+		tmp = insertValue(
 				&top,
 				generateUniqueID(),
 				DT_INT
 		);
+		insertDataInteger(&tmp,curr->data.integer);
+
+		return tmp;
 		break;
 
 	case AST_REAL:

@@ -14,6 +14,6 @@
 
 int interpret();
 
-void *run_tree(struct astNode *curr);
+void *runTree(struct astNode *curr);
 
 #endif
