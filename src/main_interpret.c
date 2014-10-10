@@ -173,6 +173,8 @@ run:
 			printSymbolTable(global.funcTable, 0);
 		
 			interpret();
+
+			printSymbolTable(top, 0);
 		}	
 	}
 	
