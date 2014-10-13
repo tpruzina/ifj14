@@ -1,9 +1,7 @@
 ALL: all
-all:
-	/bin/true
+all: test
 
 test:
-	/bin/true
-
+	../scripts/testProject.sh ../src/main tests
 clean:
 	/bin/true
