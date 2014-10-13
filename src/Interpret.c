@@ -53,7 +53,7 @@ void *runTree(struct astNode *curr)
 		if(curr->left && curr->left->type == AST_ID &&
 			curr->right)
 		{
-			left = search(&top, runTree(curr->left));	// x :=
+			left = runTree(curr->left);	// x :=
 			// ak je left null tak mame neinicializovanu premennu - todo: check!!!
 			right = runTree(curr->right);			//ocekavame symtabnode (tmp premenna...)
 
@@ -66,7 +66,7 @@ void *runTree(struct astNode *curr)
 			else
 				exit(intern);
 
-			return right;
+			return left;
 		}
 		else
 			exit(intern);
@@ -84,12 +84,14 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_IF:
-		right = runTree(curr->right);	// podmienka body
-		if(right)	// evaluovana true
-			return runTree(curr->left);
-		else
-			return NULL;
+		tmp = runTree(curr->other);	// podmienka body
 
+		if(tmp)	//vyhodnocena true
+			return runTree(curr->left);
+		else if(curr->right)	// vyhodnocena false a mame v branchi else
+				return runTree(curr->right);
+		// jinak
+		return NULL;
 		break;
 
 	case AST_WHILE:
@@ -113,6 +115,17 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_GRT:
+		if(curr->left && curr->right)
+		{
+			tmp = search(&top, curr->left->data.str);
+			if(!tmp)
+				exit(intern);
+
+			if(tmp->data.int_data > curr->right->data.integer)
+				return tmp;
+			else
+				return NULL;
+		}
 		break;
 
 	case AST_LSS:
@@ -172,16 +185,17 @@ void *runTree(struct astNode *curr)
 	case AST_MUL:
 		if(curr->left && curr->right)
 		{
-			tmp = search(&top,curr->left->data.str);	//vyhledame si lokalnu verziu premennej
-			if(DT_INT == tmp->dataType)
-			{
-				// check na maximalnu hodnotu a*b > INT_MAX
-				insertDataInteger(&tmp,(tmp->data.int_data * curr->right->data.integer));
-			}
-			else if(DT_REAL == tmp->dataType)
-				insertDataReal(&tmp,(tmp->data.real_data * curr->right->data.real));
-			else
-				exit(intern);
+			left = runTree(curr->left);		// _a_ / b
+			right = runTree(curr->right);	// a / _b_
+
+			tmp = insertValue(
+					&top,
+					generateUniqueID(),
+					DT_INT);
+
+			insertDataInteger(&tmp,
+					(left->data.int_data * right->data.int_data)
+			);
 			return tmp;
 		}
 		else
@@ -231,8 +245,8 @@ void *runTree(struct astNode *curr)
 
 	case AST_ID:
 		// mame identifikator, navrat string o level vyssie
-		if(curr->data.str)
-			return curr->data.str;
+		tmp = search(&top,curr->data.str);
+		return tmp;
 
 		break;
 
