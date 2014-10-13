@@ -42,12 +42,11 @@ void *runTree(struct astNode *curr)
 
 	case AST_CMD:
 		if(curr->right)				//	<command>
-			runTree(curr->right);
+			right = runTree(curr->right);
 
 		if(curr->left && curr->left->type == AST_CMD)	// <command list>
-			runTree(curr->left);
+			return runTree(curr->left);
 
-		return NULL; //commandy boli zparsovane
 		break;
 
 	case AST_ASGN:	// <command>: <assign>
@@ -85,6 +84,11 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_IF:
+		right = runTree(curr->right);	// podmienka body
+		if(right)	// evaluovana true
+			return runTree(curr->left);
+		else
+			return NULL;
 
 		break;
 
