@@ -51,15 +51,21 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_ASGN:	// <command>: <assign>
-		if(curr->left && curr->right)
+		if(curr->left && curr->left->type == AST_ID &&
+			curr->right)
 		{
 			left = search(&top, runTree(curr->left));	// x :=
 			// ak je left null tak mame neinicializovanu premennu - todo: check!!!
-
 			right = runTree(curr->right);			//ocekavame symtabnode (tmp premenna...)
 
 			if(right->dataType == DT_INT && left->dataType == DT_INT)
 				insertDataInteger(&left, right->data.int_data);
+			else if(right->dataType == DT_STR && left->dataType == DT_STR)
+				insertDataString(&left, right->data.str_data);
+			else if(right->dataType == DT_REAL && left->dataType == DT_REAL)
+				insertDataReal(&left, right->data.real_data);
+			else
+				exit(intern);
 
 			return right;
 		}
@@ -69,6 +75,7 @@ void *runTree(struct astNode *curr)
 
 
 	case AST_END:
+		return NULL;
 		break;
 
 	case AST_FUNC:
@@ -78,6 +85,7 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_IF:
+
 		break;
 
 	case AST_WHILE:
@@ -125,22 +133,80 @@ void *runTree(struct astNode *curr)
 
 	case AST_ADD:
 		if(curr->left && curr->right)
-		{
-			//curr->left -> id
+		{	//curr->left -> id
 			tmp = search(&top,curr->left->data.str);	//vyhledame si lokalnu verziu premennej
-
 			//curr->right -> int, str....
-			insertDataInteger(&tmp,
-					(tmp->data.int_data + curr->right->data.integer)
-			);
+			if(DT_INT == tmp->dataType)
+				insertDataInteger(&tmp,(tmp->data.int_data + curr->right->data.integer));
+			else if(DT_STR == tmp->dataType)
+				exit(intern);
+			else
+				exit(intern);
 
 			return tmp;
 		}
 		else
 			exit(intern);
+
 	case AST_SUB:
+		if(curr->left && curr->right)
+		{
+			tmp = search(&top,curr->left->data.str);	//vyhledame si lokalnu verziu premennej
+			if(DT_INT == tmp->dataType)
+			{
+				if(tmp->data.int_data - curr->right->data.integer < 0)
+					exit(run_num);
+				insertDataInteger(&tmp,(tmp->data.int_data - curr->right->data.integer));
+			}
+			else
+				exit(intern);
+			return tmp;
+		}
+		else
+			exit(intern);
+
 	case AST_MUL:
+		if(curr->left && curr->right)
+		{
+			tmp = search(&top,curr->left->data.str);	//vyhledame si lokalnu verziu premennej
+			if(DT_INT == tmp->dataType)
+			{
+				// check na maximalnu hodnotu a*b > INT_MAX
+				insertDataInteger(&tmp,(tmp->data.int_data * curr->right->data.integer));
+			}
+			else if(DT_REAL == tmp->dataType)
+				insertDataReal(&tmp,(tmp->data.real_data * curr->right->data.real));
+			else
+				exit(intern);
+			return tmp;
+		}
+		else
+			exit(intern);
+
 	case AST_DIV:
+		if(curr->left && curr->right)
+		{
+			tmp = search(&top,curr->left->data.str);	//vyhledame si lokalnu verziu premennej
+			if(DT_INT == tmp->dataType)
+			{
+				if(curr->right->data.integer == 0)
+					exit(run_div);
+
+				insertDataInteger(&tmp,(tmp->data.int_data / curr->right->data.integer));
+			}
+			else if(DT_REAL == tmp->dataType)
+			{
+				if(curr->right->data.real == (double)0)	//todo: takto sa realy neporovnavaju, medze!!!
+					exit(run_div);
+
+				insertDataReal(&tmp,(tmp->data.int_data / curr->right->data.integer));
+			}
+			else
+				exit(intern);
+			return tmp;
+		}
+		else
+			exit(intern);
 
 		break;
 
@@ -179,12 +245,33 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_REAL:
+		tmp = insertValue(
+				&top,
+				generateUniqueID(),
+				DT_REAL
+		);
+		insertDataInteger(&tmp, curr->data.real);
+		return tmp;
 		break;
 
 	case AST_BOOL:
+		tmp = insertValue(
+				&top,
+				generateUniqueID(),
+				DT_BOOL
+		);
+		insertDataBoolean(&top, curr->data.boolean);
+		return tmp;
 		break;
 
 	case AST_STR:
+		tmp = insertValue(
+				&top,
+				generateUniqueID(),
+				DT_STR
+		);
+		insertDataString(&top, curr->data.str);
+		return tmp;
 		break;
 
 	case AST_ARR:

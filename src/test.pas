@@ -10,7 +10,7 @@ begin
 	
 	while x < 10 do
 	begin
-		x := x + 1
+		x := x * 2
 	end
 	{m := a;}
 	

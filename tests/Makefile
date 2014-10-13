@@ -1,9 +1,11 @@
+TEST_SCRIPT="../scripts/testProject.sh"
+TEST_DIR="./tests"
+BIN="../src/interpret"
+
 ALL: all
-all:
-	/bin/true
+all: test
 
 test:
-	/bin/true
-
+	$(TEST_SCRIPT) $(BIN) $(TEST_DIR)
 clean:
 	/bin/true

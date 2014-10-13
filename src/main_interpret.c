@@ -177,5 +177,5 @@ run:
 			printSymbolTable(top, 0);
 		}	
 	}
-	
+	return global.errno;
 }
