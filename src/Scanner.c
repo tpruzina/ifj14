@@ -392,6 +392,14 @@ getToc()
 					toc->type = T_MOD;
 				else if(!compareString(str,"do"))
 					toc->type = T_KW_DO;
+				else if(!compareString(str,"case"))
+					toc->type = T_KW_CASE;
+				else if(!compareString(str,"for"))
+					toc->type = T_KW_FOR;
+				else if(!compareString(str,"to"))
+					toc->type = T_KW_TO;
+				else if(!compareString(str,"downto"))
+					toc->type = T_KW_DOWNTO;
 				else
 				{
 					toc->type = T_ID;
