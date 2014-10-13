@@ -6,7 +6,7 @@
 #include "Ast.h"
 #include "Scanner.h"
 #include "Parser.h"
-#include "SymbolTable.h"
+#include "ial.h"
 
 #define D(t) { Log(t, DEBUG, PARSER); }
 #define E(t) { Log(t, ERROR, PARSER); }
@@ -519,6 +519,7 @@ int makeAstFromToken(struct toc* token, struct stack** aststack){
 		return False;						
 	}
 	
+	D("Printing ast");
 	// ulozeni zpatky na zasobnik
 	int ret = stackPush(*aststack, node);
 	printAst((struct astNode*)stackTop(*aststack));
@@ -1161,7 +1162,6 @@ struct astNode* parseFunction(){
 	
 	// ulozit do tabulky zastupnou promennou za return
 	insertValue(&top, name, node->dataType);
-	
 
 	// prohledani tabulky funkci
 	struct symbolTableNode* dekl = (struct symbolTableNode*)search(&(global.funcTable), name);
@@ -1193,6 +1193,7 @@ struct astNode* parseFunction(){
 	 		 	
 	 	node->right = makeNewAST();
 	 	node->right->other = vp;
+	 	D("Printing ast node");
 	 	printAst(node);	 	
 	 		 	
 	 	dekl->other = node;
@@ -1643,6 +1644,291 @@ struct astNode* repeatStatement(struct toc** cur){
 	
 	return rpt;
 }
+struct astNode* forStatement(struct toc** cur){
+	// nacteny for ocekavat ID > ASGN -> To/Downto -> lteral -> body
+	struct astNode* forNode = makeNewAST();
+	forNode->type = AST_FOR;	
+	
+	
+	// type bude AST_TO/AST_DOWNTO
+	struct astNode* forCond = makeNewAST();
+	*cur = getToc();
+	if((*cur)->type == T_ID){
+		// je tam ID
+	
+		struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+		if(!top){
+			W("Symbol table is empty - no local variables");
+		}
+		
+		struct symbolTableNode* var;
+		if(!(var = search(&top, (*cur)->data.str))){
+			// nenalezena promenna
+			E("for: Semantic error - for variable not found in local variables");
+			exit(sem_prog);
+		}	
+		
+		// ulozeni idcka doleva
+		forCond->left = makeNewAST();
+		forCond->left->type = AST_ID;
+		struct String* name = makeNewString();
+		copyString((*cur)->data.str, &name);
+		forCond->left->other = name;
+	}
+	
+	*cur = getToc();
+	if((*cur)->type == T_ASGN){
+		// nasledovalo prirazeni
+		forCond->type = AST_ASGN;		
+	}
+	
+	*cur = getToc();
+	struct astNode* lit = makeNewAST();
+	switch((*cur)->type){
+		case T_INT:
+			lit->type = AST_INT;
+			lit->dataType = DT_INT;
+			lit->data.integer = (*cur)->data.integer;
+			break;	
+		case T_REAL:
+			lit->type = AST_REAL;
+			lit->dataType = DT_REAL;
+			lit->data.real = (*cur)->data.real;
+			break;
+		case T_BOOL:
+			lit->type = AST_BOOL;
+			lit->dataType = DT_BOOL;
+			lit->data.boolean = (*cur)->data.boolean;
+			break;
+		case T_STR: 
+			lit->type = AST_STR;
+			lit->dataType = DT_STR;
+			lit->data.str = (*cur)->data.str;
+			break;
+		default:
+			E("Syntax error - expected literal in right side of assign part of for");
+			exit(synt);
+	}
+	forCond->right = lit;
+	
+	// ocekavat TO/DOWNTO
+	*cur = getToc();
+	if((*cur)->type == T_KW_TO){
+		// nacteny TO keyword
+		forNode->right = makeNewAST();
+		forNode->right->type = AST_FOR_TO; 
+	}
+	else if((*cur)->type == T_KW_DOWNTO){
+		// nacteny DOWNTO
+		forNode->right = makeNewAST();
+		forNode->right->type = AST_FOR_DOWNTO;
+	}
+	else {
+		E("Syntax error - expected TO or DOWNTO keyword");
+		printTokenType(*cur);
+		exit(synt);
+	}
+	// ulozeni doleva prirazeni, doprava pujde koncova hodnota
+	forNode->right->left = forCond;
+	
+	*cur = getToc();
+	lit = makeNewAST();
+	switch((*cur)->type){
+		case T_INT:
+			lit->type = AST_INT;
+			lit->dataType = DT_INT;
+			lit->data.integer = (*cur)->data.integer;
+			break;	
+		case T_REAL:
+			lit->type = AST_REAL;
+			lit->dataType = DT_REAL;
+			lit->data.real = (*cur)->data.real;
+			break;
+		case T_BOOL:
+			lit->type = AST_BOOL;
+			lit->dataType = DT_BOOL;
+			lit->data.boolean = (*cur)->data.boolean;
+			break;
+		case T_STR: 
+			lit->type = AST_STR;
+			lit->dataType = DT_STR;
+			lit->data.str = (*cur)->data.str;
+			break;
+		default:
+			E("Syntax error - expected literal after TO/DOWNTO keyword");
+			exit(synt);
+	}
+	// ulozeni koncove hodnoty do praveho uzlu 
+	forNode->right->right = lit;
+	
+	// nacteni DO za definici
+	*cur = getToc();
+	if((*cur)->type != T_KW_DO){
+		E("Syntax error - expected DO keyword afted definition of FOR cycle");
+		exit(synt);
+	}
+	
+	// ocekavani tela
+	forNode->left = parseBody(cur);
+	
+	if((*cur)->type != T_KW_END){
+		E("Syntax error - expected END keyword at the end of body");
+		exit(synt);		
+	}
+	
+	return forNode;
+}
+struct astNode* getCaseElement(struct toc** cur, int dt){
+	struct astNode* nd = makeNewAST();	
+
+	// doprava pujde literal oznacujici polozku	
+	nd->right = makeNewAST();
+			
+	switch((*cur)->type){
+		case T_INT:
+			if(dt != DT_INT){
+				E("Semantic error - type compatibility failed");
+				exit(sem_komp);
+			}
+			nd->right->type = AST_INT;
+			nd->right->dataType = dt;
+			break;
+		case T_REAL:
+			if(dt != DT_REAL){
+				E("Semantic error - type compatibility failed");
+				exit(sem_komp);
+			}
+			nd->right->type = AST_REAL;
+			nd->right->dataType = dt;
+			break;
+		case T_BOOL:
+			if(dt != DT_BOOL){
+				E("Semantic error - type compatibility failed");
+				exit(sem_komp);
+			}
+			nd->right->type = AST_BOOL;
+			nd->right->dataType = dt;
+			break;
+		case T_STR: 
+			if(dt != DT_STR){
+				E("Semantic error - type compatibility failed");
+				exit(sem_komp);
+			}
+			nd->right->type = AST_STR;
+			nd->right->dataType = dt;
+			break;
+		case T_KW_ELSE:
+			nd->right->type = AST_NONE;
+			nd->right->dataType = dt;
+			break;
+		default:
+			E("Syntax error - expected literal");
+			printTokenType(*cur);
+			exit(synt);
+	}
+	
+	*cur = getToc();
+	if((*cur)->type != T_COL){
+		E("Syntax error - expected COLON as separator in case block");
+		printTokenType(*cur);
+		exit(synt);
+	}
+	
+	// TODO pracovat jen s řádkovýma příkazama nebo i s těly
+	*cur = getToc();
+	if((*cur)->type == T_KW_BEGIN)
+		nd->left = parseBody(cur);
+	else
+		nd->left = parseCommand(cur);
+	
+	if((*cur)->type != T_SCOL){
+		E("Syntax error - expected SEMICOLON at the end of CASE statement");
+		printTokenType(*cur);
+		exit(synt);	
+	}
+	
+	
+	return nd;
+}
+struct astNode* caseStatement(struct toc** cur){
+	// Uzel této konstrukce bude uvozovat AST_SWITCH, 
+	// kde v levém podstromu bude fronta case položek, 
+	// kde v levém poduzlu bude literál, označující ke 
+	// které hodnotě je tento prvek přiřazen, a v pravém poduzlu bude 
+	// tělo položky. V pravém poduzlu hlavního uzlu je AST_ID určující, 
+	// podle čeho se porovnává. 
+	struct astNode* switchNode = makeNewAST();
+	switchNode->type = AST_SWITCH;
+	
+	*cur = getToc();
+	if((*cur)->type != T_ID){	
+		E("Syntax error - expected ID");
+		printTokenType(*cur);
+		exit(synt);
+	}
+	
+	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+	struct symbolTableNode* var = NULL;
+	if(!(var = search(&top, (*cur)->data.str))){
+		E("Semantic error - local variable not found");
+		exit(sem_prog);
+	}
+	
+	// vytvoreni jmena promenne
+	struct String* name = makeNewString();
+	copyString((*cur)->data.str, &name);
+	
+	// vytvoreni uzlu pro promennou
+	switchNode->right = makeNewAST();
+	switch((*cur)->type){
+		case T_INT: {
+			switchNode->right->type = AST_INT;
+			switchNode->right->dataType = DT_INT;
+			break;
+		}
+		case T_REAL: {
+			switchNode->right->type = AST_REAL;
+			switchNode->right->dataType = DT_REAL;
+			break;
+		}
+		case T_BOOL: {
+			switchNode->right->type = AST_BOOL;
+			switchNode->right->dataType = DT_BOOL;
+			break;
+		}
+		case T_STR: {
+			switchNode->right->type = AST_STR;
+			switchNode->right->dataType = DT_STR;
+			break;
+		}
+	}
+	switchNode->right->other = name;
+	
+	// ocekavani OF
+	*cur = getToc();
+	if((*cur)->type != T_OF){
+		E("Syntax error - expected OF after ID in case definition");
+		printTokenType(*cur);
+		exit(synt);
+	}
+	
+	// naplneni fronty prikazy
+	struct queue* cases = makeNewQueue();
+	*cur = getToc();
+	while((*cur)->type != T_KW_END){
+		struct astNode* node = getCaseElement(cur, var->dataType);
+		
+		queuePush(cases, node);
+		
+		// nacteni dalsiho tokenu
+		*cur = getToc();
+	}
+	
+	switchNode->left = makeNewAST();
+	switchNode->left->other = cases;
+	
+	return switchNode;
+}
 
 /**
  * Vyhodnoti vsechny moznosti prikazu, ktere se muzou vyskytovat v tele funkce/programu
@@ -1659,7 +1945,7 @@ struct astNode* parseCommand(struct toc** cur){
 			E("cmd: Syntax error - last command cannot be ended with semicolon");
 			exit(synt);
 		}	
-		case T_KW_IF: {			
+		case T_KW_IF:{			
 			struct astNode* ifstat = ifStatement(cur);
 			if(!ifstat)
 				return NULL;

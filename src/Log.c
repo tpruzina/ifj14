@@ -67,9 +67,9 @@ void Log(char* msg, int type, int frm){
 			sprintf(from, "[   AST  ]");
 			break;
 		}
-		case SYMTABLE: {
+		case IAL: {
 			fcol = COLOR_DGRY;
-			sprintf(from, "[ SYMTBL ]");
+			sprintf(from, "[   IAL  ]");
 			break;
 		}
 		case PARSER: {

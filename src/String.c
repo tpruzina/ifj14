@@ -21,12 +21,14 @@ struct String* makeNewString(){
 	struct String* str = (struct String*)gcMalloc(sizeof(struct String));
 	if(str == NULL){
 		Log("String: makeNewString: malloc error", ERROR, STRING);
-		return NULL;
+		exit(intern);
 	}
 
-	str->Value = NULL;
+	str->Value = (char*)gcMalloc(sizeof(char));
+	str->Value[0] = '\0';
+	
 	str->Length = 0;
-	str->Allocated = 0;
+	str->Allocated = 1;
 
 	return str;
 }
@@ -78,7 +80,7 @@ int addChar(struct String* s, char c){
 int emptyString(struct String* str){
 	if(str == NULL){
 		Log("String is NULL, cannot be cleaned", ERROR, STRING);
-		return False;
+		exit(intern);
 	}
 	if(str->Value != NULL){
 		str->Value = (char*)gcRealloc(str->Value, 1);
@@ -123,7 +125,7 @@ int freeString(struct String* s){
 int compareCharArrays(char* s1, char* s2){
 	if(s1 == NULL || s2 == NULL){
 		Log("Char arrays are both NULL", ERROR, STRING);
-		return False;
+		exit(intern);
 	}
 	
 	int len = getCharArrayLength(s1);
@@ -146,7 +148,7 @@ int compareCharArrays(char* s1, char* s2){
 		return 1;
 	else {
 		Log("Comparison error", ERROR, STRING);
-		return 0;
+		exit(intern);
 	}
 }
 /**
@@ -155,8 +157,7 @@ int compareCharArrays(char* s1, char* s2){
 int compareString(struct String* s, char* s2){
 	if(s == NULL || s2 == NULL){
 		Log("Empty params", ERROR, STRING);
-		global.errno = intern;
-		return 0;
+		exit(intern);
 	}
 	int charlen = getCharArrayLength(s2);
 	if(s->Length == charlen){
@@ -178,7 +179,7 @@ int compareString(struct String* s, char* s2){
 		return 1;
 	else {
 		Log("Comparison error", ERROR, STRING);
-		return 0;
+		exit(intern);;
 	}
 }
 /**
@@ -187,8 +188,7 @@ int compareString(struct String* s, char* s2){
 int compareStrings(struct String* s1, struct String* s2){
 	if(s1 == NULL || s2 == NULL){
 		Log("s1 or s2 = null", ERROR, STRING);
-		global.errno = intern;
-		return 0;	
+		exit(intern);
 	}
 	else {
 		fprintf(stderr, "%s ? %s\n", s1->Value, s2->Value);
@@ -213,7 +213,7 @@ int compareStrings(struct String* s1, struct String* s2){
 	}
 	
 	Log("Comparison error", ERROR, STRING);
-	return 0;
+	exit(intern);
 }
 
 /**
@@ -248,13 +248,12 @@ int toLower(struct String* str){
 int copyString(struct String* src, struct String** dest){
 	if(src == NULL){
 		Log("Src string == empty", ERROR, STRING);
-		global.errno = intern;
-		return False;	
+		exit(intern);	
 	}
 	
 	if((*dest) == NULL && ((*dest) = makeNewString()) == NULL){
 		Log("Destination string cannot be maked", ERROR, STRING);
-		return False;
+		exit(intern);
 	}
 	else {
 		if(!emptyString(*dest)){
@@ -277,15 +276,14 @@ int copyString(struct String* src, struct String** dest){
 int copyFromArray(char* src, struct String** dest){
 	if(src == NULL){
 		Log("Src string == empty", ERROR, STRING);
-		global.errno = intern;
-		return False;	
+		exit(intern);	
 	}
 	if((*dest) == NULL && ((*dest) = makeNewString()) == NULL)
 		return False;
 	else {
 		if(!emptyString(*dest)){
 			Log("Clearing failed", ERROR, STRING);
-			return False;
+			exit(intern);
 		}
 	}
 		
