@@ -1,8 +1,8 @@
 program test;
 
 var
-	i : integer;
+	i : real;
 
 BEGIN
-	i := 1
+	i := 1 * 1.000 + 1
 END.

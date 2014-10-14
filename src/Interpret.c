@@ -245,9 +245,7 @@ void *runTree(struct astNode *curr)
 
 	case AST_ID:
 		// mame identifikator, navrat string o level vyssie
-		tmp = search(&top,curr->data.str);
-		return tmp;
-
+		return search(&top,curr->data.str);
 		break;
 
 	case AST_INT:
