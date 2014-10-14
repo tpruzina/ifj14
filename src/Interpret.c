@@ -229,17 +229,16 @@ void *runTree(struct astNode *curr)
 			else if(right->dataType == DT_REAL && left->dataType == DT_REAL)
 				insertDataReal(&left, right->data.real_data);
 			else
-				exit(intern);
+				exit(sem_komp);
+
+			// ak prava strana nema meno tak sme mali tmp premennu ktoru mozeme rovno smazat
+			if(!right->name->Value)
+				deleteTable(&right);
 
 			return left;
 		}
 		else
 			exit(intern);
-		break;
-
-
-	case AST_END:
-		return NULL;
 		break;
 
 	case AST_FUNC:
@@ -248,6 +247,7 @@ void *runTree(struct astNode *curr)
 	case AST_CALL:
 		break;
 
+// controll konstrukcie (if,while,repeat..)
 	case AST_IF:
 		tmp = runTree(curr->other);	// podmienka body
 
@@ -277,9 +277,10 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_REPEAT:
+		exit(intern);	//todo
 		break;
 
-
+// porovnavanie =,!=,<,<=,>,>=
 	case AST_EQV:
 	case AST_NEQV:
 	case AST_GRT:
@@ -294,7 +295,6 @@ void *runTree(struct astNode *curr)
 
 			// pripravime tmp premennu typu bool na vysledek
 			tmp = makeNewSymbolTable();
-
 			insertDataBoolean(
 					&tmp,
 					compare(left,right,curr->type)	//porovnavame a (op) b
@@ -305,6 +305,7 @@ void *runTree(struct astNode *curr)
 			exit(intern);
 		break;
 
+// aritmeticke operace +,-,/,*
 	case AST_ADD:
 	case AST_SUB:
 	case AST_MUL:
@@ -322,23 +323,50 @@ void *runTree(struct astNode *curr)
 			exit(intern);
 		break;
 
+// logicke operace
 	case AST_AND:
-		break;
-
 	case AST_OR:
-		break;
-
 	case AST_XOR:
+		if(curr->left && curr->right)
+		{
+			right = runTree(curr->right);
+			left = runTree(curr->left);
+
+			tmp = makeNewSymbolTable();
+			insertDataBoolean(
+					&tmp,
+					(curr->type == AST_AND) ? (left->data.bool_data && right->data.bool_data):
+					(curr->type == AST_OR)	? (left->data.bool_data || right->data.bool_data):
+					(curr->type == AST_XOR) ? (left->data.bool_data ^ right->data.bool_data):
+					false
+			);
+			return tmp;
+		}
+		else
+			exit(intern);
 		break;
 
 	case AST_NOT:
+		if(curr->left)
+		{
+			left = runTree(curr->left);
+
+			tmp = makeNewSymbolTable();
+			insertDataBoolean(&tmp,	!(left->data.bool_data));
+			return tmp;
+		}
+		else
+			exit(intern);
 		break;
 
+// ????
 	case AST_NUM:
 		break;
 
+
+// unarne operacie, vracaju 'tokeny' ast (premenne, int, bool,real...)
 	case AST_ID:
-		// mame identifikator, navrat string o level vyssie
+		// mame identifikator, hladame v tabulke symbolov
 		return search(&top,curr->data.str);
 		break;
 
@@ -346,7 +374,6 @@ void *runTree(struct astNode *curr)
 		// pridavame novu lokalnu premennu do tabulky a priradime jej hodnotu z node
 		tmp = makeNewSymbolTable();
 		insertDataInteger(&tmp,curr->data.integer);
-
 		return tmp;
 		break;
 
@@ -363,21 +390,22 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_STR:
-		tmp = insertValue(
-				&top,
-				generateUniqueID(),
-				DT_STR
-		);
+		tmp = makeNewSymbolTable();
 		insertDataString(&top, curr->data.str);
 		return tmp;
 		break;
 
 	case AST_ARR:
+		exit(intern);	//todo
 		break;
 
+// ????
+	case AST_END:
+		return NULL;
+		break;
 
-	default:
 	case AST_NONE:
+	default:
 //		exit(intern);
 		return NULL;
 	}
