@@ -20,6 +20,10 @@ int interpret()
 
 #define NODE_LEFT_TYPE(node,type) ((node)->left) && ((node)->left->type == (type)))
 
+
+
+#define GET_DATATYPE(node) ((node)->dataType)
+
 // porovnavame dve premenne rovnakeho typu
 // prerekvizita je uplne definovany typ, cize treba odpalit runTree() na operandy
 bool compare(struct symbolTableNode *left,struct symbolTableNode *right,int op)
@@ -77,6 +81,108 @@ bool compare(struct symbolTableNode *left,struct symbolTableNode *right,int op)
 	else
 		exit(intern);	// ak sme sa dostali sem tak sa nieco vazne dosralo
 }
+
+
+
+//podobne ako pri compare, tuna robime aritmeticke operacie
+// rozdiel je ze vracime dynamicky alokovanu tmp premennu
+struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTableNode *right,int op)
+{
+	//pomocna premenna node
+	struct symbolTableNode *tmp = makeNewSymbolTable();
+	if(!tmp)
+		exit(intern);
+	// pomocna premenna type, budeme musiet rozlisovat typy
+	int type;
+
+	if(op == AST_DIV)	//implicitne vysledok divisionu je REAL
+		type = DT_REAL;
+	else if(DT_INT == left->dataType && DT_INT == right->dataType)
+		type = DT_INT;
+	else if(DT_STR == left->dataType && DT_STR == right->dataType)
+		type = DT_STR;
+	else if(	//ak je jeden z typov real a druhy int, vysledok bude real
+			(DT_REAL == left->dataType && DT_INT == right->dataType) ||
+			(DT_REAL == right->dataType && DT_INT == left->dataType))
+		type = DT_REAL;
+	else
+		exit(4);	//jinak mame chybu v typoch, toto by malo byt osetrena v parsri ?
+
+	// ulozime si vysledny typ
+	tmp->dataType = type;
+
+	switch(op)
+	{
+	case AST_ADD:
+		if(type == DT_INT)
+			insertDataInteger(&tmp, left->data.int_data + right->data.int_data);
+		else if(type == DT_REAL)
+		{
+			//fugly workaround okolo faktu ze nemam pekne makra na zistenie typu z unionu
+			if(left->dataType == DT_INT)
+				insertDataReal(&tmp, ((double)left->data.int_data + right->data.real_data));
+			else if(right->dataType == DT_INT)
+				insertDataReal(&tmp, (left->data.real_data + (double)right->data.int_data));
+			else
+				insertDataReal(&tmp, (left->data.real_data + right->data.real_data));
+		}
+		else if(type == DT_STR)
+		{
+			// konkatenace
+			exit(intern);
+		}
+		else
+			exit(intern);
+		break;
+
+	case AST_SUB:
+		if(type == DT_INT)
+			insertDataInteger(&tmp, left->data.int_data - right->data.int_data);
+		else if(type == DT_REAL)
+		{
+			//fugly workaround okolo faktu ze nemam pekne makra na zistenie typu z unionu
+			if(left->dataType == DT_INT)
+				insertDataReal(&tmp, ((double)left->data.int_data - right->data.real_data));
+			else if(right->dataType == DT_INT)
+				insertDataReal(&tmp, (left->data.real_data - (double)right->data.int_data));
+			else
+				insertDataReal(&tmp, (left->data.real_data - right->data.real_data));
+		}
+		else
+			exit(intern);
+		break;
+
+	case AST_MUL:
+		if(type == DT_INT)
+			insertDataInteger(&tmp, left->data.int_data * right->data.int_data);
+		else if(type == DT_REAL)
+		{
+			//fugly workaround okolo faktu ze nemam pekne makra na zistenie typu z unionu
+			if(left->dataType == DT_INT)
+				insertDataReal(&tmp, (((double)left->data.int_data) * right->data.real_data));
+			else if(right->dataType == DT_INT)
+				insertDataReal(&tmp, (((double)right->data.int_data) * left->data.real_data));
+			else
+				insertDataReal(&tmp, right->data.real_data * left->data.real_data);
+		}
+		else
+			exit(intern);
+		break;
+
+	case AST_DIV:
+		if(left->dataType == DT_INT)
+			insertDataReal(&tmp, ((double)left->data.int_data / right->data.real_data));
+		else if(right->dataType == DT_INT)
+			insertDataReal(&tmp, (left->data.real_data / (double)right->data.int_data));
+		else
+			insertDataReal(&tmp, (left->data.real_data / right->data.real_data));
+		break;
+	}
+
+	// vratime tmp premennu s vysledkom operace
+	return tmp;
+}
+
 
 
 void *runTree(struct astNode *curr)
@@ -187,14 +293,11 @@ void *runTree(struct astNode *curr)
 			right = runTree(curr->right);
 
 			// pripravime tmp premennu typu bool na vysledek
-			tmp = insertValue(
-					&top,
-					generateUniqueID(),
-					DT_BOOL);
+			tmp = makeNewSymbolTable();
 
 			insertDataBoolean(
 					&tmp,
-					compare(left,right,curr->type)
+					compare(left,right,curr->type)	//porovnavame a (op) b
 			);
 			return tmp;
 		}
@@ -203,83 +306,20 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_ADD:
-		if(curr->left && curr->right)
-		{	//curr->left -> id
-			tmp = search(&top,curr->left->data.str);	//vyhledame si lokalnu verziu premennej
-			//curr->right -> int, str....
-			if(DT_INT == tmp->dataType)
-				insertDataInteger(&tmp,(tmp->data.int_data + curr->right->data.integer));
-			else if(DT_STR == tmp->dataType)
-				exit(intern);
-			else
-				exit(intern);
-
-			return tmp;
-		}
-		else
-			exit(intern);
-
 	case AST_SUB:
-		if(curr->left && curr->right)
-		{
-			tmp = search(&top,curr->left->data.str);	//vyhledame si lokalnu verziu premennej
-			if(DT_INT == tmp->dataType)
-			{
-				if(tmp->data.int_data - curr->right->data.integer < 0)
-					exit(run_num);
-				insertDataInteger(&tmp,(tmp->data.int_data - curr->right->data.integer));
-			}
-			else
-				exit(intern);
-			return tmp;
-		}
-		else
-			exit(intern);
-
 	case AST_MUL:
-		if(curr->left && curr->right)
-		{
-			left = runTree(curr->left);		// _a_ / b
-			right = runTree(curr->right);	// a / _b_
-
-			tmp = insertValue(
-					&top,
-					generateUniqueID(),
-					DT_INT);
-
-			insertDataInteger(&tmp,
-					(left->data.int_data * right->data.int_data)
-			);
-			return tmp;
-		}
-		else
-			exit(intern);
-
 	case AST_DIV:
 		if(curr->left && curr->right)
 		{
-			tmp = search(&top,curr->left->data.str);	//vyhledame si lokalnu verziu premennej
-			if(DT_INT == tmp->dataType)
-			{
-				if(curr->right->data.integer == 0)
-					exit(run_div);
+			left = runTree(curr->left);		// *a* (op) b
+			right = runTree(curr->right);	// a (op) *b*
 
-				insertDataInteger(&tmp,(tmp->data.int_data / curr->right->data.integer));
-			}
-			else if(DT_REAL == tmp->dataType)
-			{
-				if(curr->right->data.real == (double)0)	//todo: takto sa realy neporovnavaju, medze!!!
-					exit(run_div);
-
-				insertDataReal(&tmp,(tmp->data.int_data / curr->right->data.integer));
-			}
-			else
-				exit(intern);
-			return tmp;
+			// spravime aritmeticku operaciu
+			// vraci tmp premennu v symtab node
+			return arithmetic(left,right,curr->type);
 		}
 		else
 			exit(intern);
-
 		break;
 
 	case AST_AND:
@@ -304,32 +344,20 @@ void *runTree(struct astNode *curr)
 
 	case AST_INT:
 		// pridavame novu lokalnu premennu do tabulky a priradime jej hodnotu z node
-		tmp = insertValue(
-				&top,
-				generateUniqueID(),
-				DT_INT
-		);
+		tmp = makeNewSymbolTable();
 		insertDataInteger(&tmp,curr->data.integer);
 
 		return tmp;
 		break;
 
 	case AST_REAL:
-		tmp = insertValue(
-				&top,
-				generateUniqueID(),
-				DT_REAL
-		);
-		insertDataInteger(&tmp, curr->data.real);
+		tmp = makeNewSymbolTable();
+		insertDataReal(&tmp, curr->data.real);
 		return tmp;
 		break;
 
 	case AST_BOOL:
-		tmp = insertValue(
-				&top,
-				generateUniqueID(),
-				DT_BOOL
-		);
+		tmp = makeNewSymbolTable();
 		insertDataBoolean(&top, curr->data.boolean);
 		return tmp;
 		break;
