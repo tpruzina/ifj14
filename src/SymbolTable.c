@@ -122,6 +122,43 @@ struct symbolTableNode* insertValue(struct symbolTableNode** table, struct Strin
 	return NULL;
 }
 
+/*
+ * Vklada _spravne_ data do node podla jeho typu
+ * v interprete, predpokladom je inicializovany node
+ *
+ */
+int insertData(struct symbolTableNode** table, void *data)
+{
+	if(!*table)
+		exit(intern);
+
+
+	if((*table)->dataType == DT_INT)
+	{
+		int *data_i = data;
+		insertDataInteger(table,*data_i);
+	}
+	else if((*table)->dataType == DT_REAL)
+	{
+		double *data_d = data;
+		insertDataReal(table,*data_d);
+	}
+	else if((*table)->dataType == DT_BOOL)
+	{
+		bool *data_b = data;
+		insertDataBoolean(table, *data_b);
+	}
+	else if((*table)->dataType == DT_STR)
+	{
+		struct String *data_s = data;
+		insertDataString(table, data_s);
+	}
+	else
+		exit(intern);
+
+	return True;
+}
+
 /**
  * Vklada do vytvoreneho uzlu data na prislusnou polozku do unionu.
  * Kopiruje data do integeru

@@ -20,12 +20,71 @@ int interpret()
 
 #define NODE_LEFT_TYPE(node,type) ((node)->left) && ((node)->left->type == (type)))
 
+// porovnavame dve premenne rovnakeho typu
+// prerekvizita je uplne definovany typ, cize treba odpalit runTree() na operandy
+bool compare(struct symbolTableNode *left,struct symbolTableNode *right,int op)
+{
+	ASSERT(left && right);
+
+	// ak nie je rovnaky typ tak zarveme chybu (teoreticky to failne uz v parsri)
+	if(left->dataType != right->dataType)
+		exit(4);
+
+	if(left->dataType == DT_INT)
+	{
+		switch(op)
+		{
+		case AST_GRT:
+			return (left->data.int_data > right->data.int_data) ? true : false;
+		case AST_GEQV:
+			return (left->data.int_data >= right->data.int_data) ? true : false;
+		case AST_LSS:
+			return (left->data.int_data < right->data.int_data) ? true : false;
+		case AST_LEQV:
+			return (left->data.int_data <= right->data.int_data) ? true : false;
+		case AST_EQV:
+			return (left->data.int_data == right->data.int_data) ? true : false;
+		case AST_NEQV:
+			return (left->data.int_data != right->data.int_data) ? true : false;
+		default:
+			exit(intern);
+		}
+	}
+	else if(left->dataType == DT_BOOL)
+	{
+		switch(op)
+		{
+		case AST_GRT:
+			return (left->data.real_data > right->data.real_data) ? true : false;
+		case AST_GEQV:
+			return (left->data.real_data >= right->data.real_data) ? true : false;
+		case AST_LSS:
+			return (left->data.real_data < right->data.real_data) ? true : false;
+		case AST_LEQV:
+			return (left->data.real_data <= right->data.real_data) ? true : false;
+		case AST_EQV:
+			return (left->data.real_data == right->data.real_data) ? true : false;
+		case AST_NEQV:
+			return (left->data.real_data != right->data.real_data) ? true : false;
+		default:
+			exit(intern);
+		}
+	}
+	else if(left->dataType == DT_STR)
+		exit(intern);	//todo
+	else if(left->dataType == DT_BOOL)
+		exit(intern);	//todo
+	else
+		exit(intern);	// ak sme sa dostali sem tak sa nieco vazne dosralo
+}
+
+
 void *runTree(struct astNode *curr)
 {
 	if(!curr)
 		exit(intern);
 
-	struct symbolTableNode *left = NULL;		//toto by mali byt void pointre, ale fuck my life (resp. typecasty)
+	struct symbolTableNode *left = NULL;
 	struct symbolTableNode *right = NULL;
 
 	struct symbolTableNode *tmp = NULL;
@@ -86,7 +145,7 @@ void *runTree(struct astNode *curr)
 	case AST_IF:
 		tmp = runTree(curr->other);	// podmienka body
 
-		if(tmp)	//vyhodnocena true
+		if(tmp->data.bool_data == true)	//vyhodnocena true
 			return runTree(curr->left);
 		else if(curr->right)	// vyhodnocena false a mame v branchi else
 				return runTree(curr->right);
@@ -97,8 +156,15 @@ void *runTree(struct astNode *curr)
 	case AST_WHILE:
 		if(curr->left && curr->other)
 		{
-			while(runTree(curr->other)) //overenie <condition>
-				runTree(curr->left);	// ak true, tak bezime telo
+			while(true)
+			{
+				tmp = runTree(curr->other);
+				if(tmp->data.bool_data)
+					runTree(curr->left);	// ak true, tak bezime telo
+				else
+					break;
+			}
+			return NULL;
 		}
 		else
 			exit(intern);
@@ -109,43 +175,31 @@ void *runTree(struct astNode *curr)
 
 
 	case AST_EQV:
-		break;
-
 	case AST_NEQV:
-		break;
-
 	case AST_GRT:
-		if(curr->left && curr->right)
-		{
-			tmp = search(&top, curr->left->data.str);
-			if(!tmp)
-				exit(intern);
-
-			if(tmp->data.int_data > curr->right->data.integer)
-				return tmp;
-			else
-				return NULL;
-		}
-		break;
-
 	case AST_LSS:
+	case AST_GEQV:
+	case AST_LEQV:
 		if(curr->left && curr->right)
 		{
-			//curr->left --> id
-			tmp = search(&top,curr->left->data.str);
-			//curr->right --> int
+			// ziskame levu & pravu stranu porovnania
+			left = runTree(curr->left);
+			right = runTree(curr->right);
 
-			if(tmp->data.int_data < curr->right->data.integer)
-				return tmp;
-			else
-				return NULL;
+			// pripravime tmp premennu typu bool na vysledek
+			tmp = insertValue(
+					&top,
+					generateUniqueID(),
+					DT_BOOL);
+
+			insertDataBoolean(
+					&tmp,
+					compare(left,right,curr->type)
+			);
+			return tmp;
 		}
-		break;
-
-	case AST_GEQV:
-		break;
-
-	case AST_LEQV:
+		else
+			exit(intern);
 		break;
 
 	case AST_ADD:

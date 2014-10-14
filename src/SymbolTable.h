@@ -23,7 +23,7 @@ int deleteTable(struct symbolTableNode**);
 
 void printSymbolTable(struct symbolTableNode*, int);
 
-
+int insertData(struct symbolTableNode** table, void *data);
 struct String *generateUniqueID(void);
 
 #endif
