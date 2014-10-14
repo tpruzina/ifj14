@@ -324,6 +324,7 @@ void *runTree(struct astNode *curr)
 		break;
 
 // logicke operace
+	// tieto su binarne
 	case AST_AND:
 	case AST_OR:
 	case AST_XOR:
@@ -346,6 +347,7 @@ void *runTree(struct astNode *curr)
 			exit(intern);
 		break;
 
+	// not je unarna operacia
 	case AST_NOT:
 		if(curr->left)
 		{
