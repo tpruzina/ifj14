@@ -20,8 +20,6 @@ int interpret()
 
 #define NODE_LEFT_TYPE(node,type) ((node)->left) && ((node)->left->type == (type)))
 
-
-
 #define GET_DATATYPE(node) ((node)->dataType)
 
 // porovnavame dve premenne rovnakeho typu
@@ -241,10 +239,12 @@ void *runTree(struct astNode *curr)
 			exit(intern);
 		break;
 
-	case AST_FUNC:
-		break;
-
+// toto z pohladu interpretu potrebne nebude
+//	case AST_FUNC:
+//		break;
 	case AST_CALL:
+
+
 		break;
 
 // controll konstrukcie (if,while,repeat..)
@@ -254,7 +254,7 @@ void *runTree(struct astNode *curr)
 		if(tmp->data.bool_data == true)	//vyhodnocena true
 			return runTree(curr->left);
 		else if(curr->right)	// vyhodnocena false a mame v branchi else
-				return runTree(curr->right);
+			return runTree(curr->right);
 		// jinak
 		return NULL;
 		break;
@@ -361,11 +361,6 @@ void *runTree(struct astNode *curr)
 			exit(intern);
 		break;
 
-// ????
-	case AST_NUM:
-		break;
-
-
 // unarne operacie, vracaju 'tokeny' ast (premenne, int, bool,real...)
 	case AST_ID:
 		// mame identifikator, hladame v tabulke symbolov
@@ -398,18 +393,19 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_ARR:
-		exit(intern);	//todo
+		// AST_ARR má v položce other uloženou strukturu dataTypeArray,
+		// která obsahuje hlavní informace o poli - meze, datový typ a jméno pole.
+		exit(intern);
+		tmp = makeNewSymbolTable();
 		break;
 
-// ????
+
+	// tieto veci by sa do interpretu nemali dostat
+	case AST_NUM:
 	case AST_END:
-		return NULL;
-		break;
-
 	case AST_NONE:
 	default:
-//		exit(intern);
-		return NULL;
+		exit(intern);
 	}
 	return NULL;
 }
