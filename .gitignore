@@ -8,5 +8,7 @@
 *.project
 *.cproject
 
+tests/vysledkyTestu.txt
+
 ./ifj2014
 ./docs/dokumentace/dokumentace.pdf
