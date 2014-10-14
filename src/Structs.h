@@ -40,6 +40,8 @@ enum tokenType {
 	T_KW_PROGRAM,
 	T_KW_LENGTH,
 	T_KW_COPY,
+	T_KW_FOR,
+	T_KW_CASE,
 	// neni v zadani ako klucove slovo - ??? 
 	T_RPT,	// repeat
 	T_UNTIL,	// until

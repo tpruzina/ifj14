@@ -400,6 +400,10 @@ getToc()
 					toc->type = T_KW_TO;
 				else if(!compareString(str,"downto"))
 					toc->type = T_KW_DOWNTO;
+				else if(!compareString(str,"copy"))
+					toc->type = T_KW_COPY;
+				else if(!compareString(str, "length"))
+					toc->type = T_KW_LENGTH;
 				else
 				{
 					toc->type = T_ID;
