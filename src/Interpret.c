@@ -5,6 +5,11 @@ int interpret()
 	ASSERT(global);
 	ASSERT(global.program);
 
+	// TODO: sem pridat kontrolu na to, aby bola kazda funkcia riadne definovana
+	// potrebne pre forward deklarace
+	printAst(global.funcTable);
+
+
 	printf("##################INTERPRET############################\n");
 
 	struct astNode *curr = global.program;
