@@ -133,7 +133,18 @@ void printAst(struct astNode* ast){
 		"AST_BOL",
 		"AST_STR",
 		"AST_ARR",
-		"AST_CMD"};
+		"AST_CMD",
+		"AST_FOR",
+		"AST_FOR_TO",
+		"AST_FOR_DOWNTO",
+		"AST_SWITCH",
+		"AST_WRITE",
+		"AST_READLN",
+		"AST_COPY",
+		"AST_LENGTH",
+		"AST_FIND",
+		"AST_SORT",
+	};
 	
 	prtAst(ast, 0, nodes);
 }
