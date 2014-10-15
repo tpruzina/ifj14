@@ -287,6 +287,7 @@ void datatypes(int left, int right){
 	free(l);
 	free(r);
 }
+
 int valid(struct astNode* left, struct astNode* right, int op){	
 	struct symbolTableNode* symtable = (struct symbolTableNode*)stackTop(global.symTable);
 	

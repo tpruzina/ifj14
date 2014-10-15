@@ -195,7 +195,9 @@ void *runTree(struct astNode *curr)
 	struct symbolTableNode *left = NULL;
 	struct symbolTableNode *right = NULL;
 	struct symbolTableNode *tmp = NULL;
-	struct varspars *vp = NULL;
+
+	struct varspars *tmp_vp = NULL;
+	struct astNode	*tmp_asp = NULL;
 
 	// stack top je cheap operace, nech to nemusime riesit v KA, bude to v kazdej iteracii - resp. TODO
 	struct symbolTableNode* top = stackTop(global.symTable);
@@ -247,11 +249,14 @@ void *runTree(struct astNode *curr)
 
 	case AST_FUNC:
 /*
- *		Funkce bude uložená v AST_FUNC uzlu, kde levý obsahuje tělo a pravý je typu AST_NONE a v položce OTHER má strukturu varsapars obsahující frontu pro proměnné a frontu pro parametry.
- *
+ *		Funkce bude uložená v AST_FUNC uzlu, kde levý obsahuje tělo a
+ *		pravý je typu AST_NONE a v položce OTHER má strukturu varsapars
+ *		obsahující frontu pro proměnné a frontu pro parametry.
  */
+//		ASSERT(curr->left);		//telo
+		ASSERT(curr->right);	// none->other (varspars)
 
-
+		return runTree(curr->other);
 
 	break;
 
@@ -264,14 +269,26 @@ void *runTree(struct astNode *curr)
 		// curr->other (struct string *) jmeno_funkcie
 		tmp = search(&global.funcTable,(struct String *)curr->other);
 		ASSERT(tmp);	//teoreticky je toto riesene uz v parsri
+		tmp_vp = curr->right->other;	//tu budu parametry
+		tmp_asp = tmp->other;	//telo: todo smazat
 
+		printAst(tmp->other);
 
-		vp = curr->right->other;	//tu budu parametry
+		// vytvorime si novu lokalnu tabulky symbolov
+		stackPush(global.symTable, makeNewSymbolTable());
 
+		// nakopirujeme parametre
 
+		// vytvorime lokalne premenne
 
+		// zavolame funkciu
+		tmp = runTree(tmp->other);
 
-		exit(intern);
+		// navratime povodnu tabulku symbolov
+		stackPop(global.symTable);
+
+		// vratime navratovu hodnotu funkcie
+		return tmp;
 
 		break;
 
@@ -357,9 +374,9 @@ void *runTree(struct astNode *curr)
 		insertDataBoolean(
 				&tmp,
 				(curr->type == AST_AND) ? (left->data.bool_data && right->data.bool_data):
-						(curr->type == AST_OR)	? (left->data.bool_data || right->data.bool_data):
-								(curr->type == AST_XOR) ? (left->data.bool_data ^ right->data.bool_data):
-										false
+				(curr->type == AST_OR)	? (left->data.bool_data || right->data.bool_data):
+				(curr->type == AST_XOR) ? (left->data.bool_data ^ right->data.bool_data):
+				false
 		);
 		return tmp;
 
