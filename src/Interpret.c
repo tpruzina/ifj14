@@ -7,7 +7,7 @@ int interpret()
 
 	// TODO: sem pridat kontrolu na to, aby bola kazda funkcia riadne definovana
 	// potrebne pre forward deklarace
-	printAst(global.funcTable);
+	//printAst(global.funcTable);
 
 
 	printf("##################INTERPRET############################\n");
@@ -206,6 +206,7 @@ void *runTree(struct astNode *curr)
 	case AST_START:
 		if(curr->left && curr->left->type == AST_CMD)
 			runTree(curr->left);
+
 		break;
 
 	case AST_CMD:
@@ -245,10 +246,17 @@ void *runTree(struct astNode *curr)
 		break;
 
 // toto z pohladu interpretu potrebne nebude
-//	case AST_FUNC:
-//		break;
-	case AST_CALL:
 
+	case AST_FUNC:
+
+
+	case AST_CALL:
+		tmp = search(&global.funcTable,(struct String *)curr->other);
+		runTree(tmp);
+
+		left = tmp->other;
+		right = curr->right->other;
+		exit(intern);
 
 		break;
 
@@ -269,7 +277,8 @@ void *runTree(struct astNode *curr)
 		{
 			while(true)
 			{
-				tmp = runTree(curr->other);
+				tmp = runTree(curr->other);	// evaluujeme podmienku
+
 				if(tmp->data.bool_data)
 					runTree(curr->left);	// ak true, tak bezime telo
 				else
@@ -400,7 +409,6 @@ void *runTree(struct astNode *curr)
 	case AST_ARR:
 		// AST_ARR má v položce other uloženou strukturu dataTypeArray,
 		// která obsahuje hlavní informace o poli - meze, datový typ a jméno pole.
-		exit(intern);
 		tmp = makeNewSymbolTable();
 		break;
 
