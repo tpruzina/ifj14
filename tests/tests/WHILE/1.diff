@@ -1,0 +1,251 @@
+1c1,248
+< 
+---
+> String:
+>    Value:    	"program"
+>    Length:   	7
+>    Allocated:	8
+> String:
+>    Value:    	"jmeno;"
+>    Length:   	6
+>    Allocated:	7
+> String:
+>    Value:    	"var"
+>    Length:   	3
+>    Allocated:	4
+> String:
+>    Value:    	"x:"
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"integer;"
+>    Length:   	8
+>    Allocated:	9
+> String:
+>    Value:    	"a:"
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"real;"
+>    Length:   	5
+>    Allocated:	6
+> String:
+>    Value:    	"m:"
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"integer;"
+>    Length:   	8
+>    Allocated:	9
+> String:
+>    Value:    	"text:"
+>    Length:   	5
+>    Allocated:	6
+> String:
+>    Value:    	"string;"
+>    Length:   	7
+>    Allocated:	8
+> String:
+>    Value:    	"begin"
+>    Length:   	5
+>    Allocated:	6
+> String:
+>    Value:    	"x"
+>    Length:   	1
+>    Allocated:	2
+> String:
+>    Value:    	":="
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"1;"
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"while"
+>    Length:   	5
+>    Allocated:	6
+> String:
+>    Value:    	"x"
+>    Length:   	1
+>    Allocated:	2
+> String:
+>    Value:    	"<"
+>    Length:   	1
+>    Allocated:	2
+> String:
+>    Value:    	"10"
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"do"
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"begin"
+>    Length:   	5
+>    Allocated:	6
+> String:
+>    Value:    	"x"
+>    Length:   	1
+>    Allocated:	2
+> String:
+>    Value:    	":="
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"x"
+>    Length:   	1
+>    Allocated:	2
+> String:
+>    Value:    	"*"
+>    Length:   	1
+>    Allocated:	2
+> String:
+>    Value:    	"2"
+>    Length:   	1
+>    Allocated:	2
+> String:
+>    Value:    	"end"
+>    Length:   	3
+>    Allocated:	4
+> String:
+>    Value:    	"{m"
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	":="
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"a;}"
+>    Length:   	3
+>    Allocated:	4
+> String:
+>    Value:    	"end."
+>    Length:   	4
+>    Allocated:	5
+> String:
+>    Value:    	"end."
+>    Length:   	4
+>    Allocated:	5
+> String:
+>    Value:    	"a;}"
+>    Length:   	3
+>    Allocated:	4
+> String:
+>    Value:    	":="
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"{m"
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"end"
+>    Length:   	3
+>    Allocated:	4
+> String:
+>    Value:    	"2"
+>    Length:   	1
+>    Allocated:	2
+> String:
+>    Value:    	"*"
+>    Length:   	1
+>    Allocated:	2
+> String:
+>    Value:    	"x"
+>    Length:   	1
+>    Allocated:	2
+> String:
+>    Value:    	":="
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"x"
+>    Length:   	1
+>    Allocated:	2
+> String:
+>    Value:    	"begin"
+>    Length:   	5
+>    Allocated:	6
+> String:
+>    Value:    	"do"
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"10"
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"<"
+>    Length:   	1
+>    Allocated:	2
+> String:
+>    Value:    	"x"
+>    Length:   	1
+>    Allocated:	2
+> String:
+>    Value:    	"while"
+>    Length:   	5
+>    Allocated:	6
+> String:
+>    Value:    	"1;"
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	":="
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"x"
+>    Length:   	1
+>    Allocated:	2
+> String:
+>    Value:    	"begin"
+>    Length:   	5
+>    Allocated:	6
+> String:
+>    Value:    	"string;"
+>    Length:   	7
+>    Allocated:	8
+> String:
+>    Value:    	"text:"
+>    Length:   	5
+>    Allocated:	6
+> String:
+>    Value:    	"integer;"
+>    Length:   	8
+>    Allocated:	9
+> String:
+>    Value:    	"m:"
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"real;"
+>    Length:   	5
+>    Allocated:	6
+> String:
+>    Value:    	"a:"
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"integer;"
+>    Length:   	8
+>    Allocated:	9
+> String:
+>    Value:    	"x:"
+>    Length:   	2
+>    Allocated:	3
+> String:
+>    Value:    	"var"
+>    Length:   	3
+>    Allocated:	4
+> String:
+>    Value:    	"jmeno;"
+>    Length:   	6
+>    Allocated:	7
+> String:
+>    Value:    	"program"
+>    Length:   	7
+>    Allocated:	8

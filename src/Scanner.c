@@ -28,7 +28,7 @@ getToc()
 
 // makro na vratenie charu na vstup a return tokenu
 #define UNGETC_AND_RETURN_TOKEN() do {	\
-		unGetChar(c); 			\
+		unGetChar(c); 					\
 		return toc;						\
 		} while(0)
 		
@@ -72,10 +72,6 @@ getToc()
 				state = KA_LPAR;
 			else if(')' == c)
 				state = KA_RPAR;
-//			else if('{' == c)
-//				state = KA_LCBR;
-//			else if('}' == c)
-//				state = KA_RCBR;
 			else if('[' == c)
 				state = KA_LBRC;
 			else if(']' == c)
@@ -118,12 +114,6 @@ getToc()
 		case KA_RBRC:
 			toc->type = T_RBRC;		// ]
 			UNGETC_AND_RETURN_TOKEN();
-//		case KA_LCBR:
-//			toc->type = T_LCBR;		// {
-//			UNGETC_AND_RETURN_TOKEN();
-//		case KA_RCBR:
-//			toc->type = T_LCBR;		// }
-//			UNGETC_AND_RETURN_TOKEN();
 		case KA_SCOL:
 			toc->type = T_SCOL;		// ;
 			UNGETC_AND_RETURN_TOKEN();
@@ -351,15 +341,7 @@ getToc()
 				else if (!compareString(str,"else"))
 					toc->type = T_KW_ELSE;
 				else if (!compareString(str,"end"))
-				{
-				/*
-					if((c = getChar()) == '.')	// mensi hack no rozlisenie END a END.
-						toc->type = T_KW_ENDDOT;
-					else*/
-					
 					toc->type = T_KW_END;
-					//ungetc(c, global.src);
-				}
 				else if (!compareString(str,"false"))
 					toc->type = T_KW_FALSE;
 				else if (!compareString(str,"find"))
@@ -410,10 +392,21 @@ getToc()
 					toc->type = T_MOD;
 				else if(!compareString(str,"do"))
 					toc->type = T_KW_DO;
+				else if(!compareString(str,"case"))
+					toc->type = T_KW_CASE;
+				else if(!compareString(str,"for"))
+					toc->type = T_KW_FOR;
+				else if(!compareString(str,"to"))
+					toc->type = T_KW_TO;
+				else if(!compareString(str,"downto"))
+					toc->type = T_KW_DOWNTO;
+				else if(!compareString(str,"copy"))
+					toc->type = T_KW_COPY;
+				else if(!compareString(str, "length"))
+					toc->type = T_KW_LENGTH;
 				else
 				{
 					toc->type = T_ID;
-					// copy string toc->data ???
 					toc->data.str = str;
 				}
 				UNGETC_AND_RETURN_TOKEN();
@@ -469,6 +462,7 @@ void skipWSandComments()
 		{
 			while(c != '}' && c != EOF )
 				c = getChar();
+			return;
 		}
 		else if(!isspace(c))
 			break;

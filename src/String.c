@@ -22,12 +22,14 @@ struct String* makeNewString(){
 	struct String* str = (struct String*)gcMalloc(sizeof(struct String));
 	if(str == NULL){
 		Log("String: makeNewString: malloc error", ERROR, STRING);
-		return NULL;
+		exit(intern);
 	}
 
-	str->Value = NULL;
+	str->Value = (char*)gcMalloc(sizeof(char));
+	str->Value[0] = '\0';
+	
 	str->Length = 0;
-	str->Allocated = 0;
+	str->Allocated = 1;
 
 	return str;
 }
@@ -79,7 +81,7 @@ int addChar(struct String* s, char c){
 int emptyString(struct String* str){
 	if(str == NULL){
 		Log("String is NULL, cannot be cleaned", ERROR, STRING);
-		return False;
+		exit(intern);
 	}
 	if(str->Value != NULL){
 		str->Value = (char*)gcRealloc(str->Value, 1);
@@ -169,13 +171,12 @@ int toLower(struct String* str){
 int copyString(struct String* src, struct String** dest){
 	if(src == NULL){
 		Log("Src string == empty", ERROR, STRING);
-		global.errno = intern;
-		return False;	
+		exit(intern);	
 	}
 	
 	if((*dest) == NULL && ((*dest) = makeNewString()) == NULL){
 		Log("Destination string cannot be maked", ERROR, STRING);
-		return False;
+		exit(intern);
 	}
 	else {
 		if(!emptyString(*dest)){
@@ -198,15 +199,14 @@ int copyString(struct String* src, struct String** dest){
 int copyFromArray(char* src, struct String** dest){
 	if(src == NULL){
 		Log("Src string == empty", ERROR, STRING);
-		global.errno = intern;
-		return False;	
+		exit(intern);	
 	}
 	if((*dest) == NULL && ((*dest) = makeNewString()) == NULL)
 		return False;
 	else {
 		if(!emptyString(*dest)){
 			Log("Clearing failed", ERROR, STRING);
-			return False;
+			exit(intern);
 		}
 	}
 		
