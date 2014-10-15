@@ -1214,11 +1214,12 @@ struct astNode* parseFunction(){
 			}
 		}
 		
+		// v pripade definovani deklarovane funkce
 		if(dekl->other != NULL) {
 			struct astNode* telo = (struct astNode*)(dekl->other);
 			struct astNode* vpnode = telo->right;
 			if(!vpnode){
-				E("Right subnode is empty");
+				E("Right varspars subnode is empty");
 				exit(intern);
 			}
 			struct varspars* deklpars = (struct varspars*)vpnode->other;
@@ -1242,11 +1243,13 @@ struct astNode* parseFunction(){
 				exit(synt);
 			}
 		}
-		node->other = vp;
+		node->right = makeNewAST();
+		node->right->other = vp;
 		printVarsPars(vp);
-		
-		//TODO NUTNO ULOZIT DO TABULKY FUNKCI UZ TED
-		
+	
+		if(!dekl->other){
+			dekl->other = node;
+		}
 		
 		// ocekavat telo
 		D("Body expectation");
@@ -1366,6 +1369,7 @@ struct queue* parseCallParams(struct toc** cur){
 		printAst(nd);
 		queuePush(pars, nd);
 	}
+	
 	D("Expected data - no received");
 	return pars;
 }
@@ -1523,7 +1527,7 @@ struct astNode* parseFuncCall(struct toc** id){
 	}
 	struct astNode* vpnode = fnode->right;
 	struct varspars* vpfunc = (struct varspars*)vpnode->other;
-	
+
 	D("vp call");
 	printVarsPars(vp);
 	D("vp func");
@@ -2000,12 +2004,8 @@ struct astNode* parseCommand(struct toc** cur){
 			D("WRITE");
 			
 			struct astNode* wrt = makeNewAST();
-			wrt->type = AST_CALL;
+			wrt->type = AST_WRITE;
 
-			struct String* name = makeNewString();
-			copyFromArray("write", &name);
-			wrt->other = name;
-			
 			struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
 			vp->vars = NULL;
 			vp->pars = makeNewQueue();
@@ -2021,12 +2021,11 @@ struct astNode* parseCommand(struct toc** cur){
 			// projistotu nacist top		
 			struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
 			
+			
+			*cur = getToc();
 			// nacitat parametry
 			while((*cur)->type != T_RPAR){
 				// ocekavat cokoliv
-				*cur = getToc();
-				
-				// projit
 				struct astNode* node = makeNewAST();
 				switch((*cur)->type){
 					case T_ID: {
@@ -2088,6 +2087,8 @@ struct astNode* parseCommand(struct toc** cur){
 				// push do fronty
 				queuePush(vp->pars, node);						
 						
+				// dalsi token + dopredu
+				*cur = getToc();
 				// oddelene carkou -> kdyz za carkou bude RPAR chyba				
 				if((*cur)->type == T_COM){
 					// nactena carka
@@ -2118,11 +2119,7 @@ struct astNode* parseCommand(struct toc** cur){
 			D("READLN");
 			
 			struct astNode* rdln = makeNewAST();
-			rdln->type = AST_CALL;
-			
-			struct String* name = makeNewString();
-			copyFromArray("readln", &name);
-			rdln->other = name;
+			rdln->type = AST_READLN;
 			
 			*cur = getToc();
 			if((*cur)->type != T_LPAR){
@@ -2180,7 +2177,7 @@ struct astNode* parseCommand(struct toc** cur){
 			D("FIND");
 			
 			struct astNode* find = makeNewAST();
-			find->type = AST_CALL;
+			find->type = AST_FIND;
 			
 			struct String* name = makeNewString();
 			copyFromArray("find", &name);
@@ -2275,19 +2272,14 @@ struct astNode* parseCommand(struct toc** cur){
 		}
 		case T_KW_SORT:
 		case T_KW_LENGTH: {
-			/* sort(str) */
-			
+			/* sort(str) */	
 			struct astNode* sort = makeNewAST();
-			sort->type = AST_CALL;
-			
-			// kopie jmena funkce
-			struct String* name = makeNewString();
+					
 			D("SORT/LENGTH");
 			if((*cur)->type == T_KW_SORT)
-				copyFromArray("sort", &name);
+				sort->type = AST_SORT;
 			else
-				copyFromArray("length", &name);
-			sort->other = name;
+				sort->type = AST_LENGTH;
 
 			struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
 			vp->vars = NULL;
@@ -2354,12 +2346,7 @@ struct astNode* parseCommand(struct toc** cur){
 		case T_KW_COPY: {
 			/* copy(str, int, int) */
 			struct astNode* copy = makeNewAST();
-			copy->type = AST_CALL;
-			
-			// kopie jmena
-			struct String* name;
-			copyString((*cur)->data.str, &name);
-			copy->other = name;
+			copy->type = AST_COPY;
 			
 			struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
 			vp->vars = NULL;
