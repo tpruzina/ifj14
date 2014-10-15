@@ -1244,6 +1244,10 @@ struct astNode* parseFunction(){
 		}
 		node->other = vp;
 		printVarsPars(vp);
+		
+		//TODO NUTNO ULOZIT DO TABULKY FUNKCI UZ TED
+		
+		
 		// ocekavat telo
 		D("Body expectation");
 		node->left = parseBody(&cur);	
@@ -2110,7 +2114,7 @@ struct astNode* parseCommand(struct toc** cur){
 			return wrt;
 		}
 		case T_KW_READLN: {
-			/* readln() */
+			/* readln(id) */
 			D("READLN");
 			
 			struct astNode* rdln = makeNewAST();
@@ -2126,6 +2130,36 @@ struct astNode* parseCommand(struct toc** cur){
 				printTokenType(*cur);
 				exit(synt);
 			}
+			
+			*cur = getToc();
+			if((*cur)->type != T_ID){
+				E("Syntax error - expecting identificator as only parameter");
+				printTokenType(*cur);
+				exit(synt);
+			}
+			
+			struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
+			vp->vars = NULL;
+			vp->pars = makeNewQueue();
+			
+			struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+			struct symbolTableNode* var = search(&top, (*cur)->data.str);
+			if(!var){
+				E("Semantic error - variable not found");
+				exit(sem_prog);
+			}
+			struct astNode* nd = makeNewAST();
+			nd->type = AST_ID;
+			nd->dataType = var->dataType;
+			
+			struct String* idname = makeNewString();
+			copyString((*cur)->data.str, &idname);
+			nd->other = idname;
+			
+			queuePush(vp->pars, nd);
+			
+			rdln->right = makeNewAST();
+			rdln->right->other = vp;
 			
 			*cur = getToc();
 			if((*cur)->type != T_RPAR){
