@@ -459,7 +459,7 @@ int valid(struct astNode* left, struct astNode* right, int op){
  */
 int makeAstFromToken(struct toc* token, struct stack** aststack){
 	D("makeAstFromToken");
-	printTokenType(token);
+	//printTokenType(token);
 	printAstStack(*aststack);
 
 	struct astNode* node = makeNewAST();
@@ -650,10 +650,10 @@ struct astNode* parseProgram(){
 		if(cur->type == T_SCOL)
 			cur = getToc();
 				
-		printTokenType(cur);		
+		//printTokenType(cur);		
 	}
 	D("!!!! after Function reading - gets");
-	printTokenType(cur);
+	//printTokenType(cur);
 	
 	//printTokenType(cur);
 	
@@ -664,12 +664,12 @@ struct astNode* parseProgram(){
 	program->left = body;
 	
 	D("program: after body");
-	printTokenType(cur);
+	//printTokenType(cur);
 	
 	cur = getToc();
 	if(cur->type != T_DOT){
 		E("program: Syntax error - expected END.");
-		printTokenType(cur);
+		//printTokenType(cur);
 		exit(synt);
 	}
 	
@@ -695,7 +695,7 @@ struct astNode* parseBody(struct toc** cur){
 		
 		if((*cur)->type != T_KW_BEGIN){
 			E("body: Syntax error - expected BEGIN keyword");
-			printTokenType(*cur);		
+			//printTokenType(*cur);		
 			exit(synt);
 		}
 	}
@@ -741,7 +741,7 @@ struct astNode* parseBody(struct toc** cur){
 			}
 			else {
 				E("body: Syntax error - expected END or SEMICOLON");
-				printTokenType(*cur);
+				//printTokenType(*cur);
 				exit(synt);			
 			}			
 		}
@@ -970,7 +970,7 @@ struct queue* parseVars(struct toc** cur){
 	}
  
  	D("returning null");
- 	printTokenType(*cur);
+ 	//printTokenType(*cur);
 	return NULL;
 }
 
@@ -1044,7 +1044,7 @@ struct queue* parseParams(){
 					}
 					default:
 						E("params: Syntax error - unsupported type of parameter");
-						printTokenType(cur);
+						//printTokenType(cur);
 						exit(synt);
 				}
 				
@@ -1066,7 +1066,7 @@ struct queue* parseParams(){
 			}
 			else {
 				E("params: Syntax error - expected identificator of parameter");
-				printTokenType(cur);
+				//printTokenType(cur);
 				exit(synt);	
 			}
 		
@@ -1247,7 +1247,7 @@ struct astNode* parseFunction(){
 			// po definici promennych MUSI nasledovat telo, tedy begin
 			if(cur->type != T_KW_BEGIN){
 				E("function: Syntax error - expected BEGIN keyword");
-				printTokenType(cur);
+				//printTokenType(cur);
 				exit(synt);
 			}
 		}
@@ -1266,7 +1266,7 @@ struct astNode* parseFunction(){
 		cur = getToc();
 		if(cur->type != T_SCOL){
 			E("function: Syntax error - expected semicolon after function definition");
-			printTokenType(cur);
+			//printTokenType(cur);
 			exit(synt);
 		}
 		
@@ -1544,7 +1544,7 @@ struct astNode* parseFuncCall(struct toc** id){
 	node->left = NULL;
 
 	*id = getToc();
-	printTokenType(*id);
+	//printTokenType(*id);
 	
 	return node;
 }
@@ -1741,7 +1741,7 @@ struct astNode* forStatement(struct toc** cur){
 	}
 	else {
 		E("Syntax error - expected TO or DOWNTO keyword");
-		printTokenType(*cur);
+		//printTokenType(*cur);
 		exit(synt);
 	}
 	// ulozeni doleva prirazeni, doprava pujde koncova hodnota
@@ -1839,14 +1839,14 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 			break;
 		default:
 			E("Syntax error - expected literal");
-			printTokenType(*cur);
+			//printTokenType(*cur);
 			exit(synt);
 	}
 	
 	*cur = getToc();
 	if((*cur)->type != T_COL){
 		E("Syntax error - expected COLON as separator in case block");
-		printTokenType(*cur);
+		//printTokenType(*cur);
 		exit(synt);
 	}
 	
@@ -1859,7 +1859,7 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 	
 	if((*cur)->type != T_SCOL){
 		E("Syntax error - expected SEMICOLON at the end of CASE statement");
-		printTokenType(*cur);
+		//printTokenType(*cur);
 		exit(synt);	
 	}
 	
@@ -1879,7 +1879,7 @@ struct astNode* caseStatement(struct toc** cur){
 	*cur = getToc();
 	if((*cur)->type != T_ID){	
 		E("Syntax error - expected ID");
-		printTokenType(*cur);
+		//printTokenType(*cur);
 		exit(synt);
 	}
 	
@@ -1924,7 +1924,7 @@ struct astNode* caseStatement(struct toc** cur){
 	*cur = getToc();
 	if((*cur)->type != T_OF){
 		E("Syntax error - expected OF after ID in case definition");
-		printTokenType(*cur);
+		//printTokenType(*cur);
 		exit(synt);
 	}
 	
@@ -2021,7 +2021,7 @@ struct astNode* parseCommand(struct toc** cur){
 			*cur = getToc();
 			if((*cur)->type != T_LPAR){
 				E("Syntax error - expecting left parenthesis");
-				printTokenType(*cur);
+				//printTokenType(*cur);
 				exit(synt);
 			}
 			
@@ -2088,7 +2088,7 @@ struct astNode* parseCommand(struct toc** cur){
 						break;		
 					default:
 						E("Semantic error - unsupported type of parameter");
-						printTokenType(*cur);
+						//printTokenType(*cur);
 						exit(sem_komp);
 				}
 				
@@ -2111,7 +2111,7 @@ struct astNode* parseCommand(struct toc** cur){
 			
 			if((*cur)->type != T_RPAR){
 				E("Syntax error - expecting right parenthesis after call parameters");
-				printTokenType(*cur);
+				//printTokenType(*cur);
 				exit(synt);
 			}
 			
@@ -2132,14 +2132,14 @@ struct astNode* parseCommand(struct toc** cur){
 			*cur = getToc();
 			if((*cur)->type != T_LPAR){
 				E("Syntax error - expecting left parenthesis");
-				printTokenType(*cur);
+				//printTokenType(*cur);
 				exit(synt);
 			}
 			
 			*cur = getToc();
 			if((*cur)->type != T_ID){
 				E("Syntax error - expecting identificator as only parameter");
-				printTokenType(*cur);
+				//printTokenType(*cur);
 				exit(synt);
 			}
 			
@@ -2169,7 +2169,7 @@ struct astNode* parseCommand(struct toc** cur){
 			*cur = getToc();
 			if((*cur)->type != T_RPAR){
 				E("Syntax error - expecting right parenthesis");
-				printTokenType(*cur);
+				//printTokenType(*cur);
 				exit(synt);
 			}
 			
@@ -2194,7 +2194,7 @@ struct astNode* parseCommand(struct toc** cur){
 			*cur = getToc();
 			if((*cur)->type != T_LPAR){
 				E("Syntax error - expecting left parenthesis");
-				printTokenType(*cur);
+				//printTokenType(*cur);
 				exit(synt);
 			}
 			
@@ -2245,7 +2245,7 @@ struct astNode* parseCommand(struct toc** cur){
 					else {
 						E("Syntax error - INLINE find expected string as second parameter data type");
 					}
-					printTokenType(*cur);
+					//printTokenType(*cur);
 					exit(synt);
 				}
 					
@@ -2256,7 +2256,7 @@ struct astNode* parseCommand(struct toc** cur){
 					// ocekavam carku
 					if((*cur)->type != T_COM){
 						E("Syntax error - parameters must be separate by comma");
-						printTokenType(*cur);
+						//printTokenType(*cur);
 						exit(synt);
 					}
 				}
@@ -2264,7 +2264,7 @@ struct astNode* parseCommand(struct toc** cur){
 					// ocekavam pravou zavorku
 					if((*cur)->type != T_RPAR){
 						E("Syntax error - expected right parenthesis");
-						printTokenType(*cur);
+						//printTokenType(*cur);
 						exit(synt);
 					}
 				}
@@ -2297,7 +2297,7 @@ struct astNode* parseCommand(struct toc** cur){
 			*cur = getToc();
 			if((*cur)->type != T_LPAR){
 				E("Syntax error - expected left parenthesis");
-				printTokenType(*cur);
+				//printTokenType(*cur);
 				exit(synt);
 			}
 			
@@ -2340,7 +2340,7 @@ struct astNode* parseCommand(struct toc** cur){
 			*cur = getToc();
 			if((*cur)->type != T_RPAR){
 				E("Syntax error - expected right parenthesis");
-				printTokenType(*cur);
+				//printTokenType(*cur);
 				exit(synt);
 			}
 			// nacteni dalsiho tokenu
@@ -2363,7 +2363,7 @@ struct astNode* parseCommand(struct toc** cur){
 			*cur = getToc();
 			if((*cur)->type != T_LPAR){
 				E("Syntax error - expected left parenthesis");
-				printTokenType(*cur);
+				//printTokenType(*cur);
 				exit(synt);
 			}
 			
@@ -2407,7 +2407,7 @@ struct astNode* parseCommand(struct toc** cur){
 			*cur = getToc();
 			if((*cur)->type != T_COM){
 				E("Syntax error - expected comma after parameter");
-				printTokenType(*cur);
+				//printTokenType(*cur);
 				exit(synt);
 			}
 			
@@ -2445,7 +2445,7 @@ struct astNode* parseCommand(struct toc** cur){
 			
 			if((*cur)->type != T_RPAR){
 				E("Syntax error - expected right parenthesis");
-				printTokenType(*cur);
+				//printTokenType(*cur);
 				exit(synt);
 			}
 			
@@ -2461,14 +2461,14 @@ struct astNode* parseCommand(struct toc** cur){
 			if(next->type == T_LPAR){
 				// pravdepodobne volani funkce
 				D("Probably func call");
-				printTokenType(*cur);
+				//printTokenType(*cur);
 				return parseFuncCall(cur);
 			}
 			else if(next->type == T_ASGN){
 				// pravdepodobne prirazeni
 				D("cmd: cur and next token");
-				printTokenType(*cur);
-				printTokenType(next);
+				//printTokenType(*cur);
+				//printTokenType(next);
 				
 				// levy uzel je T_ID
 				// pravy uzel je expression
@@ -2492,7 +2492,7 @@ struct astNode* parseCommand(struct toc** cur){
 				if(!right) 
 					return NULL;
 				D("cmd: After expr parsing");
-				printTokenType(*cur);
+				//printTokenType(*cur);
 			
 				if(left->dataType != right->dataType){
 					datatypes(left->dataType, right->dataType);
@@ -2511,7 +2511,7 @@ struct astNode* parseCommand(struct toc** cur){
 			}
 			else {
 				E("cmd: Syntax error - expected funcCall or assign");
-				printTokenType(*cur);
+				//printTokenType(*cur);
 				exit(synt);
 			}		
 			break;
@@ -2594,7 +2594,7 @@ struct astNode* parseExpression(struct toc** cur){
 		D("expr: new token");
 		fprintf(stderr, "readNew type = %d \n", readNew);
 		
-		printTokenType(*cur);
+		//printTokenType(*cur);
 		switch((*cur)->type){
 			// leva zavorka
 			case T_LPAR: {
@@ -2637,7 +2637,7 @@ struct astNode* parseExpression(struct toc** cur){
 			case T_KW_TRUE:
 			case T_KW_FALSE:{
 				W("Literal comes");
-				printTokenType(*cur);
+				//printTokenType(*cur);
 				
 				struct astNode* node = makeNewAST();
 				
@@ -2666,7 +2666,7 @@ struct astNode* parseExpression(struct toc** cur){
 					// nahrat nacteny token
 					
 					D("READ NEW - cur type");
-					printTokenType(*cur);
+					//printTokenType(*cur);
 					readNew = false;
 				}
 				else if((*cur)->type == T_INT){
@@ -2786,7 +2786,7 @@ struct astNode* parseExpression(struct toc** cur){
 					D("expr: STACK STATE START =======");
 				
 					struct toc* now = (struct toc*)stackPop(stack);
-					printTokenType(now);
+					//printTokenType(now);
 					
 					
 					if(!makeAstFromToken(now, &aststack))
@@ -2821,7 +2821,7 @@ struct astNode* parseExpression(struct toc** cur){
 		// get next token
 		if(readNew){
 			(*cur) = getToc();
-			printTokenType(*cur);
+			//printTokenType(*cur);
 			D("Read new token");
 		}
 		else{
