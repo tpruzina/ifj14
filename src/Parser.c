@@ -644,12 +644,6 @@ struct astNode* parseProgram(){
 		struct astNode* func = parseFunction();				
 		if(!func)
 			return NULL;
-		else
-		{
-			// najdi v tabulke symbolov funkciu a prirad telo
-			struct symbolTableNode *tmp = search(&(global.funcTable),(struct String*)func->other);
-			tmp->other = func;
-		}
 		printAst(func);
 		
 		// muze nacitat 
