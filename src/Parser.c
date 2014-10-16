@@ -458,7 +458,8 @@ int valid(struct astNode* left, struct astNode* right, int op){
  * aststack: Urcuje zasobnik ze ktereho bude tahat data a kam bude ukladat vysledek
  */
 int makeAstFromToken(struct toc* token, struct stack** aststack){
-	//printTokenType(token);
+	D("makeAstFromToken");
+	printTokenType(token);
 	printAstStack(*aststack);
 
 	struct astNode* node = makeNewAST();
@@ -552,6 +553,10 @@ void printSymbolTableStack(){
  * --------------------
  */
 int parser(){
+	struct stackItem* top = (struct stackItem*) gcMalloc(sizeof(struct stackItem));
+	top->Value = makeNewSymbolTable();
+	global.symTable->Top = top;
+	
 	struct astNode* prog = parseProgram();
 	if(!prog){
 		E("parser: Ended with false");
@@ -1203,6 +1208,8 @@ struct astNode* parseFunction(){
 	 	return node;
 	}
 	
+	D("FUNC DEF");
+	
 	// zacatek definice
 	if(cur->type == T_KW_VAR || cur->type == T_KW_BEGIN){
 		if(!(dekl)) {
@@ -1216,6 +1223,7 @@ struct astNode* parseFunction(){
 		
 		// v pripade definovani deklarovane funkce
 		if(dekl->other != NULL) {
+			D("Function has been declared");
 			struct astNode* telo = (struct astNode*)(dekl->other);
 			struct astNode* vpnode = telo->right;
 			if(!vpnode){
@@ -1224,7 +1232,7 @@ struct astNode* parseFunction(){
 			}
 			struct varspars* deklpars = (struct varspars*)vpnode->other;
 			controlDefinitionParams(vp->pars, deklpars->pars);
-	 	
+	 		D("Control def params DONE");
 			if(telo->left != NULL){
 				// telo uz bylo jednou definovane!!
 				E("function: Syntax error - redefinition of function");
@@ -2503,7 +2511,7 @@ struct astNode* parseCommand(struct toc** cur){
 			}
 			else {
 				E("cmd: Syntax error - expected funcCall or assign");
-				//printTokenType(*cur);
+				printTokenType(*cur);
 				exit(synt);
 			}		
 			break;
@@ -2525,6 +2533,9 @@ struct astNode* parseExpression(struct toc** cur){
 	// zasobnik pro chystani AST
 	struct stack* aststack = makeNewStack();				
 	
+	
+	bool readNew = true;
+	
 	// zacatek podminky
 	(*cur) = getToc();
 		
@@ -2541,9 +2552,12 @@ struct astNode* parseExpression(struct toc** cur){
 			// volani funkce -> za ID pokracovala leva zavorka	
 			*cur = id;
 			// <id>(.....	
-			return parseFuncCall(cur);
+			D("expr: FUNC CALL");
+			struct astNode* nd = parseFuncCall(cur);
+			stackPush(aststack, nd);
 		}
 		else {
+			D("expr: VARIABLE");
 			// v pripade, ze po ID nebyla zavorka
 			// pushnout na stack, jako promennou
 			struct astNode* node = makeNewAST();
@@ -2578,7 +2592,9 @@ struct astNode* parseExpression(struct toc** cur){
 	// 		tokeny ;, THEN, DO by mely vesmes ukoncovat vyrazy	
 	while((*cur) != NULL){
 		D("expr: new token");
-		////printTokenType(*cur);
+		fprintf(stderr, "readNew type = %d \n", readNew);
+		
+		printTokenType(*cur);
 		switch((*cur)->type){
 			// leva zavorka
 			case T_LPAR: {
@@ -2621,23 +2637,37 @@ struct astNode* parseExpression(struct toc** cur){
 			case T_KW_TRUE:
 			case T_KW_FALSE:{
 				W("Literal comes");
-				//printTokenType(*cur);
+				printTokenType(*cur);
 				
 				struct astNode* node = makeNewAST();
 				
 				if((*cur)->type == T_ID){
-					node->type = AST_ID;
-					// kopie jmena
-					copyString((*cur)->data.str, &(node->data.str));
+					struct toc* new = getToc();
+					if(new->type == T_LPAR){
+						// volani funkce
+						node = parseFuncCall(cur);	
+					}
+					else {
+						// promenna			
+						node->type = AST_ID;
+						// kopie jmena
+						copyString((*cur)->data.str, &(node->data.str));
 					
-					// ziskani tabulky symbolu
-					struct symbolTableNode* stable = (struct symbolTableNode*)stackTop(global.symTable);
-					struct symbolTableNode* nd = search(&stable, node->data.str);
-					D("expr: comparison between symtable node and ast node");
-					datatypes(nd->dataType, node->dataType);
+						// ziskani tabulky symbolu
+						struct symbolTableNode* stable = (struct symbolTableNode*)stackTop(global.symTable);
+						struct symbolTableNode* nd = search(&stable, node->data.str);
+						D("expr: comparison between symtable node and ast node");
+						datatypes(nd->dataType, node->dataType);
 					
-					node->dataType = nd->dataType;					
-					D("expr: making ID");
+						node->dataType = nd->dataType;					
+						D("expr: making ID");
+						*cur = new;
+					}
+					// nahrat nacteny token
+					
+					D("READ NEW - cur type");
+					printTokenType(*cur);
+					readNew = false;
 				}
 				else if((*cur)->type == T_INT){
 					node->type = AST_INT;
@@ -2753,18 +2783,24 @@ struct astNode* parseExpression(struct toc** cur){
 				//printTokenType(*cur);
 				
 				while(!stackEmpty(stack)){
+					D("expr: STACK STATE START =======");
+				
 					struct toc* now = (struct toc*)stackPop(stack);
+					printTokenType(now);
+					
+					
 					if(!makeAstFromToken(now, &aststack))
 						return NULL;
 						
-					D("expr: stack state");
-					printAstStack(stack);
+					D("expr: STACK STATE END =========");
+					printAstStack(aststack);
 				}
 				
 			
 				// v pripade, ze je v zasobniku jen jeden prvek, vratit ho, je to vysledek SY algoritmu
 				if(aststack->Length > 1){
 					E("expression: Shunting yard error - stack length is grather then 1");
+					printAstStack(aststack);
 					exit(intern);
 				}
 				else if(aststack->Length == 0){
@@ -2783,7 +2819,15 @@ struct astNode* parseExpression(struct toc** cur){
 		}
 		
 		// get next token
-		(*cur) = getToc();
+		if(readNew){
+			(*cur) = getToc();
+			printTokenType(*cur);
+			D("Read new token");
+		}
+		else{
+			readNew = true;
+			D("dont read new token");
+		}
 	}
 	return NULL;
 }
