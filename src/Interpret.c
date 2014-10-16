@@ -272,8 +272,6 @@ void *runTree(struct astNode *curr)
 		tmp_vp = curr->right->other;	//tu budu parametry
 		tmp_asp = tmp->other;	//telo: todo smazat
 
-		printAst(tmp->other);
-
 		// vytvorime si novu lokalnu tabulky symbolov
 		stackPush(global.symTable, makeNewSymbolTable());
 
@@ -319,9 +317,14 @@ void *runTree(struct astNode *curr)
 		return NULL;
 		break;
 
+	case AST_FOR:
+	case AST_FOR_TO:
+	case AST_FOR_DOWNTO:
+	case AST_SWITCH:
 	case AST_REPEAT:
 		exit(intern);	//todo
 		break;
+
 
 // porovnavanie =,!=,<,<=,>,>=
 	case AST_EQV:
@@ -375,8 +378,7 @@ void *runTree(struct astNode *curr)
 				&tmp,
 				(curr->type == AST_AND) ? (left->data.bool_data && right->data.bool_data):
 				(curr->type == AST_OR)	? (left->data.bool_data || right->data.bool_data):
-				(curr->type == AST_XOR) ? (left->data.bool_data ^ right->data.bool_data):
-				false
+				(curr->type == AST_XOR) ? (left->data.bool_data ^ right->data.bool_data): false
 		);
 		return tmp;
 
@@ -429,6 +431,16 @@ void *runTree(struct astNode *curr)
 		// AST_ARR má v položce other uloženou strukturu dataTypeArray,
 		// která obsahuje hlavní informace o poli - meze, datový typ a jméno pole.
 		tmp = makeNewSymbolTable();
+		break;
+
+	//zatial neimplementovane builtin funkce
+	case AST_WRITE:
+	case AST_READLN:
+	case AST_COPY:
+	case AST_LENGTH:
+	case AST_FIND:
+	case AST_SORT:
+		exit(intern);
 		break;
 
 	// tieto veci by sa do interpretu nemali dostat

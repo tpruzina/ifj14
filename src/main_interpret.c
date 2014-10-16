@@ -5,7 +5,7 @@
 #include "Log.h"
 #include "Stack.h"
 #include "Ast.h"
-#include "SymbolTable.h"
+#include "ial.h"
 #include "Scanner.h"
 #include "Parser.h"
 #include "Interpret.h"
@@ -79,6 +79,7 @@ int main(int argc, char** argv)
 			Log("Printing function table", DEBUG, MAIN);
 			printSymbolTable(global.funcTable, 0);
 		
+
 			interpret();
 
 			printSymbolTable(top, 0);

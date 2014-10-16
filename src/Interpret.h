@@ -8,7 +8,7 @@
 #include "Log.h"
 #include "Stack.h"
 #include "Ast.h"
-#include "SymbolTable.h"
+#include "ial.h"
 #include "Scanner.h"
 #include "Parser.h"
 
