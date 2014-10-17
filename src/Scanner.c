@@ -222,7 +222,7 @@ getToc()
 			else if('#' == c)
 			{
 				parse_escape_seq(&c);
-				addChar(str,c);
+				addChar(str,(char)c);
 				state = KA_STR_LIT_INISDE;
 			}
 			else
@@ -450,6 +450,7 @@ tocInit(struct toc **toc)
 	*(toc) = tmp;
 }
 
+// pomocne funkcie
 void skipWSandComments()
 {
 	ASSERT(global.src);
@@ -469,7 +470,6 @@ void skipWSandComments()
 	unGetChar(c);
 }
 
-// pomocne funkcie
 int ascii(unsigned char c)
 {
 	return (

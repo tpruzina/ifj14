@@ -334,8 +334,8 @@ struct symbolTableNode *pushVarsParsIntoTable(
 	struct astNode *ast_src, *ast_dest;
 	struct symbolTableNode *stn_src, *stn_dest;
 
-	static struct symbolTableNode stn_src_static;
-	static struct symbolTableNode stn_dest_static;
+//	static struct symbolTableNode stn_src_static;
+//	static struct symbolTableNode stn_dest_static;
 
 	// do docasnej tabulky symbolov prekladame parametry z volania
 	while(currCPItem && currFPItem)
