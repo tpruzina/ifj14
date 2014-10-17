@@ -11,6 +11,33 @@
 #include "Scanner.h"
 #include "Log.h"
 
+void parse_escape_seq(char *c)
+{
+	if(*c != '#')
+		return;
+	else
+	{
+		unsigned short num = 0;
+		unsigned char tmp_c = fgetc(global.src);
+
+		if(!isdigit(tmp_c))
+			exit(lex);
+
+		while(isdigit((char)tmp_c))
+		{
+			num *= 10;
+			num += tmp_c - '0';
+			if(num > 255)
+				exit(lex);
+			tmp_c = fgetc(global.src);
+		}
+
+		if('\'' != tmp_c)
+			exit(lex);
+		*c = (char) num;
+	}
+}
+
 /* get_toc - cita zo suboru dalsi token
  * @vstup:	otvoreny file descriptor
  * @vystup:	vraci alokovany token
@@ -24,7 +51,7 @@ getToc()
 	struct String *str;
 	// pomocna premenna pouzivana len v escape sekvenciach
 	// stringovych literalov
-//	short escape_seq=0;
+	short escape_seq=0;
 
 // makro na vratenie charu na vstup a return tokenu
 #define UNGETC_AND_RETURN_TOKEN() do {	\
@@ -195,8 +222,6 @@ getToc()
 		case KA_STR_LIT:	//mame '
 			if('\'' == c)	//mame prazdny literal - go STR_LIT_DONE
 				state = KA_STR_LIT_DONE;
-			else if('#' == c)	// mame escape sekvenciu
-				state = KA_SHARP;
 			else if(ascii(c))	//mame znak v tele literalu 31-127 minus {#,'}
 			{
 				addChar(str,c);
@@ -207,9 +232,7 @@ getToc()
 			break;
 
 		case KA_STR_LIT_INISDE:	//sme vnoreni v str. literale
-			if('#' == c)
-				state = KA_SHARP;	//mame escape sekvenciu
-			else if('\'' == c)
+			if('\'' == c)
 				state = KA_STR_LIT_DONE; //mame ukoncenie
 			else if(ascii(c))
 				addChar(str,c);
@@ -224,6 +247,12 @@ getToc()
 				addChar(str,c);
 				state = KA_STR_LIT_INISDE;
 			}
+			else if('#' == c)
+			{
+				parse_escape_seq(&c);
+				addChar(str,c);
+				state = KA_STR_LIT_INISDE;
+			}
 			else
 			{
 				addChar(str,'\0');
@@ -234,8 +263,6 @@ getToc()
 			}
 			break;
 
-		case KA_SHARP:	//mame escape sekvenciu, nasleduje cislo
-				exit(intern);	// TODO
 
 // INTEGER + REAL LIT
 		case KA_INTEGER:	//uz mame cislicu

@@ -289,6 +289,22 @@ void datatypes(int left, int right){
 }
 
 int valid(struct astNode* left, struct astNode* right, int op){	
+	if(op == AST_NOT){
+		if(left == NULL){
+			E("valid: left node for NOT operator may not be NULL");
+			exit(sem_prog);
+		}
+	}
+	else {
+		// binarni operace
+		
+		if(left == NULL || right == NULL){
+			E("valid: NULL operands");
+			exit(sem_prog);
+		}
+	}
+	
+	
 	struct symbolTableNode* symtable = (struct symbolTableNode*)stackTop(global.symTable);
 	
 	// dodatecne typy leve strany
@@ -479,6 +495,7 @@ int makeAstFromToken(struct toc* token, struct stack** aststack){
 		
 		// kontrola validity operace a operandu
 		//printTokenType(token);
+		D("Validity");
 		node->dataType = valid(node->left, node->right, node->type);
 		switch(node->dataType){
 			case DT_INT:
@@ -558,6 +575,8 @@ int parser(){
 	//top->Value = makeNewSymbolTable();
 	//global.symTable->Top = top;
 	global.symTable->Top = NULL;
+	
+	D("PARSER START");
 	
 	struct astNode* prog = parseProgram();
 	if(!prog){
@@ -670,7 +689,7 @@ struct astNode* parseProgram(){
 	cur = getToc();
 	if(cur->type != T_DOT){
 		E("program: Syntax error - expected END.");
-		//printTokenType(cur);
+		printTokenType(cur);
 		exit(synt);
 	}
 	
@@ -705,8 +724,17 @@ struct astNode* parseBody(struct toc** cur){
 	// ukladat je doleva za sebe do typu AST_CMD
 	struct astNode* body = makeNewAST();
 	body->type = AST_CMD;
+	
+	*cur = getToc();
+	if((*cur)->type == T_KW_END){
+		// prazdne telo 
+		D("PRAZDNE TELO");
+		return body;	
+	}
+	
 	struct astNode* cmd = parseCommand(cur);
 	if((*cur)->type == T_KW_END){
+		D("body: gets END");
 		// ukonceni bloku kodu
 		if(cmd == NULL){
 			W("body: WARNING - statement without effect");
@@ -722,6 +750,7 @@ struct astNode* parseBody(struct toc** cur){
 		return body;		
 	}
 	else if((*cur)->type == T_SCOL){	
+		D("body: gets SEMICOLON");
 		// ocekavat dalsi command
 		while(cmd != NULL){
 			struct astNode* item = body;
@@ -732,6 +761,8 @@ struct astNode* parseBody(struct toc** cur){
 			item->left->left = NULL;
 			item->left->right = cmd;
 		
+			D("Waiting for end or scol");
+			printTokenType(*cur);
 			// pokud narazi na END tak ukoncit hledani dalsich 
 			if((*cur)->type == T_KW_END)
 				break;
@@ -1846,8 +1877,8 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 			nd->right->dataType = dt;
 			break;
 		default:
-			E("Syntax error - expected literal");
-			//printTokenType(*cur);
+			E("Syntax error - expected literal as case identificator");
+			printTokenType(*cur);
 			exit(synt);
 	}
 	
@@ -1860,18 +1891,32 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 	
 	// TODO pracovat jen s řádkovýma příkazama nebo i s těly
 	*cur = getToc();
-	if((*cur)->type == T_KW_BEGIN)
+	if((*cur)->type == T_KW_BEGIN){
+		D("Parse body");
 		nd->left = parseBody(cur);
-	else
+		
+		if((*cur)->type != T_KW_END){
+			E("Syntax error - expected END on body end");
+			printTokenType(*cur);
+			exit(synt);
+		}
+		//*cur = getToc();
+	}
+	else {
+		D("Parse command");
 		nd->left = parseCommand(cur);
 	
-	if((*cur)->type != T_SCOL){
-		E("Syntax error - expected SEMICOLON at the end of CASE statement");
-		//printTokenType(*cur);
-		exit(synt);	
+		if((*cur)->type != T_SCOL){
+			E("Syntax error - expected SEMICOLON at the end of CASE statement");
+			printTokenType(*cur);
+			exit(synt);	
+		}
+		
+		//*cur = getToc();
 	}
 	
-	
+	D("case element RETURNING");
+	printTokenType(*cur);	
 	return nd;
 }
 struct astNode* caseStatement(struct toc** cur){
@@ -1939,6 +1984,7 @@ struct astNode* caseStatement(struct toc** cur){
 	
 	// naplneni fronty prikazy
 	struct queue* cases = makeNewQueue();
+	
 	*cur = getToc();
 	while((*cur)->type != T_KW_END){
 		struct astNode* node = getCaseElement(cur, var->dataType);
@@ -1961,16 +2007,35 @@ struct astNode* caseStatement(struct toc** cur){
  */
 struct astNode* parseCommand(struct toc** cur){
 	W("parseCommand");
-	(*cur) = getToc();
 	
-	//printTokenType(*cur);
+	switch((*cur)->type){
+		case T_KW_END:
+		case T_KW_IF:
+		case T_KW_WHILE:
+		case T_RPT:
+		case T_KW_CASE:
+		case T_KW_FOR:
+		case T_KW_WRT:
+		case T_KW_FIND:
+		case T_KW_SORT:
+		case T_KW_COPY:
+		case T_KW_LENGTH:
+		case T_ID:
+			break;
+		default:
+			(*cur) = getToc();
+	}
+	
+	printTokenType(*cur);
 	switch((*cur)->type){
 		case T_KW_END: {
-			// narazil hned na END -> po stredniku nasledoval END chyba
-			E("cmd: Syntax error - last command cannot be ended with semicolon");
+			// narazil hned na END -> po stredniku nasledoval END chyba 
+			// 						  NEBO telo nema prvky
+			E("cmd: Syntax error - semicolon after last cmd or body without commands");
 			exit(synt);
 		}	
-		case T_KW_IF:{			
+		case T_KW_IF:{	
+			D("IF command");		
 			struct astNode* ifstat = ifStatement(cur);
 			if(!ifstat)
 				return NULL;
@@ -1986,6 +2051,7 @@ struct astNode* parseCommand(struct toc** cur){
 			}	
 		}
 		case T_KW_WHILE: {
+			D("WHILE command");
 			struct astNode* whl = whileStatement(cur);
 			if(!whl)
 				return NULL;
@@ -2001,6 +2067,7 @@ struct astNode* parseCommand(struct toc** cur){
 			}
 		}
 		case T_RPT: {
+			D("REPEAT command");
 			struct astNode* rpt = repeatStatement(cur);
 			if(!rpt)
 				return NULL;
@@ -2015,6 +2082,22 @@ struct astNode* parseCommand(struct toc** cur){
 				exit(synt);
 			}
 			return rpt;
+		}
+		case T_KW_CASE: {
+			D("CASE cmd");
+			struct astNode* cas = caseStatement(cur);
+			
+			if((*cur)->type == T_KW_END){
+				*cur= getToc();
+				return cas;
+			}
+			else {
+				E("cmd: Syntax error - expected END (case)");
+				// TODO smazat
+				printTokenType(*cur);
+				exit(synt);
+			}
+			return cas;
 		}
 		case T_KW_WRT: {
 			/* write(params) */
@@ -2049,15 +2132,14 @@ struct astNode* parseCommand(struct toc** cur){
 							E("Semantic error - undefined variable");
 							exit(sem_prog);
 						}
-						
 						// vytvorit novy uzel
 						node->type = AST_ID;
 						
 						// nazev promenne
-						struct String* name;
+						struct String* name = makeNewString();
 						copyString((*cur)->data.str, &name);
 						node->other = name;
-						
+
 						// datovy typ promenne
 						node->dataType = var->dataType;
 						
@@ -2360,6 +2442,7 @@ struct astNode* parseCommand(struct toc** cur){
 			return sort;
 		}
 		case T_KW_COPY: {
+			D("COPY");
 			/* copy(str, int, int) */
 			struct astNode* copy = makeNewAST();
 			copy->type = AST_COPY;
