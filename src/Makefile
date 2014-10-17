@@ -1,16 +1,15 @@
 MAIN=main
 CFLAGS=-std=c99 -g -Wall -pedantic -Wextra
+SOURCES=ial.c GC.c Log.c String.c Stack.c Ast.c Scanner.c Parser.c
 
-all: interpret color main
+ALL: all
+all: interpret color
 
-main: *.[c,h]
-	$(CC) $(CFLAGS) -D_DEBUG -D_COLOR GC.c Log.c ial.c String.c Stack.c Ast.c Scanner.c Parser.c $(MAIN).c -o $(MAIN)
-
-interpret: *.[c,h]
+interpret: $(SOURCES) Interpret.c main_interpret.c
 	$(CC) $(CFLAGS) GC.c ial.c Log.c String.c Stack.c Ast.c Scanner.c Parser.c Interpret.c main_interpret.c -o interpret
 
-color: *.[c,h]
-	$(CC) $(CFLAGS) -D_DEBUG -D_COLOR ial.c GC.c Log.c String.c Stack.c Ast.c Scanner.c Parser.c Interpret.c main_interpret.c -o main
+color: $(SOURCES) main.c
+	$(CC) $(CFLAGS) -D_DEBUG -D_COLOR ial.c GC.c Log.c String.c Stack.c Ast.c Scanner.c Parser.c main.c -o main
 
 clean:
 	rm -fv *.o *.gch main test interpret
