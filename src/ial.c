@@ -225,9 +225,8 @@ struct symbolTableNode* makeNewSymbolTable(){
 	}
 	
 	table->name = makeNewString();
-	if(table->name == NULL)
-		return NULL;
 	
+	table->dataType = DT_NONE;
 	table->data.str_data = NULL;
 	table->data.int_data = 0;
 	table->data.real_data = 0;
@@ -281,6 +280,8 @@ struct symbolTableNode* search(struct symbolTableNode** table, struct String* na
  */
 struct symbolTableNode* insertValue(struct symbolTableNode** table, struct String* name, int dtype){
 	if((*table) == NULL){
+	
+		
 		// v pripade, ze se vklada do prazdne tabulky
 		if(!((*table) = makeNewNamedNode(name))){
 			return NULL;		
@@ -385,6 +386,7 @@ int insertDataString(struct symbolTableNode** table, struct String* value){
  */
 int copyTable(struct symbolTableNode* src, struct symbolTableNode** dest){
 	if(src != NULL){
+		Log("copyTable: src not null", DEBUG, IAL);
 		(*dest) = makeNewNamedNode(src->name);
 		
 		
@@ -406,6 +408,9 @@ int copyTable(struct symbolTableNode* src, struct symbolTableNode** dest){
 			case DT_BOOL:
 				(*dest)->data.bool_data = src->data.bool_data;
 				break;
+			case DT_NONE:
+				Log("copyTable: unintialized variable", DEBUG, IAL);
+				break;
 			default:
 				E("copy: Invalid data type");
 				exit(sem_komp);
@@ -413,9 +418,10 @@ int copyTable(struct symbolTableNode* src, struct symbolTableNode** dest){
 		copyTable(src->left, &((*dest)->left));
 		copyTable(src->right, &((*dest)->right));	
 	}
-	else
+	else {
+		Log("copyTable: src == NULL!!!!", DEBUG, IAL);
 		(*dest) = NULL;	
-		
+	}
 	return True;
 }
 /**

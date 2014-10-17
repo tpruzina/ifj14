@@ -1,7 +1,7 @@
  [  MAIN  ]	 main:init - done
  [ PARSER ]	 parseProgram
  [ PARSER ]	 parseVars
- [ PARSER ]	 !!!! after Function reading - gets
+ [ STKQUE ]	 stackPop: Stack is empty...
  [ PARSER ]	 parseBody
  [ PARSER ]	 parseCommand
  [ PARSER ]	 cmd: cur and next token
