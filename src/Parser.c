@@ -2175,9 +2175,7 @@ struct astNode* parseCommand(struct toc** cur){
 			
 			*cur = getToc();
 			
-			rdln->left = NULL;
-			rdln->right = NULL;
-			
+			rdln->left = NULL;			
 			return rdln;
 		}
 		case T_KW_FIND: {
