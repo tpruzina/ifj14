@@ -5,9 +5,9 @@
 #include "Log.h"
 #include "Stack.h"
 #include "Ast.h"
-#include "SymbolTable.h"
 #include "Scanner.h"
 #include "Parser.h"
+#include "ial.h"
 
 struct mainAll global;
 
@@ -35,7 +35,6 @@ int init(char* srcpath){
 		fprintf(stderr, "Failed to open a file %s\n", srcpath);
 	}
 	global.errno = ok;
-	global.lineCounter = 0;
 	
 	global.program = NULL;
 	global.symTable = makeNewStack();	
@@ -58,8 +57,8 @@ void quit(){
 
 int main(int argc, char** argv)
 {
-	if(argc < 2){
-		Log("Spatne parametry..", ERROR, MAIN);
+	if(argc != 2){
+		Log("Wrong program parameters..", ERROR, MAIN);
 		return False;
 	}
 	
@@ -67,106 +66,18 @@ int main(int argc, char** argv)
 		Log("main: main_all struct dont allocated garbage collector..", ERROR, MAIN);
 		return False;
 	}
-	
-	if(!compareCharArrays(argv[2], "--stack")){
-		// spusteni cteni - lexikalni anal-lyzator
-		struct stack* stack = makeNewStack();
-		struct String* str = makeNewString();
-		char c = ' ';
-		while(!feof(global.src)){
-			c = fgetc(global.src);
-		if(c == ' ' || c == '\n' || c == '\r' || c == '\t'){
-				// separator - konec tokenu
-				if(str->Length != 0){
-					//printString(str);
-					//emptyString(&ma, str);
-				
-					if(stackPush(stack, str)){
-						Log("Value pushed", DEBUG, MAIN);
-						printString(str);
-					}
-
-					str = makeNewString();
-				}
-			}
-			else
-				addChar(str, c);
-		}	
-		Log("READING....", DEBUG, MAIN);
-		while(!stackEmpty(stack)){
-			struct String* s = (struct String*)stackPop(stack);
-			printString(s);	
-		}
-		Log("END", DEBUG, MAIN);
-	}
-	else if(!compareCharArrays(argv[2], "--ast")){
-		struct astNode* ast = makeNewAST();
-		ast->type = AST_START;
-		struct astNode* l = makeNewAST();
-		l->type = AST_ADD;
-		struct astNode* r = makeNewAST();
-		r->type = AST_IF;
-		struct astNode* l1 = makeNewAST();
-		l1->type = AST_NUM;
-		struct astNode* r1 = makeNewAST();
-		r1->type = AST_NUM;
-		l->left = l1;
-		l->right = r1;
-		ast->left = l;
-		ast->right = r;
-	
-		printAst(ast);
-	}
-	else if(!compareCharArrays(argv[2], "--symbol")){
-		// demonstrace tabulky symbolu
 		
-		struct symbolTableNode* symtable = NULL;
+	// pokud vse probehlo OK, tak zobrazit strom
+	if(parser()){
+		Log("ALL DONE", DEBUG, MAIN);
+		printAst(global.program);	
 		
-		struct String* str = makeNewString();
-		char c = ' ';
-		while(!feof(global.src)){
-			c = fgetc(global.src);
-
-			if(c == ' ' || c == '\n' || c == '\r' || c == '\t' || c == ';' || c == '.' || c == ',' || c == ':' || c == '{' || c == '}'){
-				// separator - konec tokenu
-				if(str->Length != 0){
-					printString(str);
-					struct symbolTableNode* node = insertValue(&symtable, str, DT_INT);
-					if(node == NULL){
-						break;					
-					}
-					//printString(str);
-					str = makeNewString();
-				}
-			}
-			else
-				addChar(str, c);
-		}
-		if(global.errno == 0){
-			printSymbolTable(symtable, 0);
-		
-			struct symbolTableNode* copy;
-			copyTable(symtable, &copy);
-			printSymbolTable(copy, 0);
-		
-			if(!deleteTable(&copy)){
-				Log("Deleting error", ERROR, MAIN);
-			}
-			printSymbolTable(copy, 0);
-		}
-	}
-	else if(!compareCharArrays(argv[2], "--run")){
-		// pokud vse probehlo OK, tak zobrazit strom
-		if(parser()){
-			printAst(global.program);	
-			
-			Log("Printing symbol table top layer", DEBUG, MAIN);
-			struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
-			printSymbolTable(top, 0);	
-			Log("Printing function table", DEBUG, MAIN);
-			printSymbolTable(global.funcTable, 0);
-		}	
-	}
+		Log("Printing symbol table top layer", DEBUG, MAIN);
+		struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+		printSymbolTable(top, 0);	
+		Log("Printing function table", DEBUG, MAIN);
+		printSymbolTable(global.funcTable, 0);
+	}	
 	
 	atexit(quit);
 	return global.errno;

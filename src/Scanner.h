@@ -21,8 +21,7 @@ struct toc
 struct toc * getToc();
 
 void tocInit(struct toc **);
-//preskoci whitespace a komentare
-void skipWSandComments();
+
 
 // pomocna funkcia, das jej typ a navrati string
 // napriklad T_NOT vrati "not"
@@ -32,10 +31,10 @@ const char *returnTypeAsStr(int type);
 int getChar();
 void unGetChar(char);
 
-
-// pomocna premenna pre stringove literaly
+// pomocne funkcie scannera
 int ascii(unsigned char);
-
+void parse_escape_seq(int *c);
+void skipWSandComments();	
 
 enum KA_STATES
 {

@@ -30,7 +30,7 @@
 #define WRG 1
 #define PRT 1
 
-enum LogFrom { MAIN, GC, STRING, STACK, AST, SYMTABLE, PARSER };
+enum LogFrom { MAIN, GC, STRING, STACK, AST, IAL, PARSER };
 enum LogType { DEBUG, ERROR, WARNING };
 /*
  * Definice funkci knihovny Log

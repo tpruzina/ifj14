@@ -56,6 +56,12 @@ void prtAst(struct astNode* nd, int lvl, char** str){
 		case AST_ASGN:
 			fprintf(stderr, "%s%s%s\n", COLOR_LBLU, str[nd->type], COLOR_NRM);
 			break;
+		case AST_FUNC:
+		case AST_CALL: {
+			struct String* name = (struct String*)nd->other;
+			fprintf(stderr, "%s%s\t[ %s ]%s\n", COLOR_LCYN, str[nd->type], name->Value, COLOR_NRM);
+			break;
+		}
 		case AST_EQV:
 		case AST_NEQV:
 		case AST_GRT:
@@ -127,7 +133,18 @@ void printAst(struct astNode* ast){
 		"AST_BOL",
 		"AST_STR",
 		"AST_ARR",
-		"AST_CMD"};
+		"AST_CMD",
+		"AST_FOR",
+		"AST_FOR_TO",
+		"AST_FOR_DOWNTO",
+		"AST_SWITCH",
+		"AST_WRITE",
+		"AST_READLN",
+		"AST_COPY",
+		"AST_LENGTH",
+		"AST_FIND",
+		"AST_SORT",
+	};
 	
 	prtAst(ast, 0, nodes);
 }

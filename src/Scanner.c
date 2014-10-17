@@ -22,13 +22,10 @@ getToc()
 	int state;	// aktualny stav
 	struct toc *toc;
 	struct String *str;
-	// pomocna premenna pouzivana len v escape sekvenciach
-	// stringovych literalov
-//	short escape_seq=0;
 
 // makro na vratenie charu na vstup a return tokenu
 #define UNGETC_AND_RETURN_TOKEN() do {	\
-		unGetChar(c); 			\
+		unGetChar(c); 					\
 		return toc;						\
 		} while(0)
 		
@@ -72,10 +69,6 @@ getToc()
 				state = KA_LPAR;
 			else if(')' == c)
 				state = KA_RPAR;
-//			else if('{' == c)
-//				state = KA_LCBR;
-//			else if('}' == c)
-//				state = KA_RCBR;
 			else if('[' == c)
 				state = KA_LBRC;
 			else if(']' == c)
@@ -118,12 +111,6 @@ getToc()
 		case KA_RBRC:
 			toc->type = T_RBRC;		// ]
 			UNGETC_AND_RETURN_TOKEN();
-//		case KA_LCBR:
-//			toc->type = T_LCBR;		// {
-//			UNGETC_AND_RETURN_TOKEN();
-//		case KA_RCBR:
-//			toc->type = T_LCBR;		// }
-//			UNGETC_AND_RETURN_TOKEN();
 		case KA_SCOL:
 			toc->type = T_SCOL;		// ;
 			UNGETC_AND_RETURN_TOKEN();
@@ -205,8 +192,6 @@ getToc()
 		case KA_STR_LIT:	//mame '
 			if('\'' == c)	//mame prazdny literal - go STR_LIT_DONE
 				state = KA_STR_LIT_DONE;
-			else if('#' == c)	// mame escape sekvenciu
-				state = KA_SHARP;
 			else if(ascii(c))	//mame znak v tele literalu 31-127 minus {#,'}
 			{
 				addChar(str,c);
@@ -217,9 +202,7 @@ getToc()
 			break;
 
 		case KA_STR_LIT_INISDE:	//sme vnoreni v str. literale
-			if('#' == c)
-				state = KA_SHARP;	//mame escape sekvenciu
-			else if('\'' == c)
+			if('\'' == c)
 				state = KA_STR_LIT_DONE; //mame ukoncenie
 			else if(ascii(c))
 				addChar(str,c);
@@ -234,8 +217,15 @@ getToc()
 				addChar(str,c);
 				state = KA_STR_LIT_INISDE;
 			}
+			else if('#' == c)
+			{
+				parse_escape_seq(&c);
+				addChar(str,(char)c);
+				state = KA_STR_LIT_INISDE;
+			}
 			else
 			{
+				addChar(str,'\0');
 				// inak hotovo
 				toc->type = T_STR;
 				toc->data.str = str;
@@ -243,8 +233,6 @@ getToc()
 			}
 			break;
 
-		case KA_SHARP:	//mame escape sekvenciu, nasleduje cislo
-				exit(intern);	// TODO
 
 // INTEGER + REAL LIT
 		case KA_INTEGER:	//uz mame cislicu
@@ -401,10 +389,21 @@ getToc()
 					toc->type = T_MOD;
 				else if(!compareString(str,"do"))
 					toc->type = T_KW_DO;
+				else if(!compareString(str,"case"))
+					toc->type = T_KW_CASE;
+				else if(!compareString(str,"for"))
+					toc->type = T_KW_FOR;
+				else if(!compareString(str,"to"))
+					toc->type = T_KW_TO;
+				else if(!compareString(str,"downto"))
+					toc->type = T_KW_DOWNTO;
+				else if(!compareString(str,"copy"))
+					toc->type = T_KW_COPY;
+				else if(!compareString(str, "length"))
+					toc->type = T_KW_LENGTH;
 				else
 				{
 					toc->type = T_ID;
-					// copy string toc->data ???
 					toc->data.str = str;
 				}
 				UNGETC_AND_RETURN_TOKEN();
@@ -449,6 +448,7 @@ tocInit(struct toc **toc)
 	*(toc) = tmp;
 }
 
+// pomocne funkcie
 void skipWSandComments()
 {
 	ASSERT(global.src);
@@ -460,6 +460,7 @@ void skipWSandComments()
 		{
 			while(c != '}' && c != EOF )
 				c = getChar();
+			return;
 		}
 		else if(!isspace(c))
 			break;
@@ -467,7 +468,33 @@ void skipWSandComments()
 	unGetChar(c);
 }
 
-// pomocne funkcie
+void parse_escape_seq(int *c)
+{
+	if(*c != '#')
+		return;
+	else
+	{
+		unsigned short num = 0;
+		unsigned char tmp_c = fgetc(global.src);
+
+		if(!isdigit(tmp_c))
+			exit(lex);
+
+		while(isdigit((char)tmp_c))
+		{
+			num *= 10;
+			num += tmp_c - '0';
+			if(num > 255)
+				exit(lex);
+			tmp_c = fgetc(global.src);
+		}
+
+		if('\'' != tmp_c)
+			exit(lex);
+		*c = (char) num;
+	}
+}
+
 int ascii(unsigned char c)
 {
 	return (

@@ -23,5 +23,8 @@ struct astNode* repeatStatement(struct toc**);
 struct astNode* parseCommand();
 struct astNode* parseExpression(struct toc**);
 
+void controlCallParams(struct queue*, struct queue*);
+void controlDefinitionParams(struct queue*, struct queue*);
+int checkFunctionDeclarations(struct symbolTableNode*);
 #endif /* __PARSER_H__ */
 

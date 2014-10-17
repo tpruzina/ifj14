@@ -40,6 +40,8 @@ enum tokenType {
 	T_KW_PROGRAM,
 	T_KW_LENGTH,
 	T_KW_COPY,
+	T_KW_FOR,
+	T_KW_CASE,
 	// neni v zadani ako klucove slovo - ??? 
 	T_RPT,	// repeat
 	T_UNTIL,	// until
@@ -54,6 +56,9 @@ enum tokenType {
 	T_ARR,		// array
 	// obecne
 	T_OF,		// of
+	T_KW_SWITCH,
+	T_KW_TO,
+	T_KW_DOWNTO,
 	// inline
 	//T_RDLN,		// readln
 	// aritmetika a logika
@@ -183,7 +188,17 @@ enum astNodeType {
 	AST_BOOL, // literal
 	AST_STR, // literal
 	AST_ARR,
-	AST_CMD
+	AST_CMD,
+	AST_FOR,
+	AST_FOR_TO,
+	AST_FOR_DOWNTO,
+	AST_SWITCH,
+	AST_WRITE,
+	AST_READLN,
+	AST_COPY,
+	AST_LENGTH,
+	AST_FIND,
+	AST_SORT
 };
 
 /**
