@@ -189,31 +189,95 @@ struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTab
  * Pomocna funkcia AST_WRITE, dostane symtab node a vypise ho
  */
 
-void writeNode(struct symbolTableNode *p)
+void writeNode(struct astNode *p)
 {
 	ASSERT(p);
+
+	struct symbolTableNode *id = NULL;
+
 	// ak dostaneme ID tak odpalime search a vratime lokalnu verziu premennej
-	if(p->dataType == T_ID)
-		p = runTree(p);
-
-	// nedefinovana premenna???
-	if(!p)
-		ASSERT(false);
-
-	if(T_STR == p->dataType)
+	// kedze nedostavame symtab ale ast tak robime cely tento shit .... fuck
+	if(AST_ID == p->type)
 	{
-		ASSERT(p->data.str_data->Value);
-		printf("%s",p->data.str_data->Value);
+		struct symbolTableNode *top = stackTop(global.symTable);
+		id = search(&top,p->other);
+		// nedefinovana premenna???
+		if(!p)
+			ASSERT(false);
+
+		p = makeNewAST();
+
+		// konverzia symtab typy na AST typy
+		if(id->dataType == DT_STR)
+		{
+			p->type = AST_STR;
+			p->data.str = id->data.str_data;
+		}
+		else if(id->dataType == DT_INT)
+		{
+			p->type = AST_INT;
+			p->data.integer = id->data.int_data;
+		}
+		else if(id->dataType == DT_REAL)
+		{
+			p->type = AST_REAL;
+			p->data.real = id->data.real_data;
+		}
+		else if(id->dataType == DT_BOOL)
+		{
+			p->type = AST_BOOL;
+			p->data.boolean = id->data.bool_data;
+		}
+		else
+			exit(intern);	// shit is going down
 	}
-	else if (T_REAL == p->dataType)
-		printf("%g",p->data.real_data);
+
+	if(AST_STR == p->type)
+	{
+		ASSERT(p->data.str->Value);
+		printf("%s",p->data.str->Value);
+	}
+	else if (AST_REAL == p->type)
+		printf("%g",p->data.real);
+	else if(AST_INT == p->type)
+		printf("%d",p->data.integer);
 	else
 		ASSERT(false);
 }
 
 void readNode(struct symbolTableNode *p)
 {
+	struct String *tmp = makeNewString();
+	int c;
 
+	if(p->dataType == DT_STR)
+	{
+		while((c = fgetc(stdin)) != EOF && c != '\n')
+			addChar(tmp,c);
+		p->data.str_data = tmp;
+	}
+	else if(p->dataType == DT_REAL)
+	{
+		while((c = fgetc(stdin)) != EOF && c != '\n')
+		{
+			if(c != '\t' && c != ' ')
+				addChar(tmp,c);
+		}
+		sscanf(tmp->Value,"%lg", &(p->data.real_data));	//todo chybove vstupy
+	}
+	else if(p->dataType == DT_INT)
+	{
+		while((c = fgetc(stdin)) != EOF && c != '\n')
+		{
+			if(c != '\t' && c != ' ')
+				addChar(tmp,c);
+		}
+		sscanf(tmp->Value,"%d", &(p->data.int_data));	//todo chybove vstupy
+	}
+	else if(p->dataType == DT_BOOL)
+		exit(4);
+	else
+		ASSERT(false);	// fuck you
 }
 
 void *runTree(struct astNode *curr)
@@ -467,14 +531,22 @@ void *runTree(struct astNode *curr)
 		tmp_vp = curr->right->other;
 		for(struct queueItem *p=tmp_vp->pars->start; p; )
 		{
-//			writeNode(p->value);
+			writeNode(p->value);
 			p = ((struct queueItem*) p)->next;
 		}
 		break;
 
 	case AST_READLN:	// readln(a);
-		//tmp = search(&top, curr->other);	// vyhladame si a
-		readNode(tmp);						// budeme citate do a
+		ASSERT(curr);
+		ASSERT(curr->right && curr->right->type == AST_NONE);
+
+
+		tmp_vp = curr->right->other;			// vyrvem si varspars
+		tmp_asp = tmp_vp->pars->start->value;	// vyrvem z toho ast node
+		// a z vyjebaneho ast_node->other vyjebem dojebany string ktory este vyhladam v tabulke
+		tmp = search(&top, tmp_asp->other);
+		// a po tomto celom bullshite este zavolam funkciu ktora zapise do premennej
+		readNode(tmp);
 
 		return NULL;
 		break;
