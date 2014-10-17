@@ -30,12 +30,17 @@
 #include <stdbool.h>	// boolean [true,false]
 #include <stdlib.h>	// todo: delete : malloc
 #include <stdio.h>	
+#include <assert.h>
 
 #ifdef _DEBUG
-#include <assert.h>
 // (nekompilovat ak nie je definovany _DEBUG, prepinac "gcc -D_DEBUG")
-#define ASSERT(X) \
-	do { assert( (X) ); } while (false)
+#define ASSERT(expr) do {										\
+	if(!(expr)){												\
+	fprintf(stderr,"Skapal som v %s:%d\n",__FILE__,__LINE__);	\
+	exit(intern);												\
+	}															\
+} while (0)
+
 #endif // _DEBUG
 
 

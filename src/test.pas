@@ -6,11 +6,12 @@ var
 	text: string;
 	
 begin
-	x := 1;
+	x := 0;
 	
 	while x < 10 do
 	begin
-		x := x + 1
+		x := x + 1;
+		write(x,''#10'')
 	end
 	{m := a;}
 	

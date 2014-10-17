@@ -25,8 +25,8 @@ getToc()
 
 // makro na vratenie charu na vstup a return tokenu
 #define UNGETC_AND_RETURN_TOKEN() do {	\
-		unGetChar(c); 					\
-		return toc;						\
+		unGetChar(c); 		\
+		return toc;		\
 		} while(0)
 		
 	tocInit(&toc);
@@ -468,6 +468,15 @@ void skipWSandComments()
 	unGetChar(c);
 }
 
+int ascii(unsigned char c)
+{
+	return (
+			((c >= 31) && (c <= 127)) &&
+			!(c == '#' || c == '\'')) ?
+					1 : 0;
+}
+
+// funkcie na parsovanie escape sekvencii '#10'
 void parse_escape_seq(int *c)
 {
 	if(*c != '#')
@@ -493,14 +502,6 @@ void parse_escape_seq(int *c)
 			exit(lex);
 		*c = (char) num;
 	}
-}
-
-int ascii(unsigned char c)
-{
-	return (
-			((c >= 31) && (c <= 127)) &&
-			!(c == '#' || c == '\'')) ?
-					1 : 0;
 }
 
 // pomocna globalna premenna, funkcia returnTypeAssStr vrati

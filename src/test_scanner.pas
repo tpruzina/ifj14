@@ -1,3 +1,19 @@
+end.
+end
+..
+'Ahoj'#010'Sve''te'#33''
+'aoe#13aoe'
+'#255#0'
+'#0#255'
+'#255#13'
+'#255aoe'
+'a#255oe'
+'#13aoe'
+'a#13oe'
+'aoe#13'
+'aoe#39'
+'a#39oe'
+'#39aoe'
 begin
 boolean
 do
@@ -57,3 +73,4 @@ not
 {aoeuoaeu
 aoeuaoeuaoeu
 }
+'aoe'
