@@ -232,8 +232,8 @@ void printVarsPars(struct varspars* vp){
 }
 
 void datatypes(int left, int right){
-	char* l = malloc(sizeof(char));
-	char* r = malloc(sizeof(char));
+	char l[10];
+	char r[10];
 	
 	switch(left){
 		case DT_INT:
@@ -284,8 +284,6 @@ void datatypes(int left, int right){
 	}
 	
 	fprintf(stderr, "%s< Comparison between %s and %s >%s\n", ((right==left)?COLOR_LGRN:COLOR_LRED), l, r, COLOR_NRM);	
-	free(l);
-	free(r);
 }
 int valid(struct astNode* left, struct astNode* right, int op){	
 	if(op == AST_NOT){
