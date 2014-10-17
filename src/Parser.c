@@ -2075,7 +2075,7 @@ struct astNode* parseCommand(struct toc** cur){
 						// novy uzel
 						node->type = AST_STR;
 						node->dataType = DT_STR;
-						
+
 						break;
 					}	
 					case T_BOOL: {						
@@ -2177,7 +2177,7 @@ struct astNode* parseCommand(struct toc** cur){
 			*cur = getToc();
 			
 			rdln->left = NULL;
-			rdln->right = NULL;
+//			rdln->right = NULL; //-> R U FUCKING KIDDINGG ME?
 			
 			return rdln;
 		}

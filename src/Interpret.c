@@ -185,7 +185,36 @@ struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTab
 	return tmp;
 }
 
+/*
+ * Pomocna funkcia AST_WRITE, dostane symtab node a vypise ho
+ */
 
+void writeNode(struct symbolTableNode *p)
+{
+	ASSERT(p);
+	// ak dostaneme ID tak odpalime search a vratime lokalnu verziu premennej
+	if(p->dataType == T_ID)
+		p = runTree(p);
+
+	// nedefinovana premenna???
+	if(!p)
+		ASSERT(false);
+
+	if(T_STR == p->dataType)
+	{
+		ASSERT(p->data.str_data->Value);
+		printf("%s",p->data.str_data->Value);
+	}
+	else if (T_REAL == p->dataType)
+		printf("%g",p->data.real_data);
+	else
+		ASSERT(false);
+}
+
+void readNode(struct symbolTableNode *p)
+{
+
+}
 
 void *runTree(struct astNode *curr)
 {
@@ -435,7 +464,21 @@ void *runTree(struct astNode *curr)
 
 	//zatial neimplementovane builtin funkce
 	case AST_WRITE:
-	case AST_READLN:
+		tmp_vp = curr->right->other;
+		for(struct queueItem *p=tmp_vp->pars->start; p; )
+		{
+//			writeNode(p->value);
+			p = ((struct queueItem*) p)->next;
+		}
+		break;
+
+	case AST_READLN:	// readln(a);
+		//tmp = search(&top, curr->other);	// vyhladame si a
+		readNode(tmp);						// budeme citate do a
+
+		return NULL;
+		break;
+
 	case AST_COPY:
 	case AST_LENGTH:
 	case AST_FIND:

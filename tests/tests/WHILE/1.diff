@@ -1,251 +1,71 @@
-1c1,248
+1c1,68
 < 
 ---
-> String:
->    Value:    	"program"
->    Length:   	7
->    Allocated:	8
-> String:
->    Value:    	"jmeno;"
->    Length:   	6
->    Allocated:	7
-> String:
->    Value:    	"var"
->    Length:   	3
->    Allocated:	4
-> String:
->    Value:    	"x:"
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"integer;"
->    Length:   	8
->    Allocated:	9
-> String:
->    Value:    	"a:"
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"real;"
->    Length:   	5
->    Allocated:	6
-> String:
->    Value:    	"m:"
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"integer;"
->    Length:   	8
->    Allocated:	9
-> String:
->    Value:    	"text:"
->    Length:   	5
->    Allocated:	6
-> String:
->    Value:    	"string;"
->    Length:   	7
->    Allocated:	8
-> String:
->    Value:    	"begin"
->    Length:   	5
->    Allocated:	6
-> String:
->    Value:    	"x"
->    Length:   	1
->    Allocated:	2
-> String:
->    Value:    	":="
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"1;"
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"while"
->    Length:   	5
->    Allocated:	6
-> String:
->    Value:    	"x"
->    Length:   	1
->    Allocated:	2
-> String:
->    Value:    	"<"
->    Length:   	1
->    Allocated:	2
-> String:
->    Value:    	"10"
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"do"
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"begin"
->    Length:   	5
->    Allocated:	6
-> String:
->    Value:    	"x"
->    Length:   	1
->    Allocated:	2
-> String:
->    Value:    	":="
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"x"
->    Length:   	1
->    Allocated:	2
-> String:
->    Value:    	"*"
->    Length:   	1
->    Allocated:	2
-> String:
->    Value:    	"2"
->    Length:   	1
->    Allocated:	2
-> String:
->    Value:    	"end"
->    Length:   	3
->    Allocated:	4
-> String:
->    Value:    	"{m"
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	":="
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"a;}"
->    Length:   	3
->    Allocated:	4
-> String:
->    Value:    	"end."
->    Length:   	4
->    Allocated:	5
-> String:
->    Value:    	"end."
->    Length:   	4
->    Allocated:	5
-> String:
->    Value:    	"a;}"
->    Length:   	3
->    Allocated:	4
-> String:
->    Value:    	":="
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"{m"
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"end"
->    Length:   	3
->    Allocated:	4
-> String:
->    Value:    	"2"
->    Length:   	1
->    Allocated:	2
-> String:
->    Value:    	"*"
->    Length:   	1
->    Allocated:	2
-> String:
->    Value:    	"x"
->    Length:   	1
->    Allocated:	2
-> String:
->    Value:    	":="
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"x"
->    Length:   	1
->    Allocated:	2
-> String:
->    Value:    	"begin"
->    Length:   	5
->    Allocated:	6
-> String:
->    Value:    	"do"
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"10"
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"<"
->    Length:   	1
->    Allocated:	2
-> String:
->    Value:    	"x"
->    Length:   	1
->    Allocated:	2
-> String:
->    Value:    	"while"
->    Length:   	5
->    Allocated:	6
-> String:
->    Value:    	"1;"
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	":="
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"x"
->    Length:   	1
->    Allocated:	2
-> String:
->    Value:    	"begin"
->    Length:   	5
->    Allocated:	6
-> String:
->    Value:    	"string;"
->    Length:   	7
->    Allocated:	8
-> String:
->    Value:    	"text:"
->    Length:   	5
->    Allocated:	6
-> String:
->    Value:    	"integer;"
->    Length:   	8
->    Allocated:	9
-> String:
->    Value:    	"m:"
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"real;"
->    Length:   	5
->    Allocated:	6
-> String:
->    Value:    	"a:"
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"integer;"
->    Length:   	8
->    Allocated:	9
-> String:
->    Value:    	"x:"
->    Length:   	2
->    Allocated:	3
-> String:
->    Value:    	"var"
->    Length:   	3
->    Allocated:	4
-> String:
->    Value:    	"jmeno;"
->    Length:   	6
->    Allocated:	7
-> String:
->    Value:    	"program"
->    Length:   	7
->    Allocated:	8
+>  [  MAIN  ]	 main:init - done
+>  [ PARSER ]	 parseProgram
+>  [ PARSER ]	 parseVars
+>  [ PARSER ]	 !!!! after Function reading - gets
+>  [ PARSER ]	 parseBody
+>  [ PARSER ]	 parseCommand
+>  [ PARSER ]	 cmd: cur and next token
+>  [ PARSER ]	 parseExpression
+>  [ PARSER ]	 expr: new token
+>  [ PARSER ]	 Literal comes
+>  [ PARSER ]	 expr: making INT
+>  [ PARSER ]	 Read new token
+>  [ PARSER ]	 expr: new token
+>  [ PARSER ]	 expr: Making node into
+>  [ PARSER ]	 expression: Returning top layer
+>  [ PARSER ]	 cmd: After expr parsing
+>  [ PARSER ]	 cmd: Returning asgn node
+>  [ PARSER ]	 parseCommand
+>  [ PARSER ]	 parseExpression
+>  [ PARSER ]	 expr: TOKEN ID on the left side
+>  [ PARSER ]	 expr: VARIABLE
+>  [ PARSER ]	 expr: new token
+>  [ PARSER ]	 Operator comes
+>  [ PARSER ]	 Read new token
+>  [ PARSER ]	 expr: new token
+>  [ PARSER ]	 Literal comes
+>  [ PARSER ]	 expr: making INT
+>  [ PARSER ]	 Read new token
+>  [ PARSER ]	 expr: new token
+>  [ PARSER ]	 expr: Making node into
+>  [ PARSER ]	 expr: STACK STATE START =======
+>  [ PARSER ]	 makeAstFromToken
+>  [ PARSER ]	 maft: Valid operation by operand types - BOOLEAN
+>  [ PARSER ]	 Printing ast
+>  [ PARSER ]	 expr: STACK STATE END =========
+>  [ PARSER ]	 expression: Returning top layer
+>  [ PARSER ]	 parseBody
+>  [ PARSER ]	 parseCommand
+>  [ PARSER ]	 cmd: cur and next token
+>  [ PARSER ]	 parseExpression
+>  [ PARSER ]	 expr: TOKEN ID on the left side
+>  [ PARSER ]	 expr: VARIABLE
+>  [ PARSER ]	 expr: new token
+>  [ PARSER ]	 Operator comes
+>  [ PARSER ]	 Read new token
+>  [ PARSER ]	 expr: new token
+>  [ PARSER ]	 Literal comes
+>  [ PARSER ]	 expr: making INT
+>  [ PARSER ]	 Read new token
+>  [ PARSER ]	 expr: new token
+>  [ PARSER ]	 expr: Making node into
+>  [ PARSER ]	 expr: STACK STATE START =======
+>  [ PARSER ]	 makeAstFromToken
+>  [ PARSER ]	 maft: Valid operation by operand types - INTEGER
+>  [ PARSER ]	 Printing ast
+>  [ PARSER ]	 expr: STACK STATE END =========
+>  [ PARSER ]	 expression: Returning top layer
+>  [ PARSER ]	 cmd: After expr parsing
+>  [ PARSER ]	 cmd: Returning asgn node
+>  [ PARSER ]	 program: after body
+>  [  MAIN  ]	 Printing PROGRAM
+>  [  MAIN  ]	 Printing PROGRAM
+>  [  MAIN  ]	 Printing symbol table top layer
+>  [  MAIN  ]	 Printing function table
+> ##################INTERPRET############################
+> ##################INTERPRET############################
+>  [   GC   ]	 free_all:	all free done
+>  [  MAIN  ]	 main:exit - done
