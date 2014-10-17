@@ -553,9 +553,10 @@ void printSymbolTableStack(){
  * --------------------
  */
 int parser(){
-	struct stackItem* top = (struct stackItem*) gcMalloc(sizeof(struct stackItem));
-	top->Value = makeNewSymbolTable();
-	global.symTable->Top = top;
+	//struct stackItem* top = (struct stackItem*) gcMalloc(sizeof(struct stackItem));
+	//top->Value = makeNewSymbolTable();
+	//global.symTable->Top = top;
+	global.symTable->Top = NULL;
 	
 	struct astNode* prog = parseProgram();
 	if(!prog){
