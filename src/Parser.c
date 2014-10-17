@@ -282,8 +282,9 @@ void datatypes(int left, int right){
 			sprintf(l, "??????");
 			break;
 	}
-	
+#ifdef _DEBUG
 	fprintf(stderr, "%s< Comparison between %s and %s >%s\n", ((right==left)?COLOR_LGRN:COLOR_LRED), l, r, COLOR_NRM);	
+#endif
 	free(l);
 	free(r);
 }
@@ -2685,8 +2686,9 @@ struct astNode* parseExpression(struct toc** cur){
 	// 		tokeny ;, THEN, DO by mely vesmes ukoncovat vyrazy	
 	while((*cur) != NULL){
 		D("expr: new token");
+#ifdef _DEBUG
 		fprintf(stderr, "readNew type = %d \n", readNew);
-		
+#endif		
 		//printTokenType(*cur);
 		switch((*cur)->type){
 			// leva zavorka

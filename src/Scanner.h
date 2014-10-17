@@ -35,7 +35,7 @@ void unGetChar(char);
 
 // pomocna premenna pre stringove literaly
 int ascii(unsigned char);
-
+void parse_escape_seq(int *c);
 
 enum KA_STATES
 {

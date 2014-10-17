@@ -5,11 +5,7 @@ int interpret()
 	ASSERT(global.program);
 
 	// TODO: sem pridat kontrolu na to, aby bola kazda funkcia riadne definovana
-	// potrebne pre forward deklarace
 	//printAst(global.funcTable);
-
-
-	printf("##################INTERPRET############################\n");
 
 	struct astNode *curr = global.program;
 
@@ -17,14 +13,9 @@ int interpret()
 		runTree(curr);
 	else
 		exit(intern);
-
-	printf("##################INTERPRET############################\n");
+	
 	return 0;
 }
-
-#define NODE_LEFT_TYPE(node,type) ((node)->left) && ((node)->left->type == (type)))
-
-#define GET_DATATYPE(node) ((node)->dataType)
 
 // porovnavame dve premenne rovnakeho typu
 // prerekvizita je uplne definovany typ, cize treba odpalit runTree() na operandy
