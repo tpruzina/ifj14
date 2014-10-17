@@ -457,9 +457,13 @@ void *runTree(struct astNode *curr)
 //		ASSERT(curr->left);		//telo
 //		ASSERT(curr->right);	// none->other (varspars)
 
+		insertValue(&top,curr->other,curr->dataType);
+
 		printSymbolTable(top, 0);
 
-		return runTree(curr->left);
+		runTree(curr->left);
+
+		return  search(&top, curr->other);
 
 	break;
 
@@ -484,6 +488,7 @@ void *runTree(struct astNode *curr)
 				((struct varspars *)tmp_asp->right->other)->pars,
 				((struct varspars *)tmp_asp->right->other)->vars
 		);
+
 		// pushneme
 		stackPush(global.symTable,right);
 

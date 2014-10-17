@@ -59,7 +59,7 @@
 #define PRINT 0
 #define DBG 0
 #define WRG 0
-#define PRT 1
+#define PRT 0
 #endif
 
 
