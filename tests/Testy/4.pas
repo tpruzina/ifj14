@@ -1,5 +1,5 @@
 Program hello;
-	var:
+	var
 		a: integer;
 		b: string;
 
@@ -8,11 +8,10 @@ Program hello;
 		a:=0;
 		if (a>0) then
 			begin
-				print(b);
+				write(b);
 			end
 		else
 			begin
 				a:=a+10;
 			end
-	end
 end.
