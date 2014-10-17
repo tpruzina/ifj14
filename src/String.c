@@ -220,12 +220,10 @@ int compareStrings(struct String* s1, struct String* s2){
  * Vraci delku pole charu, pro pocitani delky.
  */
 int getCharArrayLength(char* array){
-	char cur = ' ';
 	int i = 0;
 
-	while((cur = array[i]) != '\0'){
+	while(array[i] != '\0')
 		i++;
-	}
 
 	return i;
 }
