@@ -11,32 +11,7 @@
 #include "Scanner.h"
 #include "Log.h"
 
-void parse_escape_seq(char *c)
-{
-	if(*c != '#')
-		return;
-	else
-	{
-		unsigned short num = 0;
-		unsigned char tmp_c = fgetc(global.src);
 
-		if(!isdigit(tmp_c))
-			exit(lex);
-
-		while(isdigit((char)tmp_c))
-		{
-			num *= 10;
-			num += tmp_c - '0';
-			if(num > 255)
-				exit(lex);
-			tmp_c = fgetc(global.src);
-		}
-
-		if('\'' != tmp_c)
-			exit(lex);
-		*c = (char) num;
-	}
-}
 
 /* get_toc - cita zo suboru dalsi token
  * @vstup:	otvoreny file descriptor
@@ -49,9 +24,6 @@ getToc()
 	int state;	// aktualny stav
 	struct toc *toc;
 	struct String *str;
-	// pomocna premenna pouzivana len v escape sekvenciach
-	// stringovych literalov
-	short escape_seq=0;
 
 // makro na vratenie charu na vstup a return tokenu
 #define UNGETC_AND_RETURN_TOKEN() do {	\
@@ -250,7 +222,7 @@ getToc()
 			else if('#' == c)
 			{
 				parse_escape_seq(&c);
-				addChar(str,c);
+				addChar(str,(char)c);
 				state = KA_STR_LIT_INISDE;
 			}
 			else
@@ -478,6 +450,7 @@ tocInit(struct toc **toc)
 	*(toc) = tmp;
 }
 
+// pomocne funkcie
 void skipWSandComments()
 {
 	ASSERT(global.src);
@@ -497,7 +470,33 @@ void skipWSandComments()
 	unGetChar(c);
 }
 
-// pomocne funkcie
+void parse_escape_seq(int *c)
+{
+	if(*c != '#')
+		return;
+	else
+	{
+		unsigned short num = 0;
+		unsigned char tmp_c = fgetc(global.src);
+
+		if(!isdigit(tmp_c))
+			exit(lex);
+
+		while(isdigit((char)tmp_c))
+		{
+			num *= 10;
+			num += tmp_c - '0';
+			if(num > 255)
+				exit(lex);
+			tmp_c = fgetc(global.src);
+		}
+
+		if('\'' != tmp_c)
+			exit(lex);
+		*c = (char) num;
+	}
+}
+
 int ascii(unsigned char c)
 {
 	return (
