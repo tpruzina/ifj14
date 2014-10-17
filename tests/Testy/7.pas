@@ -4,7 +4,7 @@ Program hello;
 		b: string;
 
 	begin
-		b:="Hello word!";
+		b:='Hello word!';
 		a:=0;
 		if  and (a>0) then
 			begin

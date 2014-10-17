@@ -4,7 +4,7 @@ Program hello;
 		b: string;
 
 	begin
-		b:="Hello word!";
+		b:='Hello word!';
 		for a:=10; downto 50 do
 		begin
 			print(b);

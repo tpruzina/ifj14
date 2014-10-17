@@ -4,7 +4,7 @@ Program hello;
 		b: string;
 
 	begin
-		b:="Hello word!";
+		b:='Hello word!';
 		a:=0;
 		case b of
 			0 : begin
@@ -18,7 +18,7 @@ Program hello;
 			'a': begin
 					if (a>20) then
 						begin
-							print("Chyba")
+							print('Chyba')
 						end
 					else
 						begin

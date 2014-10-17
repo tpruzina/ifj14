@@ -1,5 +1,4 @@
 Program hello;
-	begin
-		print("Hello Word!");
-	end
+begin
+	write('Hello Word!')
 end.

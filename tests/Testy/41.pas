@@ -4,7 +4,7 @@ Program hello;
 		b: string;
 
 	begin
-		b:="Hello word!";
+		b:='Hello word!';
 		for a:=0; to 25 do		
 	end
 end.

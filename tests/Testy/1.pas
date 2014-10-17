@@ -1,8 +1,8 @@
-Program 
+Program; 
 	var:
 		a: integer;
 
 	begin
-		print("Hello Word!");
+		print('Hello Word!');
 	end
 end.

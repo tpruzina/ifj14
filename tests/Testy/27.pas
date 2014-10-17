@@ -1,27 +1,24 @@
 Program hello;
-	var:
+	var
 		a: integer;
 		b: string;
 
 	begin
-		b:="Hello word!";
+		b:='Hello word!';
 		a:=0;
 		case a of 
 			0 : begin
-					print(b)
-					a:=10;
+					write(b);
+					a:=10
 				end
-			1 : print(a)
+			1 : write(a)
 			2 : begin
 					a:=a+20
 				end
 			'a': begin
 					if (a>20) then
 						begin
-							print("Chyba")
+							write('Chyba')
 						end
-					else
-						begin
-						end			
-	end
+				end		
 end.

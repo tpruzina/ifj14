@@ -1,8 +1,7 @@
 Program hello;
-	var:
+	var
 		a: integer;
 
-	begin
-		print("Hello Word!");
-	end
+begin
+	write('Hello Word!')
 end
