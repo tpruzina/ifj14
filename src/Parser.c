@@ -232,8 +232,8 @@ void printVarsPars(struct varspars* vp){
 }
 
 void datatypes(int left, int right){
-	char* l = malloc(sizeof(char));
-	char* r = malloc(sizeof(char));
+	char l[10];
+	char r[10];
 	
 	switch(left){
 		case DT_INT:
@@ -285,8 +285,6 @@ void datatypes(int left, int right){
 #ifdef _DEBUG
 	fprintf(stderr, "%s< Comparison between %s and %s >%s\n", ((right==left)?COLOR_LGRN:COLOR_LRED), l, r, COLOR_NRM);	
 #endif
-	free(l);
-	free(r);
 }
 
 int valid(struct astNode* left, struct astNode* right, int op){	
@@ -585,6 +583,7 @@ int parser(){
 		return False;
 	}
 	
+	// prohledat celou tabulku funkci a hledat polozku bez tela
 	checkFunctionDeclarations(global.funcTable);
 	
 	global.program = prog;
@@ -592,15 +591,26 @@ int parser(){
 }
 
 int checkFunctionDeclarations(struct symbolTableNode* gft){
+	// pokud predana tabulka neni prazdna
 	if(gft == NULL){
 		return False;
 	}
 	
-	if(gft->other == NULL){
-		E("Function without body definition");
+	// telo funkce
+	struct astNode* telo = (struct astNode*)gft->other;
+	if(telo == NULL){
+		E("Function without ast node deklaration");
 		exit(sem_prog);
 	}
 	
+	// hledani posloupnosti prikazu v levem podstromu
+	if(telo->left == NULL){
+		E("Function without body definition");
+		printString(gft->name);		
+		exit(sem_prog);
+	}
+	
+	// prohledavani poduzlu
 	if(gft->left != NULL)
 		return checkFunctionDeclarations(gft->left);
 	if(gft->right != NULL)
@@ -990,7 +1000,7 @@ struct queue* parseVars(struct toc** cur){
 			}
 			else {
 				E("vars: Syntax error - unsupported token");
-				//printTokenType(*cur);
+				printTokenType(*cur);
 				exit(synt);			
 			}
 		}
@@ -1702,12 +1712,11 @@ struct astNode* forStatement(struct toc** cur){
 	forNode->type = AST_FOR;	
 	
 	
-	// type bude AST_TO/AST_DOWNTO
+	// ocekavat ID, jenom
 	struct astNode* forCond = makeNewAST();
 	*cur = getToc();
 	if((*cur)->type == T_ID){
 		// je tam ID
-	
 		struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
 		if(!top){
 			W("Symbol table is empty - no local variables");
@@ -1722,20 +1731,22 @@ struct astNode* forStatement(struct toc** cur){
 		
 		// ulozeni idcka doleva
 		forCond->left = makeNewAST();
-		forCond->left->type = AST_ID;
-		struct String* name = makeNewString();
-		copyString((*cur)->data.str, &name);
-		forCond->left->other = name;
+		forCond->left->type = AST_ID;		
+		copyString((*cur)->data.str, &(forCond->left->data.str));
+		forCond->left->dataType = var->dataType;
 	}
 	
+	// dalsi token je prirazeni
 	*cur = getToc();
 	if((*cur)->type == T_ASGN){
 		// nasledovalo prirazeni
 		forCond->type = AST_ASGN;		
 	}
 	
+	// ocekavat pravou stranu prirazeni
 	*cur = getToc();
 	struct astNode* lit = makeNewAST();
+	D("lit twice alloced");
 	switch((*cur)->type){
 		case T_INT:
 			lit->type = AST_INT;
@@ -1777,12 +1788,13 @@ struct astNode* forStatement(struct toc** cur){
 	}
 	else {
 		E("Syntax error - expected TO or DOWNTO keyword");
-		//printTokenType(*cur);
+		printTokenType(*cur);
 		exit(synt);
 	}
 	// ulozeni doleva prirazeni, doprava pujde koncova hodnota
 	forNode->right->left = forCond;
 	
+	// nacitat literal
 	*cur = getToc();
 	lit = makeNewAST();
 	switch((*cur)->type){
@@ -1828,6 +1840,8 @@ struct astNode* forStatement(struct toc** cur){
 		exit(synt);		
 	}
 	
+	D("Printing astNode of FOR cycle");
+	printAst(forNode);
 	return forNode;
 }
 struct astNode* getCaseElement(struct toc** cur, int dt){
@@ -2099,6 +2113,22 @@ struct astNode* parseCommand(struct toc** cur){
 				exit(synt);
 			}
 			return cas;
+		}
+		case T_KW_FOR: {
+			/* for(asgn, int, int) */
+			D("FOR cmd");
+			
+			struct astNode* nd = forStatement(cur);
+			if((*cur)->type == T_KW_END){
+				*cur = getToc();
+				return nd;
+			}
+			else {
+				E("cmd: Syntax error - expected END (for)");
+				printTokenType(*cur);
+				exit(synt);
+			}
+			return nd;			
 		}
 		case T_KW_WRT: {
 			/* write(params) */
