@@ -787,8 +787,6 @@ struct astNode* parseBody(struct toc** cur){
 			}			
 		}
 	}
-	if(!body)
-		return NULL;
 	return body;
 }
 
