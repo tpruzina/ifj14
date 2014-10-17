@@ -312,8 +312,9 @@ struct symbolTableNode *convertAST2STN(struct astNode *ast)
 	else if(ast->type == AST_STR)
 	{
 		tmp->dataType = DT_STR;
-		tmp->data.str_data = makeNewString();
-		copyString(ast->data.str, tmp->data.str_data);
+		tmp->data.str_data = ast->data.str;
+//		tmp->data.str_data = makeNewString();
+//		copyString(ast->data.str, tmp->data.str_data);
 	}
 	else
 		ASSERT(false);
@@ -332,6 +333,9 @@ struct symbolTableNode *pushVarsParsIntoTable(
 
 	struct astNode *ast_src, *ast_dest;
 	struct symbolTableNode *stn_src, *stn_dest;
+
+	static struct symbolTableNode stn_src_static;
+	static struct symbolTableNode stn_dest_static;
 
 	// do docasnej tabulky symbolov prekladame parametry z volania
 	while(currCPItem && currFPItem)

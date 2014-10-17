@@ -67,22 +67,24 @@ int main(int argc, char** argv)
 	if(argc >= 2)
 	{	// pokud vse probehlo OK, tak zobrazit strom
 		if(parser()){
+#ifdef _DEBUG
 			Log("Printing PROGRAM",DEBUG,MAIN);
 			printAst(global.program);
 			fflush(stderr);
 			fflush(stdout);
 			Log("Printing PROGRAM",DEBUG,MAIN);
-			
+
 			Log("Printing symbol table top layer", DEBUG, MAIN);
 			struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
-			printSymbolTable(top, 0);	
+			printSymbolTable(top, 0);
 			Log("Printing function table", DEBUG, MAIN);
 			printSymbolTable(global.funcTable, 0);
-		
+#endif
 
 			interpret();
-
+#ifdef _DEBUG
 			printSymbolTable(top, 0);
+#endif
 		}	
 	}
 	return global.errno;
