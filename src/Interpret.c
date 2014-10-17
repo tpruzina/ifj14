@@ -193,8 +193,7 @@ void writeNode(struct astNode *p)
 		struct symbolTableNode *top = stackTop(global.symTable);
 		id = search(&top,p->other);
 		// nedefinovana premenna???
-		if(!p)
-			ASSERT(false);
+		ASSERT(id);
 
 		p = makeNewAST();
 

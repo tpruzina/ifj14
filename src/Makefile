@@ -11,5 +11,13 @@ interpret: $(SOURCES) Interpret.c main_interpret.c
 color: $(SOURCES) main.c
 	$(CC) $(CFLAGS) -D_DEBUG -D_COLOR ial.c GC.c Log.c String.c Stack.c Ast.c Scanner.c Parser.c main.c -o main
 
+test: clang cppcheck
+
+clang:
+	env scan-build --use-analyzer=/usr/bin/clang++ make
+
+cppcheck:
+	env cppcheck --enable=all --std=c99 --language=c *.c
+
 clean:
 	rm -fv *.o *.gch main test interpret
