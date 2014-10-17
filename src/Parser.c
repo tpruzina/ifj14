@@ -652,7 +652,6 @@ struct astNode* parseProgram(){
 				
 		//printTokenType(cur);		
 	}
-	D("!!!! after Function reading - gets");
 	//printTokenType(cur);
 	
 	//printTokenType(cur);
@@ -1331,6 +1330,7 @@ struct queue* parseCallParams(struct toc** cur){
 					return NULL;
 				
 				nd->type = AST_REAL;
+				nd->dataType = DT_REAL;
 				nd->data.real = (*cur)->data.real;
 				
 				break;
@@ -1341,6 +1341,7 @@ struct queue* parseCallParams(struct toc** cur){
 					return NULL;
 				
 				nd->type = AST_BOOL;
+				nd->dataType = DT_BOOL;
 				nd->data.boolean = (*cur)->data.boolean;
 				
 				break;
@@ -1351,6 +1352,7 @@ struct queue* parseCallParams(struct toc** cur){
 					return NULL;
 				
 				nd->type = AST_STR;
+				nd->dataType = DT_STR;
 				copyString((*cur)->data.str, &(nd->data.str));		
 				break;
 			}
@@ -1808,6 +1810,7 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 			}
 			nd->right->type = AST_INT;
 			nd->right->dataType = dt;
+			nd->right->data.integer = (*cur)->data.integer;
 			break;
 		case T_REAL:
 			if(dt != DT_REAL){
@@ -1816,6 +1819,7 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 			}
 			nd->right->type = AST_REAL;
 			nd->right->dataType = dt;
+			nd->right->data.real = (*cur)->data.real;
 			break;
 		case T_BOOL:
 			if(dt != DT_BOOL){
@@ -1824,6 +1828,7 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 			}
 			nd->right->type = AST_BOOL;
 			nd->right->dataType = dt;
+			nd->right->data.boolean = (*cur)->data.boolean;
 			break;
 		case T_STR: 
 			if(dt != DT_STR){
@@ -1831,7 +1836,8 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 				exit(sem_komp);
 			}
 			nd->right->type = AST_STR;
-			nd->right->dataType = dt;
+			nd->right->dataType = dt;			
+			nd->right->data.str = (*cur)->data.str;
 			break;
 		case T_KW_ELSE:
 			nd->right->type = AST_NONE;
@@ -1894,6 +1900,7 @@ struct astNode* caseStatement(struct toc** cur){
 	struct String* name = makeNewString();
 	copyString((*cur)->data.str, &name);
 	
+	// TODO zkontrolovat toto
 	// vytvoreni uzlu pro promennou
 	switchNode->right = makeNewAST();
 	switch((*cur)->type){
@@ -2024,11 +2031,9 @@ struct astNode* parseCommand(struct toc** cur){
 				//printTokenType(*cur);
 				exit(synt);
 			}
-			
 
 			// projistotu nacist top		
 			struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
-			
 			
 			*cur = getToc();
 			// nacitat parametry
@@ -2060,20 +2065,21 @@ struct astNode* parseCommand(struct toc** cur){
 						// novy uzel
 						node->type = AST_INT;
 						node->dataType = DT_INT;
-						
+						node->data.integer = (*cur)->data.integer;
 						break;
 					}	
 					case T_REAL: {
 						// novy uzel
 						node->type = AST_REAL;
 						node->dataType = DT_REAL;
-						
+						node->data.real = (*cur)->data.real;						
 						break;
 					}	
 					case T_STR: {
 						// novy uzel
 						node->type = AST_STR;
 						node->dataType = DT_STR;
+						node->data.str = (*cur)->data.str;
 						
 						break;
 					}	
@@ -2081,6 +2087,7 @@ struct astNode* parseCommand(struct toc** cur){
 						// novy uzel
 						node->type = AST_BOOL;
 						node->dataType = DT_BOOL;
+						node->data.boolean = (*cur)->data.boolean;
 	
 						break;
 					}	
@@ -2233,6 +2240,7 @@ struct astNode* parseCommand(struct toc** cur){
 					struct astNode* first = makeNewAST();
 					first->type = AST_STR;
 					first->dataType = DT_STR;
+					first->data.str = (*cur)->data.str;
 								
 					queuePush(vp->pars, first);
 				}
@@ -2326,7 +2334,7 @@ struct astNode* parseCommand(struct toc** cur){
 				struct astNode* nd = makeNewAST();
 				nd->type = AST_STR;
 				nd->dataType = DT_STR;
-				
+				nd->data.str = (*cur)->data.str;
 				// pushnuti do fronty
 				queuePush(vp->pars, nd);
 			}
@@ -2394,6 +2402,7 @@ struct astNode* parseCommand(struct toc** cur){
 				struct astNode* nstr = makeNewAST();
 				nstr->type = AST_STR;
 				nstr->dataType = DT_STR;
+				nstr->data.str = (*cur)->data.str;
 				
 				queuePush(vp->pars, nstr);				
 			}
@@ -2418,6 +2427,7 @@ struct astNode* parseCommand(struct toc** cur){
 					struct astNode* nint = makeNewAST();
 					nint->type = AST_INT;
 					nint->dataType = DT_INT;
+					nint->data.integer = (*cur)->data.integer;
 					
 					// pushnuti do fronty
 					queuePush(vp->pars, nint);					
@@ -2690,8 +2700,7 @@ struct astNode* parseExpression(struct toc** cur){
 				}
 				else if((*cur)->type == T_STR){
 					node->type = AST_STR;
-					if(!copyString((*cur)->data.str, &(node->data.str)))
-						return NULL;
+					node->data.str = (*cur)->data.str;
 						
 					node->dataType = DT_STR;
 					D("expr: making STR");
