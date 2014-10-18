@@ -428,11 +428,15 @@ void *runTree(struct astNode *curr)
 			insertDataString(&left, right->data.str_data);
 		else if(right->dataType == DT_REAL && left->dataType == DT_REAL)
 			insertDataReal(&left, right->data.real_data);
+		else if(right->dataType == DT_BOOL && left->dataType == DT_BOOL)
+			insertDataBoolean(&left, right->data.bool_data);
+		else if(right->dataType == DT_ARR && left->dataType == DT_ARR)
+			exit(intern);	//TODO kopirovanie arraya
 		else
 			exit(sem_komp);
 
 		// ak prava strana nema meno tak sme mali tmp premennu ktoru mozeme rovno smazat
-		if(!right->name->Value)
+		if(right->name && right->name->Length == 0)
 			deleteTable(&right);
 
 		return left;
