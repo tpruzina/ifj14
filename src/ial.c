@@ -227,13 +227,14 @@ struct symbolTableNode* makeNewSymbolTable(){
 	table->name = makeNewString();
 	
 	table->dataType = DT_NONE;
-	table->data.str_data = NULL;
-	table->data.int_data = 0;
-	table->data.real_data = 0;
-	table->data.bool_data = False;
-	
-	table->left = NULL;
-	table->right = NULL;
+
+//	table->data.str_data = NULL;
+//	table->data.int_data = 0;
+//	table->data.real_data = 0;
+//	table->data.bool_data = False;
+//
+//	table->left = NULL;
+//	table->right = NULL;
 	
 	return table;
 }

@@ -442,14 +442,12 @@ void *runTree(struct astNode *curr)
 		return left;
 		break;
 
-// toto z pohladu interpretu potrebne nebude
-
 	case AST_FUNC:
-/*
- *		Funkce bude uložená v AST_FUNC uzlu, kde levý obsahuje tělo a
- *		pravý je typu AST_NONE a v položce OTHER má strukturu varsapars
- *		obsahující frontu pro proměnné a frontu pro parametry.
- */
+		/*
+		 *		Funkce bude uložená v AST_FUNC uzlu, kde levý obsahuje tělo a
+		 *		pravý je typu AST_NONE a v položce OTHER má strukturu varsapars
+		 *		obsahující frontu pro proměnné a frontu pro parametry.
+		 */
 		// do tabulky symbolov pridame return premennu
 		// TODO: checkujeme ci nebude duplikovana???
 		insertValue(&top,curr->other,curr->dataType);
@@ -488,7 +486,7 @@ void *runTree(struct astNode *curr)
 		// pushneme
 		stackPush(global.symTable,right);
 
-		// zavolame funkciu
+		// zavolame funkciu (body)
 		tmp = runTree(tmp->other);
 
 		// navratime povodnu tabulku symbolov
@@ -504,9 +502,13 @@ void *runTree(struct astNode *curr)
 		tmp = runTree(curr->other);	// podmienka body
 
 		if(tmp->data.bool_data == true)	//vyhodnocena true
-			return runTree(curr->left);
+			runTree(curr->left);
 		else if(curr->right)	// vyhodnocena false a mame v branchi else
-			return runTree(curr->right);
+			runTree(curr->right);
+
+		ASSERT(tmp->name && tmp->name->Length == 0);
+//		if(tmp->name && tmp->name->Length == 0)
+		deleteTable(&tmp);
 
 		break;
 
@@ -515,7 +517,6 @@ void *runTree(struct astNode *curr)
 		while(true)
 		{
 			tmp = runTree(curr->other);	// evaluujeme podmienku
-
 			if(tmp->data.bool_data)
 				runTree(curr->left);	// ak true, tak bezime telo
 			else
@@ -597,6 +598,7 @@ void *runTree(struct astNode *curr)
 
 // unarne operacie, vracaju 'tokeny' ast (premenne, int, bool,real...)
 	case AST_ID:
+		ASSERT(curr && curr->data.str && curr->data.str->Length > 0);
 		// mame identifikator, hladame v tabulke symbolov
 		return search(&top,curr->data.str);
 
@@ -664,6 +666,7 @@ void *runTree(struct astNode *curr)
 	case AST_NONE:
 	default:
 		ASSERT(false);
+		exit(intern);
 	}
 	return NULL;
 }
