@@ -32,6 +32,8 @@ int init(char* srcpath){
 	global.src = fopen(srcpath, "r");
 	global.errno = ok;
 	
+	global.lineCounter = 1;
+
 	global.program = NULL;
 	global.symTable = makeNewStack();	
 	
