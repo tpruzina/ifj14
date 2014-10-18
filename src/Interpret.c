@@ -163,12 +163,28 @@ struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTab
 		break;
 
 	case AST_DIV:
-		if(left->dataType == DT_INT)
-			insertDataReal(&tmp, ((double)left->data.int_data / right->data.real_data));
-		else if(right->dataType == DT_INT)
-			insertDataReal(&tmp, (left->data.real_data / (double)right->data.int_data));
-		else
-			insertDataReal(&tmp, (left->data.real_data / right->data.real_data));
+		if(right->dataType == DT_INT)	// (../int)
+		{
+			if(right->data.int_data == 0)
+				exit(run_div);
+
+			if(left->dataType == DT_INT) // (int / int)
+				insertDataReal(&tmp, ((double)left->data.int_data / (double) right->data.real_data));
+			else	// (real/int)
+				insertDataReal(&tmp, (left->data.real_data / (double)right->data.int_data));
+		}
+		else	// (../real)
+		{
+			//typecast do floatu, pretoze vo floate je nula
+			//reprezentovana jedinou hodnotou
+			if((float)right->data.real_data == (float)0)
+				exit(run_div);
+			
+			if(left->dataType == DT_INT)	// (int/real)
+				insertDataReal(&tmp, ((double)left->data.int_data / right->data.real_data));
+			else	//(real/real)
+				insertDataReal(&tmp, (left->data.real_data / right->data.real_data));
+		}
 		break;
 	}
 
