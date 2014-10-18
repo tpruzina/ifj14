@@ -405,10 +405,10 @@ void *runTree(struct astNode *curr)
 
 	case AST_CMD:
 		if(curr->right)				//	<command>
-			right = runTree(curr->right);
+			runTree(curr->right);
 
 		if(curr->left && curr->left->type == AST_CMD)	// <command list>
-			return runTree(curr->left);
+			runTree(curr->left);
 
 		break;
 
