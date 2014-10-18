@@ -119,13 +119,11 @@ struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTab
 			else
 				insertDataReal(&tmp, (left->data.real_data + right->data.real_data));
 		}
-		else if(type == DT_STR)
+		else //if(type == DT_STR)
 		{
 			// konkatenace
 			exit(intern);
 		}
-		else
-			exit(intern);
 		break;
 
 	case AST_SUB:
@@ -148,7 +146,7 @@ struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTab
 	case AST_MUL:
 		if(type == DT_INT)
 			insertDataInteger(&tmp, left->data.int_data * right->data.int_data);
-		else if(type == DT_REAL)
+		else //if(type == DT_REAL)
 		{
 			//fugly workaround okolo faktu ze nemam pekne makra na zistenie typu z unionu
 			if(left->dataType == DT_INT)
@@ -158,8 +156,6 @@ struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTab
 			else
 				insertDataReal(&tmp, right->data.real_data * left->data.real_data);
 		}
-		else
-			exit(intern);
 		break;
 
 	case AST_DIV:
