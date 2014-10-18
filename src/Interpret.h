@@ -14,6 +14,13 @@
 
 int interpret();
 
+#ifdef __GNUC__
+void *runTree(struct astNode *restrict curr) __attribute__ ((fastcall));
+#endif
+
+#ifndef __GNUC__
 void *runTree(struct astNode *curr);
+#endif
+
 
 #endif
