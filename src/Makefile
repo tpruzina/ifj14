@@ -3,7 +3,11 @@ CFLAGS=-std=c99 -g -Wall -pedantic -Wextra
 SOURCES=ial.c GC.c Log.c String.c Stack.c Ast.c Scanner.c Parser.c
 
 ALL: all
-all: interpret color
+all: interpret color debug
+
+
+debug: $(SOURCES) Interpret.c main_interpret.c
+	$(CC) $(CFLAGS) -D_DEBUG GC.c ial.c Log.c String.c Stack.c Ast.c Scanner.c Parser.c Interpret.c main_interpret.c -o debug
 
 interpret: $(SOURCES) Interpret.c main_interpret.c
 	$(CC) $(CFLAGS) GC.c ial.c Log.c String.c Stack.c Ast.c Scanner.c Parser.c Interpret.c main_interpret.c -o interpret

@@ -287,44 +287,35 @@ void readNode(struct symbolTableNode *p)
  * Tuna nam budu funkcie queuePop nahovno, pretoze nerobime kopiu funkcie ->
  * vsetko treba pridavat do tabulky symbolov rucne
  */
-//#define offsetof(st, m) ((size_t)(&((st *)0)->m))
-#define offsetof(type, member)  __builtin_offsetof (type, member)
-
-#ifdef __GNUC__
-#define member_type(type, member) __typeof__ (((type *)0)->member)
-#else
-#define member_type(type, member) const void
-#endif
-
-#define container_of(ptr, type, member) ((type *)( \
-    (char *)(member_type(type, member) *){ ptr } - offsetof(type, member)))
-
-struct symbolTableNode *convertAST2STN(struct astNode *ast)
+struct symbolTableNode convertAST2STN(struct astNode *ast)
 {
-	struct symbolTableNode *tmp = makeNewSymbolTable();
-
+	struct symbolTableNode tmp = {0};
 	if(ast->type == AST_ID)
-		return runTree(ast);
+	{
+		struct symbolTableNode *p = runTree(ast);
+		tmp = *p;
+		return tmp;
+	}
 
 	if(ast->type == AST_INT)
 	{
-		tmp->dataType = DT_INT;
-		tmp->data.int_data = ast->data.integer;
+		tmp.dataType = DT_INT;
+		tmp.data.int_data = ast->data.integer;
 	}
 	else if(ast->type == AST_REAL)
 	{
-		tmp->dataType = DT_REAL;
-		tmp->data.real_data = ast->data.real;
+		tmp.dataType = DT_REAL;
+		tmp.data.real_data = ast->data.real;
 	}
 	else if(ast->type == AST_BOOL)
 	{
-		tmp->dataType = DT_BOOL;
-		tmp->data.bool_data = ast->data.boolean;
+		tmp.dataType = DT_BOOL;
+		tmp.data.bool_data = ast->data.boolean;
 	}
 	else if(ast->type == AST_STR)
 	{
-		tmp->dataType = DT_STR;
-		tmp->data.str_data = ast->data.str;
+		tmp.dataType = DT_STR;
+		tmp.data.str_data = ast->data.str;
 //		tmp->data.str_data = makeNewString();
 //		copyString(ast->data.str, tmp->data.str_data);
 	}
@@ -339,15 +330,16 @@ struct symbolTableNode *pushVarsParsIntoTable(
 		struct queue *function_vars)
 {
 	struct symbolTableNode *table = makeNewSymbolTable();
+	struct symbolTableNode *new = NULL;
 
 	struct queueItem *currCPItem = call_params->start;
 	struct queueItem *currFPItem = function_params->start;
 
 	struct astNode *ast_src, *ast_dest;
-	struct symbolTableNode *stn_src, *stn_dest;
+//	struct symbolTableNode *stn_src, *stn_dest;
 
-//	static struct symbolTableNode stn_src_static;
-//	static struct symbolTableNode stn_dest_static;
+	static struct symbolTableNode stn_src;
+	static struct symbolTableNode stn_dest;
 
 	// do docasnej tabulky symbolov prekladame parametry z volania
 	while(currCPItem && currFPItem)
@@ -358,19 +350,12 @@ struct symbolTableNode *pushVarsParsIntoTable(
 		stn_src = convertAST2STN(ast_src);
 		stn_dest = convertAST2STN(ast_dest);
 
-		// ak je callee typ parametru zhodny s callerom
-		if(stn_src->dataType == stn_dest->dataType)
+		if(stn_src.dataType == stn_dest.dataType)
 		{
-			stn_dest = insertValue(
-					&table,	// do docasnej tabulky...
-					ast_dest->other,	// pridaj pod menom...
-					stn_src->dataType		// a typom...
-			);
-			//hodnotu
-			if(stn_src->dataType == DT_INT)
-				insertDataInteger(&stn_dest, stn_src->data.int_data);
+			new = insertValue(&table, ast_dest->other, stn_src.dataType);
+			if(stn_src.dataType == DT_INT)
+				insertDataInteger(&new, stn_src.data.int_data);
 //			else if
-
 		}
 		else
 			exit(run_else);
@@ -387,19 +372,12 @@ struct symbolTableNode *pushVarsParsIntoTable(
 	{
 		ast_src = varsQueue->value;
 		stn_src = convertAST2STN(ast_src);
-		stn_dest = insertValue(
-					&table,
-					ast_src->other,
-					stn_src->dataType
-		);
-		// toto je teoreticky zbytocne, pretoze vo vars neinicializujeme data???? TODO
-		if(stn_src->dataType == DT_INT)
-			insertDataInteger(&stn_dest,stn_src->data.int_data);
-
+		
+		new = insertValue(&table, ast_src->other, stn_src.dataType);
+		// TODO: nastav priznak neinicializovanej premennej
+		// new->insertValue(initialised)
 		varsQueue = varsQueue->next;
 	}
-
-
 	return table;
 }
 
@@ -470,17 +448,17 @@ void *runTree(struct astNode *curr)
  *		pravý je typu AST_NONE a v položce OTHER má strukturu varsapars
  *		obsahující frontu pro proměnné a frontu pro parametry.
  */
-//		ASSERT(curr->left);		//telo
-//		ASSERT(curr->right);	// none->other (varspars)
-
+		// do tabulky symbolov pridame return premennu
+		// TODO: checkujeme ci nebude duplikovana???
 		insertValue(&top,curr->other,curr->dataType);
-
-		printSymbolTable(top, 0);
-
+	
+		// pustime telo funkcie
 		runTree(curr->left);
-
-		return  search(&top, curr->other);
-
+#ifdef _DEBUG	//vypiseme lokalnu tabulku symbolov
+		printSymbolTable(top, 0);
+#endif		
+		// vratime return hodnotu ( AST_CALL robi cleanup )
+		return search(&top, curr->other);
 	break;
 
 	case AST_CALL:
