@@ -248,6 +248,8 @@ void writeNode(struct astNode *p)
 		ASSERT(false);
 }
 
+// citame zo vstupu (cosi) a potom to ulozime do
+// TODO: kontroly korektnosti vstupu
 void readNode(struct symbolTableNode *p)
 {
 	struct String *tmp = makeNewString();
@@ -281,12 +283,10 @@ void readNode(struct symbolTableNode *p)
 		exit(4);
 	else
 		ASSERT(false);	// fuck you
+
+	freeString(tmp);
 }
 
-/*
- * Tuna nam budu funkcie queuePop nahovno, pretoze nerobime kopiu funkcie ->
- * vsetko treba pridavat do tabulky symbolov rucne
- */
 struct symbolTableNode convertAST2STN(struct astNode *ast)
 {
 	struct symbolTableNode tmp = {0};
@@ -316,8 +316,6 @@ struct symbolTableNode convertAST2STN(struct astNode *ast)
 	{
 		tmp.dataType = DT_STR;
 		tmp.data.str_data = ast->data.str;
-//		tmp->data.str_data = makeNewString();
-//		copyString(ast->data.str, tmp->data.str_data);
 	}
 	else
 		ASSERT(false);
