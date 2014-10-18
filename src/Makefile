@@ -1,5 +1,5 @@
 MAIN=main
-CFLAGS=-std=c99 -g -Wall -pedantic -Wextra
+CFLAGS=-O2 -std=c99 -g -Wall -pedantic -Wextra
 SOURCES=ial.c GC.c Log.c String.c Stack.c Ast.c Scanner.c Parser.c
 
 ALL: all
