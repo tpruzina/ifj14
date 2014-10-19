@@ -206,9 +206,8 @@ void writeNode(struct astNode *p)
 		id = search(&top,p->other);
 		// nedefinovana premenna???
 		ASSERT(id);
-		
-		struct astNode tmp_ast = {0};
-		p = &tmp_ast;
+
+		p = makeNewAST();
 
 		// konverzia symtab typy na AST typy
 		if(id->dataType == DT_STR)
