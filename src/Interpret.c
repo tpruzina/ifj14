@@ -264,10 +264,17 @@ void readNode(struct symbolTableNode *p)
 	struct String *tmp = makeNewString();
 	int c;
 
+	c = fgetc(stdin);
+	if(c == EOF)
+		exit(6);
+	else
+		ungetc(c,stdin);
+
 	if(p->dataType == DT_STR)
 	{
-		while((c = fgetc(stdin)) != EOF && c != '\n')
+		while(((c = fgetc(stdin)) != EOF) && c != '\n')
 			addChar(tmp,c);
+
 		p->data.str_data = tmp;
 	}
 	else if(p->dataType == DT_REAL)
