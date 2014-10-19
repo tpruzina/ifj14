@@ -393,32 +393,37 @@ struct symbolTableNode *pushVarsParsIntoTable(
 	return table;
 }
 
-struct symbolTableNode *btnCopy(struct symbolTableNode *src, struct queue *pars)
+struct symbolTableNode *btnCopy(struct queue *pars)
 {
 	struct symbolTableNode *res = makeNewSymbolTable();
 
-	// v pars->start->value mame len (string*) na meno, ale toto je uz vyriesene v src
+	struct astNode *p0 = pars->start->value;
 	struct astNode *p1 = pars->start->next->value;
 	struct astNode *p2 = pars->start->next->next->value;
 
-//	struct String *str = makeNewString();
+	struct symbolTableNode p0node = convertAST2STN(p0);
+	struct symbolTableNode p1node = convertAST2STN(p1);
+	struct symbolTableNode p2node = convertAST2STN(p2);
 
-	int index = p1->data.integer;
-	int len = p2->data.integer;
 
-//	for(int i=0; i < len; i++)
-//		addChar(str,src->data.str_data->Value[index+i]);
-
-	res->data.str_data = copy(src->data.str_data,index,len);
+	res->data.str_data = copy(
+			p0node.data.str_data,
+			p1node.data.int_data,
+			p2node.data.int_data
+	);
 	res->dataType = DT_STR;
 
 	return res;
 }
 
-struct symbolTableNode *btnSort(struct symbolTableNode *src)
+struct symbolTableNode *btnSort(struct queue *pars)
 {
 	struct symbolTableNode *res = makeNewSymbolTable();
-	insertDataString(&res,sort(src->data.str_data));
+
+	struct astNode *p0 = pars->start->value;
+	struct symbolTableNode p0node = convertAST2STN(p0);
+
+	insertDataString(&res,sort(p0node.data.str_data));
 	return res;
 }
 
@@ -426,22 +431,26 @@ struct symbolTableNode *btnSort(struct symbolTableNode *src)
 
 struct symbolTableNode *btnFind(struct queue *pars)
 {
-	struct astNode *p1 = pars->start->value;
-	struct astNode *p2 = pars->start->next->value;
+	struct astNode *p0 = pars->start->value;
+	struct astNode *p1 = pars->start->next->value;
 
-	struct symbolTableNode p1node = convertAST2STN(p2);
-	struct symbolTableNode p2node = convertAST2STN(p2);
+	struct symbolTableNode p0node = convertAST2STN(p0);
+	struct symbolTableNode p1node = convertAST2STN(p1);
 
 	struct symbolTableNode *res = makeNewSymbolTable();
-	insertDataInteger(&res,find(p1node.data.str_data,p2node.data.str_data));
+	insertDataInteger(&res,find(p0node.data.str_data,p1node.data.str_data));
 	return res;
 }
 
 
-struct symbolTableNode *btnLength(struct symbolTableNode *src)
+struct symbolTableNode *btnLength(struct queue *pars)
 {
 	struct symbolTableNode *res = makeNewSymbolTable();
-	insertDataInteger(&res,length(src->data.str_data));
+
+	struct astNode *p0 = pars->start->value;
+	struct symbolTableNode p0node = convertAST2STN(p0);
+
+	insertDataInteger(&res,length(p0node.data.str_data));
 	return res;
 }
 
@@ -728,17 +737,13 @@ void *runTree(struct astNode *curr)
 		ASSERT(curr->right && curr->right->type == AST_NONE);
 
 		tmp_vp = curr->right->other;			// vyrvem si varspars
-		tmp_asp = tmp_vp->pars->start->value;	// vyrvem z toho ast node
-
-		tmp = search(&top, tmp_asp->other);
-		return btnCopy(tmp,tmp_vp->pars);
+		return btnCopy(tmp_vp->pars);
 
 	case AST_FIND:
 		ASSERT(curr);
 		ASSERT(curr->right && curr->right->type == AST_NONE);
 
 		tmp_vp = curr->right->other;			// vyrvem si varspars
-
 		return btnFind(tmp_vp->pars);
 
 	case AST_LENGTH:
@@ -746,20 +751,14 @@ void *runTree(struct astNode *curr)
 		ASSERT(curr->right && curr->right->type == AST_NONE);
 
 		tmp_vp = curr->right->other;			// vyrvem si varspars
-		tmp_asp = tmp_vp->pars->start->value;	// vyrvem z toho ast node
-
-		tmp = search(&top, tmp_asp->other);
-		return btnLength(tmp);
+		return btnLength(tmp_vp->pars);
 
 	case AST_SORT:
 		ASSERT(curr);
 		ASSERT(curr->right && curr->right->type == AST_NONE);
 
 		tmp_vp = curr->right->other;			// vyrvem si varspars
-		tmp_asp = tmp_vp->pars->start->value;	// vyrvem z toho ast node
-
-		tmp = search(&top, tmp_asp->other);
-		return btnSort(tmp);
+		return btnSort(tmp_vp->pars);
 
 	// tieto veci by sa do interpretu nemali dostat
 	case AST_NUM:
