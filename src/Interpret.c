@@ -422,13 +422,18 @@ struct symbolTableNode *btnSort(struct symbolTableNode *src)
 	return res;
 }
 
-struct symbolTableNode *btnFind(struct symbolTableNode *src, struct queue *pars)
+
+
+struct symbolTableNode *btnFind(struct queue *pars)
 {
+	struct astNode *p1 = pars->start->value;
+	struct astNode *p2 = pars->start->next->value;
+
+	struct symbolTableNode p1node = convertAST2STN(p2);
+	struct symbolTableNode p2node = convertAST2STN(p2);
+
 	struct symbolTableNode *res = makeNewSymbolTable();
-
-	struct astNode *p1 = pars->start->next->value;
-
-	insertDataInteger(&res,find(src->data.str_data, p1->data.str));
+	insertDataInteger(&res,find(p1node.data.str_data,p2node.data.str_data));
 	return res;
 }
 
@@ -660,7 +665,12 @@ void *runTree(struct astNode *curr)
 	case AST_ID:
 		ASSERT(curr && curr->data.str && curr->data.str->Length > 0);
 		// mame identifikator, hladame v tabulke symbolov
-		return search(&top,curr->data.str);
+		if(curr->data.str)
+			return search(&top,curr->data.str);
+		else if(curr->other)
+			return search(&top, curr->other);
+		else
+			exit(intern);
 
 	case AST_INT:
 		// pridavame novu lokalnu premennu do tabulky a priradime jej hodnotu z node
@@ -728,10 +738,8 @@ void *runTree(struct astNode *curr)
 		ASSERT(curr->right && curr->right->type == AST_NONE);
 
 		tmp_vp = curr->right->other;			// vyrvem si varspars
-		tmp_asp = tmp_vp->pars->start->value;	// vyrvem z toho ast node
 
-		tmp = search(&top, tmp_asp->other);
-		return btnFind(tmp,tmp_vp->pars);
+		return btnFind(tmp_vp->pars);
 
 	case AST_LENGTH:
 		ASSERT(curr);
