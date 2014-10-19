@@ -378,6 +378,26 @@ struct symbolTableNode *pushVarsParsIntoTable(
 	return table;
 }
 
+struct symbolTableNode *btnCopy(struct symbolTableNode *src, struct queue *pars)
+{
+	struct symbolTableNode *res = makeNewSymbolTable();
+
+	// v pars->start->value mame len (string*) na meno, ale toto je uz vyriesene v src
+	struct astNode *p1 = pars->start->next->value;
+	struct astNode *p2 = pars->start->next->next->value;
+
+	int index = p1->data.integer-1;
+	int len = p2->data.integer;
+
+	struct String *str = makeNewString();
+	for(int i=0; i < len; i++)
+		addChar(str,src->data.str_data->Value[index+i]);
+
+	res->data.str_data = str;
+	res->dataType = DT_STR;
+
+	return res;
+}
 
 void *runTree(struct astNode *curr)
 {
@@ -653,6 +673,16 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_COPY:
+		ASSERT(curr);
+		ASSERT(curr->right && curr->right->type == AST_NONE);
+
+		tmp_vp = curr->right->other;			// vyrvem si varspars
+		tmp_asp = tmp_vp->pars->start->value;	// vyrvem z toho ast node
+
+		tmp = search(&top, tmp_asp->other);
+		return btnCopy(tmp,tmp_vp->pars);
+
+
 	case AST_LENGTH:
 	case AST_FIND:
 	case AST_SORT:
