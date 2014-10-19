@@ -8,7 +8,8 @@
 
 struct toc
 {
-	int type;
+//	int type;
+	enum tokenType type;
 	union
 	{
 		struct String *str;
