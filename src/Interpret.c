@@ -68,7 +68,17 @@ bool compare(struct symbolTableNode *left,struct symbolTableNode *right,int op)
 		}
 	}
 	else if(left->dataType == DT_STR)
-		exit(intern);	//todo
+	{
+		switch(op)
+		{
+		case AST_EQV:
+				return (strcmp(left->data.str_data->Value, right->data.str_data->Value)) ?
+						false : true;
+		case AST_NEQV:
+				return (strcmp(left->data.str_data->Value, right->data.str_data->Value)) ?
+						true: false;
+		}
+	}
 	else if(left->dataType == DT_BOOL)
 		exit(intern);	//todo
 	else
