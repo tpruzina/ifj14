@@ -47,7 +47,7 @@ bool compare(struct symbolTableNode *left,struct symbolTableNode *right,int op)
 			exit(intern);
 		}
 	}
-	else if(left->dataType == DT_BOOL)
+	else if(left->dataType == DT_REAL)
 	{
 		switch(op)
 		{
