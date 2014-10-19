@@ -2341,12 +2341,12 @@ struct astNode* parseCommand(struct toc** cur){
 					}
 				
 					struct String* name;
-					copyString(var->name, &name);
+					copyString((*cur)->data.str, &name);
 				
 					struct astNode* first = makeNewAST();
 					first->type = AST_ID;
 					first->dataType = DT_STR;
-					first->other = name;
+					copyString((*cur)->data.str, &(first->other));
 					queuePush(vp->pars, first);
 				}
 				else if((*cur)->type == T_STR){
@@ -2664,10 +2664,6 @@ struct astNode* parseExpression(struct toc** cur){
 	// zasobnik pro chystani AST
 	struct stack* aststack = makeNewStack();
 
-	// potrebne pre inline funkcie v assigne
-	struct toc *cur_backup = *cur;
-	
-	
 	bool readNew = true;
 	
 

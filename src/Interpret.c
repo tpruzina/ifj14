@@ -72,10 +72,10 @@ bool compare(struct symbolTableNode *left,struct symbolTableNode *right,int op)
 		switch(op)
 		{
 		case AST_EQV:
-				return (strcmp(left->data.str_data->Value, right->data.str_data->Value)) ?
+				return (compareStrings(left->data.str_data, right->data.str_data)) ?
 						false : true;
 		case AST_NEQV:
-				return (strcmp(left->data.str_data->Value, right->data.str_data->Value)) ?
+			return (compareStrings(left->data.str_data, right->data.str_data)) ?
 						true: false;
 		}
 	}
