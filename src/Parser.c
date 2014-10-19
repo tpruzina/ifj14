@@ -2304,6 +2304,7 @@ struct astNode* parseCommand(struct toc** cur){
 			
 			struct astNode* find = makeNewAST();
 			find->type = AST_FIND;
+			find->dataType = DT_INT;
 			
 			struct String* name = makeNewString();
 			copyFromArray("find", &name);
@@ -2404,9 +2405,16 @@ struct astNode* parseCommand(struct toc** cur){
 					
 			D("SORT/LENGTH");
 			if((*cur)->type == T_KW_SORT)
+			{
 				sort->type = AST_SORT;
+				sort->dataType = DT_STR;
+			}
 			else
+			{
 				sort->type = AST_LENGTH;
+				sort->dataType = DT_INT;
+			}
+
 
 			struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
 			vp->vars = NULL;
@@ -2475,6 +2483,7 @@ struct astNode* parseCommand(struct toc** cur){
 			/* copy(str, int, int) */
 			struct astNode* copy = makeNewAST();
 			copy->type = AST_COPY;
+			copy->dataType = DT_STR;
 			
 			struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
 			vp->vars = NULL;
@@ -2536,7 +2545,7 @@ struct astNode* parseCommand(struct toc** cur){
 			for(int i = 0; i < 2; i++){
 				*cur = getToc();
 				
-				if((*cur)->type != T_INT){		
+				if((*cur)->type == T_INT){
 					// novy uzel		
 					struct astNode* nint = makeNewAST();
 					nint->type = AST_INT;
@@ -2653,13 +2662,47 @@ struct astNode* parseExpression(struct toc** cur){
 	// zasobnik pro operatory Shunting-yard algoritmu
 	struct stack* stack = makeNewStack();
 	// zasobnik pro chystani AST
-	struct stack* aststack = makeNewStack();				
+	struct stack* aststack = makeNewStack();
+
+	// potrebne pre inline funkcie v assigne
+	struct toc *cur_backup = *cur;
 	
 	
 	bool readNew = true;
 	
+
 	// zacatek podminky
 	(*cur) = getToc();
+
+// spinavy hack ktory riesi problem old_cur := cur();
+	switch((*cur)->type)
+	{
+	case T_KW_COPY:
+	case T_KW_READLN:
+	case T_KW_FIND:
+	case T_KW_SORT:
+	case T_KW_LENGTH:
+		{
+		struct astNode *cmd = parseCommand(cur);
+		stackPush(aststack, cmd);
+//		if((*cur)->type == T_KW_END){
+//			D("body: gets END");
+//			// ukonceni bloku kodu
+//			if(cmd == NULL){
+//				W("body: WARNING - statement without effect");
+//
+//				body->left = NULL;
+//				return body;
+//			}
+//
+//			body->left = makeNewAST();
+//			body->left->type = AST_CMD;
+//			body->left->left = NULL;
+//			body->left->right = cmd;
+//			return body;S
+		}
+	default: break;
+	}
 		
 	// <id>(
 	// <id> <operator> (
@@ -2699,7 +2742,7 @@ struct astNode* parseExpression(struct toc** cur){
 			stackPush(aststack, node);
 		}	
 	}
-	
+
 	// 1. operand -> outqueue
 	// 2. leva zavorka -> na vrchol zasobniku
 	// 3. operator:
@@ -2923,7 +2966,6 @@ struct astNode* parseExpression(struct toc** cur){
 				if(aststack->Length > 1){
 					E("expression: Shunting yard error - stack length is grather then 1");
 					printAstStack(aststack);
-					exit(intern);
 				}
 				else if(aststack->Length == 0){
 					E("expression: Shunting yard error - stack is empty");

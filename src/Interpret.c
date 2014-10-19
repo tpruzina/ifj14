@@ -614,12 +614,12 @@ void *runTree(struct astNode *curr)
 
 	case AST_BOOL:
 		tmp = makeNewSymbolTable();
-		insertDataBoolean(&top, curr->data.boolean);
+		insertDataBoolean(&tmp, curr->data.boolean);
 		return tmp;
 
 	case AST_STR:
 		tmp = makeNewSymbolTable();
-		insertDataString(&top, curr->data.str);
+		insertDataString(&tmp, curr->data.str);
 		return tmp;
 
 	case AST_ARR:
