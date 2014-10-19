@@ -282,8 +282,6 @@ void readNode(struct symbolTableNode *p)
 		exit(4);
 	else
 		ASSERT(false);	// fuck you
-
-	freeString(tmp);
 }
 
 struct symbolTableNode convertAST2STN(struct astNode *ast)
@@ -386,16 +384,42 @@ struct symbolTableNode *btnCopy(struct symbolTableNode *src, struct queue *pars)
 	struct astNode *p1 = pars->start->next->value;
 	struct astNode *p2 = pars->start->next->next->value;
 
-	int index = p1->data.integer-1;
+//	struct String *str = makeNewString();
+
+	int index = p1->data.integer;
 	int len = p2->data.integer;
 
-	struct String *str = makeNewString();
-	for(int i=0; i < len; i++)
-		addChar(str,src->data.str_data->Value[index+i]);
+//	for(int i=0; i < len; i++)
+//		addChar(str,src->data.str_data->Value[index+i]);
 
-	res->data.str_data = str;
+	res->data.str_data = copy(src->data.str_data,index,len);
 	res->dataType = DT_STR;
 
+	return res;
+}
+
+struct symbolTableNode *btnSort(struct symbolTableNode *src)
+{
+	struct symbolTableNode *res = makeNewSymbolTable();
+	insertDataString(&res,sort(src->data.str_data));
+	return res;
+}
+
+struct symbolTableNode *btnFind(struct symbolTableNode *src, struct queue *pars)
+{
+	struct symbolTableNode *res = makeNewSymbolTable();
+
+	struct astNode *p1 = pars->start->next->value;
+
+	insertDataInteger(&res,find(src->data.str_data, p1->data.str));
+	return res;
+}
+
+
+struct symbolTableNode *btnLength(struct symbolTableNode *src)
+{
+	struct symbolTableNode *res = makeNewSymbolTable();
+	insertDataInteger(&res,length(src->data.str_data));
 	return res;
 }
 
@@ -682,12 +706,35 @@ void *runTree(struct astNode *curr)
 		tmp = search(&top, tmp_asp->other);
 		return btnCopy(tmp,tmp_vp->pars);
 
+	case AST_FIND:
+		ASSERT(curr);
+		ASSERT(curr->right && curr->right->type == AST_NONE);
+
+		tmp_vp = curr->right->other;			// vyrvem si varspars
+		tmp_asp = tmp_vp->pars->start->value;	// vyrvem z toho ast node
+
+		tmp = search(&top, tmp_asp->other);
+		return btnFind(tmp,tmp_vp->pars);
 
 	case AST_LENGTH:
-	case AST_FIND:
+		ASSERT(curr);
+		ASSERT(curr->right && curr->right->type == AST_NONE);
+
+		tmp_vp = curr->right->other;			// vyrvem si varspars
+		tmp_asp = tmp_vp->pars->start->value;	// vyrvem z toho ast node
+
+		tmp = search(&top, tmp_asp->other);
+		return btnLength(tmp);
+
 	case AST_SORT:
-		exit(intern);
-		break;
+		ASSERT(curr);
+		ASSERT(curr->right && curr->right->type == AST_NONE);
+
+		tmp_vp = curr->right->other;			// vyrvem si varspars
+		tmp_asp = tmp_vp->pars->start->value;	// vyrvem z toho ast node
+
+		tmp = search(&top, tmp_asp->other);
+		return btnSort(tmp);
 
 	// tieto veci by sa do interpretu nemali dostat
 	case AST_NUM:
