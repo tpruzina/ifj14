@@ -2354,7 +2354,8 @@ struct astNode* parseCommand(struct toc** cur){
 					struct astNode* first = makeNewAST();
 					first->type = AST_STR;
 					first->dataType = DT_STR;
-					first->data.str = (*cur)->data.str;
+					first->data.str = makeNewString();
+					copyString((*cur)->data.str, &(first->data.str));
 								
 					queuePush(vp->pars, first);
 				}
