@@ -10,7 +10,7 @@ debug: $(SOURCES) Interpret.c main_interpret.c
 	$(CC) $(CFLAGS) -D_DEBUG GC.c ial.c Log.c String.c Stack.c Ast.c Scanner.c Parser.c Interpret.c main_interpret.c -o debug
 
 interpret: $(SOURCES) Interpret.c main_interpret.c
-	$(CC) $(CFLAGS) GC.c ial.c Log.c String.c Stack.c Ast.c Scanner.c Parser.c Interpret.c main_interpret.c -o interpret
+	$(CC) $(CFLAGS) -U_DEBUG GC.c ial.c Log.c String.c Stack.c Ast.c Scanner.c Parser.c Interpret.c main_interpret.c -o interpret
 
 color: $(SOURCES) main.c
 	$(CC) $(CFLAGS) -D_DEBUG -D_COLOR ial.c GC.c Log.c String.c Stack.c Ast.c Scanner.c Parser.c main.c -o main

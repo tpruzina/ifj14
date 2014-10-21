@@ -1145,7 +1145,9 @@ struct astNode* parseFunction(){
 	// skopirovani jmena
 	struct String* name = makeNewString();
 	copyString(cur->data.str, &name);
+#ifdef _DEBUG
 	printString(name);
+#endif
 	node->other = name;
 
 	// sparsovat parametry
