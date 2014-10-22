@@ -56,17 +56,18 @@ void quit(){
 
 int main(int argc, char** argv)
 {
-	//struct mainAll global = {0};
-	
-	if(init(argv[1]) != True){
-		Log("main: main_all struct dont allocated garbage collector..", ERROR, MAIN);
-		return False;
-	}
-	atexit(quit);
-	
-	if(argc >= 2)
-	{	// pokud vse probehlo OK, tak zobrazit strom
-		if(parser()){
+
+
+	if(argc == 2)
+	{
+		if(init(argv[1]) != True){
+			Log("main: main_all struct dont allocated garbage collector..", ERROR, MAIN);
+			exit(intern);
+		}
+		atexit(quit);
+		// pokud vse probehlo OK, tak zobrazit strom
+		if(parser())
+		{
 #ifdef _DEBUG
 			Log("Printing PROGRAM",DEBUG,MAIN);
 			printAst(global.program);
@@ -85,7 +86,7 @@ int main(int argc, char** argv)
 #ifdef _DEBUG
 			printSymbolTable(top, 0);
 #endif
-		}	
+		}
 	}
 	return global.errno;
 }

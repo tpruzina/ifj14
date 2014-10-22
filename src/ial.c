@@ -68,93 +68,144 @@ int length(struct String* str){
 	return str->Length;
 }
 
-/**
- * Doprovodna funkce pro pocitani QuickSortu
- * --------------------
- * *A: pole hodnot
- * left: 	leva mez
- * right:	prava mez
- * *i: 		posuvne indexy
- * *j:		posuvne indexy
- */
-void partition(int *A, int left, int right, int *i, int *j){
-	int PM;
-	*i = left;
-	*j = right;
+void partition (struct String *str, int left, int right, int* i_, int* j_)
+{
+	int i = *i_;
+	int j = *j_;
 
-	PM = A[(*i + *j)/2]; // pseudomedián
+	char PM;
+	int c; // pro presun
 
-	while(1){
-		while(A[*i] < PM){	// nic co je menší než PM mě nezajímá
-			*i+=1;
+	i = left;
+	j = right;
+
+	PM = str->Value [(i+j)/2];
+
+	do
+	{
+		while (str->Value [i] < PM) i++;
+		while (str->Value [j] > PM) j--;
+
+		if (i <= j)
+		{
+			c = str->Value [i];
+			str->Value [i] = str->Value [j];
+			str->Value [j] = c;
+
+			i++;
+			j--;
 		}
-		while(A[*j] > PM){	// tady mě nezajímá nic většího než PM
-			*j-=1;
-		}
-		
-		// pokud se indexy nepřekřížili, prohodím prvky, na které ukazují
-		if(*i<*j){
-			// v přednáškách je i<=j, ale nemá cenu přehazovat prvek 
-			// se sebou samým
-			int tmp = A[*i];
-			A[*i] = A[*j];
-			A[*j] = tmp;
-			*i+=1;
-			*j-=1;
-		}else{				// jinak skončím cyklus (repeat ... until(i>j)) v přednáškách until(i>=j),
-			break;			// ale nemá cenu přehazovat prvek se sebou samým
-		}	
-	}
+
+	} while (i < j);
+
+	*i_ = i;
+	*j_ = j;
+
+	return;
 }
 
-/**
- * Funkce QuickSort 
- * --------------------
- * *A: 		Pole na serazeni
- * left:	Leva mez
- * right:	Prava mez
- */
-void quickSort(int *A, int left, int right){
-	int i,j;
-	partition(A,left,right,&i,&j);	// rozdělím na dvě části
+void quicksort (struct String *str, int left, int right)
+{
+	int i = 0;
+	int j = 0;
 
-	if(left<j){	
-		quickSort(A,left,j);		// sortnu levou část
-	}
+	partition (str, left, right, &i, &j);
+	if (left < j) quicksort (str, left, j);
+	if (i < right) quicksort (str, i, right);
 
-	if(right>i){
-		quickSort(A,i,right);		// sortnu pravou část
-	}
+	return;
 }
+
+void sortString (struct String *str)
+{
+	// printf ("sortuju\n");
+
+	// provedu pocatecni nastaveni
+	int left = 0;
+	int right = str->Length-1;
+
+	// zavolam vlastni quicksort
+	quicksort (str, left, right);
+
+	return;
+}
+
+///**
+// * Doprovodna funkce pro pocitani QuickSortu
+// * --------------------
+// * *A: pole hodnot
+// * left: 	leva mez
+// * right:	prava mez
+// * *i: 		posuvne indexy
+// * *j:		posuvne indexy
+// */
+//void partition(int *A, int left, int right, int *i, int *j){
+//	int PM;
+//	*i = left;
+//	*j = right;
+//
+//	PM = A[(*i + *j)/2]; // pseudomedián
+//
+//	while(1){
+//		while(A[*i] < PM){	// nic co je menší než PM mě nezajímá
+//			*i+=1;
+//		}
+//		while(A[*j] > PM){	// tady mě nezajímá nic většího než PM
+//			*j-=1;
+//		}
+//
+//		// pokud se indexy nepřekřížili, prohodím prvky, na které ukazují
+//		if(*i<*j){
+//			// v přednáškách je i<=j, ale nemá cenu přehazovat prvek
+//			// se sebou samým
+//			int tmp = A[*i];
+//			A[*i] = A[*j];
+//			A[*j] = tmp;
+//			*i+=1;
+//			*j-=1;
+//		}else{				// jinak skončím cyklus (repeat ... until(i>j)) v přednáškách until(i>=j),
+//			break;			// ale nemá cenu přehazovat prvek se sebou samým
+//		}
+//	}
+//}
+//
+///**
+// * Funkce QuickSort
+// * --------------------
+// * *A: 		Pole na serazeni
+// * left:	Leva mez
+// * right:	Prava mez
+// */
+//void quickSort(int *A, int left, int right){
+//	int i,j;
+//	partition(A,left,right,&i,&j);	// rozdělím na dvě části
+//
+//	if(left<j){
+//		quickSort(A,left,j);		// sortnu levou část
+//	}
+//
+//	if(right>i){
+//		quickSort(A,i,right);		// sortnu pravou část
+//	}
+//}
 /**
  * INLINE funkce pro razeni retezcu
  * --------------------
  * str: string pro serazeni
  */
-struct String* sort(struct String* str){
-	if(str == NULL){
+struct String* sort(struct String* src){
+	if(src == NULL){
 		E("Semantic error - string is null");
 		exit(sem_else);
 	}
 
 	// udelat kopii
-	int l = str->Length;
-	int *arr = (int*)gcMalloc(sizeof(int) * l);
-		
-	// naplnit pole
-	for(int i = 0; i < l; i++){	
-		arr[i] = (int)str->Value[i];
-	}
+	struct String *res = makeNewString();
+	copyString(src,&res);
 
-	// seradit
-	quickSort(arr,0,l);	
+	sortString(res);
 
-	// vratit serazene
-	for(int i = 0; i < l; i++){
-		str->Value[i] = (char)arr[i];
-	}
-
-	return str;
+	return res;
 }
 
 /**
@@ -227,13 +278,14 @@ struct symbolTableNode* makeNewSymbolTable(){
 	table->name = makeNewString();
 	
 	table->dataType = DT_NONE;
-	table->data.str_data = NULL;
-	table->data.int_data = 0;
-	table->data.real_data = 0;
-	table->data.bool_data = False;
-	
-	table->left = NULL;
-	table->right = NULL;
+
+//	table->data.str_data = NULL;
+//	table->data.int_data = 0;
+//	table->data.real_data = 0;
+//	table->data.bool_data = False;
+//
+//	table->left = NULL;
+//	table->right = NULL;
 	
 	return table;
 }

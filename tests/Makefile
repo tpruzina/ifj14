@@ -8,4 +8,5 @@ all: test
 test:
 	$(TEST_SCRIPT) $(BIN) $(TEST_DIR)
 clean:
-	/bin/true
+	$(TEST_SCRIPT) -d $(TEST_DIR)
+	rm -rf ./vysledkyTestu.txt
