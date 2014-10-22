@@ -1,0 +1,13 @@
+function WhatIsChar( c:char ):string;
+var
+    s : string;
+begin
+   s := '';
+   case c of
+     '0' .. '9' : s := 'digit (0-9)';
+     'a' .. 'z' : s := 'lowercase letter (a-z)';
+     'A' .. 'Z' : s := 'uppercase letter (A-Z)';
+     '+' , '-'  : s := 'sign (+ or -)';
+   end;
+   result := s
+ end;
