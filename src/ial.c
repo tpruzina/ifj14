@@ -239,7 +239,6 @@ int find(struct String* text, struct String* pattern){
 		fail[k] = next+1;
     }
 
-
 	//hledani podretezce
 	text_inx = 0;
 	pattern_inx = 0;
