@@ -217,16 +217,20 @@ struct String* sort(struct String* src){
 int find(struct String* text, struct String* pattern){
 	int result; // pozice, prvniho nalezu
       	
+	int len_pattern = strlen(pattern->Value);
+	int len_text = strlen(text->Value);
+	
 	// vektor fail
-    int* fail = (int*)gcMalloc(sizeof(int) * pattern->Length);
+    int* fail = (int*)gcMalloc(sizeof(int) * len_pattern);
     // index hledaneho podretezce, index v retezci, dalsi pozice
     int pattern_inx, text_inx, next; 
 
 
 	fail[0] = -1;
 
+
 	//prochazim slovo - KMP graf
-	for(int k = 1; k < pattern->Length; k++){
+	for(int k = 1; k < len_pattern; k++){
 		next = fail[k-1];
 
 		while(next > -1 && (pattern->Value[next] != pattern->Value[k-1])){
@@ -240,7 +244,7 @@ int find(struct String* text, struct String* pattern){
 	text_inx = 0;
 	pattern_inx = 0;
 
-	while((text_inx < text->Length) && (pattern_inx < pattern->Length)){
+	while((text_inx < len_text) && (pattern_inx < len_pattern)){
 		if(pattern_inx == -1 || (text->Value[text_inx] == pattern->Value[pattern_inx])){
 			text_inx++;
 			pattern_inx++;
@@ -251,8 +255,8 @@ int find(struct String* text, struct String* pattern){
 		}
 	}
 
-	if(pattern_inx == pattern->Length){
-		result = text_inx - pattern->Length;
+	if(pattern_inx == len_pattern){
+		result = text_inx - len_pattern + 1;
 	}
 	else{
 		result = text_inx;
