@@ -16,6 +16,327 @@ void interpret()
 		exit(intern);
 }
 
+void *runTree(struct astNode *curr)
+{
+	if(!curr)
+		exit(intern);
+
+	struct symbolTableNode *left = NULL;
+	struct symbolTableNode *right = NULL;
+	struct symbolTableNode *tmp = NULL;
+
+	struct varspars *tmp_vp = NULL;
+	struct astNode	*tmp_asp = NULL;
+
+	// stack top je cheap operace, nech to nemusime riesit v KA, bude to v kazdej iteracii - resp. TODO
+	struct symbolTableNode* top = stackTop(global.symTable);
+
+	switch(curr->type)
+	{
+	case AST_START:
+		ASSERT(curr->left && curr->left->type == AST_CMD);
+		runTree(curr->left);
+
+		break;
+
+	case AST_CMD:
+		if(curr->right)				//	<command>
+			runTree(curr->right);
+
+		if(curr->left && curr->left->type == AST_CMD)	// <command list>
+			runTree(curr->left);
+
+		break;
+
+	case AST_ASGN:	// <command>: <assign>
+		ASSERT(	curr->left &&
+				curr->left->type == AST_ID &&
+				curr->right
+		);
+
+		left = runTree(curr->left);	// x :=
+		// ak je left null tak mame neinicializovanu premennu - todo: check!!!
+		right = runTree(curr->right);			//ocekavame symtabnode (tmp premenna...)
+
+		if(right->dataType == DT_INT && left->dataType == DT_INT)
+			insertDataInteger(&left, right->data.int_data);
+		else if(right->dataType == DT_STR && left->dataType == DT_STR)
+			insertDataString(&left, right->data.str_data);
+		else if(right->dataType == DT_REAL && left->dataType == DT_REAL)
+			insertDataReal(&left, right->data.real_data);
+		else if(right->dataType == DT_BOOL && left->dataType == DT_BOOL)
+			insertDataBoolean(&left, right->data.bool_data);
+		else if(right->dataType == DT_ARR && left->dataType == DT_ARR)
+			exit(intern);	//TODO kopirovanie arraya
+		else
+			exit(sem_komp);
+
+		// ak prava strana nema meno tak sme mali tmp premennu ktoru mozeme rovno smazat
+		if(right->name && right->name->Length == 0)
+			deleteTable(&right);
+
+		return left;
+		break;
+
+	case AST_FUNC:
+		/*
+		 *		Funkce bude uložená v AST_FUNC uzlu, kde levý obsahuje tělo a
+		 *		pravý je typu AST_NONE a v položce OTHER má strukturu varsapars
+		 *		obsahující frontu pro proměnné a frontu pro parametry.
+		 */
+		// do tabulky symbolov pridame return premennu
+		// TODO: checkujeme ci nebude duplikovana???
+		insertValue(&top,curr->other,curr->dataType);
+
+		// pustime telo funkcie
+		runTree(curr->left);
+#ifdef _DEBUG	//vypiseme lokalnu tabulku symbolov
+		printSymbolTable(top, 0);
+#endif
+		// vratime return hodnotu ( AST_CALL robi cleanup )
+		return searchST(&top, curr->other);
+	break;
+
+	case AST_CALL:
+/*	Bude řešeno přes AST_CALL, kde levy poduzel bude prázdný, protože volání neobsahuje tělo
+ *  a pravý poduzel bude obsahovat AST_NONE,
+ *  kde v OTHER bude uložená struktura varspars s naplněnou položkou pars parametry.
+ */
+		// vyhledame s v tabulke funkcii pozadovanu funkciu
+		// curr->other (struct string *) jmeno_funkcie
+		tmp = searchST(&global.funcTable,(struct String *)curr->other);
+		ASSERT(tmp);	//teoreticky je toto riesene uz v parsri
+		tmp_vp = curr->right->other;	//tu budu parametry
+		tmp_asp = tmp->other;	//telo: todo smazat
+
+		// vytvorime si novu lokalnu tabulky symbolov
+//		stackPush(global.symTable, makeNewSymbolTable());
+
+		// nakopirujeme parametre a vars do docasnej lokalnej tabulky symbolov
+		right = pushVarsParsIntoTable(
+				tmp_vp->pars,
+				((struct varspars *)tmp_asp->right->other)->pars,
+				((struct varspars *)tmp_asp->right->other)->vars
+		);
+
+		// pushneme
+		stackPush(global.symTable,right);
+
+		// zavolame funkciu (body)
+		tmp = runTree(tmp->other);
+
+		// navratime povodnu tabulku symbolov
+		stackPop(global.symTable);
+
+		// vratime navratovu hodnotu funkcie
+		return tmp;
+
+		break;
+
+// controll konstrukcie (if,while,repeat..)
+	case AST_IF:
+		tmp = runTree(curr->other);	// podmienka body
+
+		if(tmp->data.bool_data == true)	//vyhodnocena true
+			runTree(curr->left);
+		else if(curr->right)	// vyhodnocena false a mame v branchi else
+			runTree(curr->right);
+
+		ASSERT(tmp->name && tmp->name->Length == 0);
+//		if(tmp->name && tmp->name->Length == 0)
+		deleteTable(&tmp);
+
+		break;
+
+	case AST_WHILE:
+		ASSERT(curr->left && curr->other);
+		while(true)
+		{
+			tmp = runTree(curr->other);	// evaluujeme podmienku
+			if(tmp->data.bool_data)
+				runTree(curr->left);	// ak true, tak bezime telo
+			else
+				break;
+		}
+		break;
+
+	case AST_FOR:
+	case AST_FOR_TO:
+	case AST_FOR_DOWNTO:
+	case AST_SWITCH:
+	case AST_REPEAT:
+		exit(intern);	//todo
+		break;
+
+// porovnavanie =,!=,<,<=,>,>=
+	case AST_EQV:
+	case AST_NEQV:
+	case AST_GRT:
+	case AST_LSS:
+	case AST_GEQV:
+	case AST_LEQV:
+		ASSERT(curr->left && curr->right);
+
+		// ziskame levu & pravu stranu porovnania
+		left = runTree(curr->left);
+		right = runTree(curr->right);
+
+		// pripravime tmp premennu typu bool na vysledek
+		tmp = makeNewSymbolTable();
+		insertDataBoolean(
+				&tmp,
+				compare(left,right,curr->type)	//porovnavame a (op) b
+		);
+		return tmp;
+
+// aritmeticke operace +,-,/,*
+	case AST_ADD:
+	case AST_SUB:
+	case AST_MUL:
+	case AST_DIV:
+		ASSERT(curr->left && curr->right);
+
+		left = runTree(curr->left);		// *a* (op) b
+		right = runTree(curr->right);	// a (op) *b*
+
+		// spravime aritmeticku operaciu
+		// vraci tmp premennu v symtab node
+		return arithmetic(left,right,curr->type);
+
+// logicke operace
+	// tieto su binarne
+	case AST_AND:
+	case AST_OR:
+	case AST_XOR:
+		ASSERT(curr->left && curr->right);
+
+		right = runTree(curr->right);
+		left = runTree(curr->left);
+
+		tmp = makeNewSymbolTable();
+		insertDataBoolean(
+				&tmp,
+				(curr->type == AST_AND) ? (left->data.bool_data && right->data.bool_data):
+				(curr->type == AST_OR)	? (left->data.bool_data || right->data.bool_data):
+				(curr->type == AST_XOR) ? (left->data.bool_data ^ right->data.bool_data): false
+		);
+		return tmp;
+
+	// not je unarna operacia
+	case AST_NOT:
+		assert(curr->left && !curr->right);
+
+		left = runTree(curr->left);
+
+		tmp = makeNewSymbolTable();
+		insertDataBoolean(&tmp,	!(left->data.bool_data));
+		return tmp;
+
+// unarne operacie, vracaju 'tokeny' ast (premenne, int, bool,real...)
+	case AST_ID:
+		ASSERT(curr && curr->data.str && curr->data.str->Length > 0);
+		// mame identifikator, hladame v tabulke symbolov
+		if(curr->data.str)
+			return searchST(&top,curr->data.str);
+		else if(curr->other)
+			return searchST(&top, curr->other);
+		else
+			exit(intern);
+
+	case AST_INT:
+		// pridavame novu lokalnu premennu do tabulky a priradime jej hodnotu z node
+		tmp = makeNewSymbolTable();
+		insertDataInteger(&tmp,curr->data.integer);
+		return tmp;
+
+	case AST_REAL:
+		tmp = makeNewSymbolTable();
+		insertDataReal(&tmp, curr->data.real);
+		return tmp;
+
+	case AST_BOOL:
+		tmp = makeNewSymbolTable();
+		insertDataBoolean(&tmp, curr->data.boolean);
+		return tmp;
+
+	case AST_STR:
+		tmp = makeNewSymbolTable();
+		insertDataString(&tmp, curr->data.str);
+		return tmp;
+
+	case AST_ARR:
+		// AST_ARR má v položce other uloženou strukturu dataTypeArray,
+		// která obsahuje hlavní informace o poli - meze, datový typ a jméno pole.
+		tmp = makeNewSymbolTable();
+		break;
+
+	//zatial neimplementovane builtin funkce
+	case AST_WRITE:
+		tmp_vp = curr->right->other;
+		for(struct queueItem *p=tmp_vp->pars->start; p; )
+		{
+			writeNode(p->value);
+			p = ((struct queueItem*) p)->next;
+		}
+		break;
+
+	case AST_READLN:	// readln(a);
+		ASSERT(curr);
+		ASSERT(curr->right && curr->right->type == AST_NONE);
+
+		// ignorovat hate nizsie, vznikol po 3 hodinach debugovania @4AM
+		tmp_vp = curr->right->other;			// vyrvem si varspars
+		tmp_asp = tmp_vp->pars->start->value;	// vyrvem z toho ast node
+		// a z vyjebaneho ast_node->other vyjebem dojebany string ktory este vyhladam v tabulke
+		tmp = searchST(&top, tmp_asp->other);
+		// a po tomto celom bullshite este zavolam funkciu ktora zapise do premennej
+		readNode(tmp);
+
+		break;
+
+	case AST_COPY:
+		ASSERT(curr);
+		ASSERT(curr->right && curr->right->type == AST_NONE);
+
+		tmp_vp = curr->right->other;			// vyrvem si varspars
+		return btnCopy(tmp_vp->pars);
+
+	case AST_FIND:
+		ASSERT(curr);
+		ASSERT(curr->right && curr->right->type == AST_NONE);
+
+		tmp_vp = curr->right->other;			// vyrvem si varspars
+		return btnFind(tmp_vp->pars);
+
+	case AST_LENGTH:
+		ASSERT(curr);
+		ASSERT(curr->right && curr->right->type == AST_NONE);
+
+		tmp_vp = curr->right->other;			// vyrvem si varspars
+		return btnLength(tmp_vp->pars);
+
+	case AST_SORT:
+		ASSERT(curr);
+		ASSERT(curr->right && curr->right->type == AST_NONE);
+
+		tmp_vp = curr->right->other;			// vyrvem si varspars
+		return btnSort(tmp_vp->pars);
+
+	// tieto veci by sa do interpretu nemali dostat
+	//	case AST_NUM:
+	//	case AST_END:
+	//	case AST_NONE:
+	//  ....
+	default:
+		ASSERT(false);
+		exit(intern);
+	}
+	return NULL;
+}
+
+// hladanie v tabulke symbolov
+// najprv prehladame lokalnu (funkcia), nasledne tu globalnu
+// navrati NULL ak sme nic nenasli, inak node
 struct symbolTableNode* searchST(struct symbolTableNode** table, struct String* name)
 {
 	ASSERT(global.globalTable);
@@ -464,321 +785,3 @@ struct symbolTableNode *btnLength(struct queue *pars)
 	insertDataInteger(&res,length(p0node.data.str_data));
 	return res;
 }
-
-void *runTree(struct astNode *curr)
-{
-	if(!curr)
-		exit(intern);
-
-	struct symbolTableNode *left = NULL;
-	struct symbolTableNode *right = NULL;
-	struct symbolTableNode *tmp = NULL;
-
-	struct varspars *tmp_vp = NULL;
-	struct astNode	*tmp_asp = NULL;
-
-	// stack top je cheap operace, nech to nemusime riesit v KA, bude to v kazdej iteracii - resp. TODO
-	struct symbolTableNode* top = stackTop(global.symTable);
-
-	switch(curr->type)
-	{
-	case AST_START:
-		ASSERT(curr->left && curr->left->type == AST_CMD);
-		runTree(curr->left);
-
-		break;
-
-	case AST_CMD:
-		if(curr->right)				//	<command>
-			runTree(curr->right);
-
-		if(curr->left && curr->left->type == AST_CMD)	// <command list>
-			runTree(curr->left);
-
-		break;
-
-	case AST_ASGN:	// <command>: <assign>
-		ASSERT(	curr->left &&
-				curr->left->type == AST_ID &&
-				curr->right
-		);
-
-		left = runTree(curr->left);	// x :=
-		// ak je left null tak mame neinicializovanu premennu - todo: check!!!
-		right = runTree(curr->right);			//ocekavame symtabnode (tmp premenna...)
-
-		if(right->dataType == DT_INT && left->dataType == DT_INT)
-			insertDataInteger(&left, right->data.int_data);
-		else if(right->dataType == DT_STR && left->dataType == DT_STR)
-			insertDataString(&left, right->data.str_data);
-		else if(right->dataType == DT_REAL && left->dataType == DT_REAL)
-			insertDataReal(&left, right->data.real_data);
-		else if(right->dataType == DT_BOOL && left->dataType == DT_BOOL)
-			insertDataBoolean(&left, right->data.bool_data);
-		else if(right->dataType == DT_ARR && left->dataType == DT_ARR)
-			exit(intern);	//TODO kopirovanie arraya
-		else
-			exit(sem_komp);
-
-		// ak prava strana nema meno tak sme mali tmp premennu ktoru mozeme rovno smazat
-		if(right->name && right->name->Length == 0)
-			deleteTable(&right);
-
-		return left;
-		break;
-
-	case AST_FUNC:
-		/*
-		 *		Funkce bude uložená v AST_FUNC uzlu, kde levý obsahuje tělo a
-		 *		pravý je typu AST_NONE a v položce OTHER má strukturu varsapars
-		 *		obsahující frontu pro proměnné a frontu pro parametry.
-		 */
-		// do tabulky symbolov pridame return premennu
-		// TODO: checkujeme ci nebude duplikovana???
-		insertValue(&top,curr->other,curr->dataType);
-	
-		// pustime telo funkcie
-		runTree(curr->left);
-#ifdef _DEBUG	//vypiseme lokalnu tabulku symbolov
-		printSymbolTable(top, 0);
-#endif		
-		// vratime return hodnotu ( AST_CALL robi cleanup )
-		return searchST(&top, curr->other);
-	break;
-
-	case AST_CALL:
-/*	Bude řešeno přes AST_CALL, kde levy poduzel bude prázdný, protože volání neobsahuje tělo
- *  a pravý poduzel bude obsahovat AST_NONE,
- *  kde v OTHER bude uložená struktura varspars s naplněnou položkou pars parametry.
- */
-		// vyhledame s v tabulke funkcii pozadovanu funkciu
-		// curr->other (struct string *) jmeno_funkcie
-		tmp = searchST(&global.funcTable,(struct String *)curr->other);
-		ASSERT(tmp);	//teoreticky je toto riesene uz v parsri
-		tmp_vp = curr->right->other;	//tu budu parametry
-		tmp_asp = tmp->other;	//telo: todo smazat
-
-		// vytvorime si novu lokalnu tabulky symbolov
-//		stackPush(global.symTable, makeNewSymbolTable());
-
-		// nakopirujeme parametre a vars do docasnej lokalnej tabulky symbolov
-		right = pushVarsParsIntoTable(
-				tmp_vp->pars,
-				((struct varspars *)tmp_asp->right->other)->pars,
-				((struct varspars *)tmp_asp->right->other)->vars
-		);
-
-		// pushneme
-		stackPush(global.symTable,right);
-
-		// zavolame funkciu (body)
-		tmp = runTree(tmp->other);
-
-		// navratime povodnu tabulku symbolov
-		stackPop(global.symTable);
-
-		// vratime navratovu hodnotu funkcie
-		return tmp;
-
-		break;
-
-// controll konstrukcie (if,while,repeat..)
-	case AST_IF:
-		tmp = runTree(curr->other);	// podmienka body
-
-		if(tmp->data.bool_data == true)	//vyhodnocena true
-			runTree(curr->left);
-		else if(curr->right)	// vyhodnocena false a mame v branchi else
-			runTree(curr->right);
-
-		ASSERT(tmp->name && tmp->name->Length == 0);
-//		if(tmp->name && tmp->name->Length == 0)
-		deleteTable(&tmp);
-
-		break;
-
-	case AST_WHILE:
-		ASSERT(curr->left && curr->other);
-		while(true)
-		{
-			tmp = runTree(curr->other);	// evaluujeme podmienku
-			if(tmp->data.bool_data)
-				runTree(curr->left);	// ak true, tak bezime telo
-			else
-				break;
-		}
-		break;
-
-	case AST_FOR:
-	case AST_FOR_TO:
-	case AST_FOR_DOWNTO:
-	case AST_SWITCH:
-	case AST_REPEAT:
-		exit(intern);	//todo
-		break;
-
-// porovnavanie =,!=,<,<=,>,>=
-	case AST_EQV:
-	case AST_NEQV:
-	case AST_GRT:
-	case AST_LSS:
-	case AST_GEQV:
-	case AST_LEQV:
-		ASSERT(curr->left && curr->right);
-
-		// ziskame levu & pravu stranu porovnania
-		left = runTree(curr->left);
-		right = runTree(curr->right);
-
-		// pripravime tmp premennu typu bool na vysledek
-		tmp = makeNewSymbolTable();
-		insertDataBoolean(
-				&tmp,
-				compare(left,right,curr->type)	//porovnavame a (op) b
-		);
-		return tmp;
-
-// aritmeticke operace +,-,/,*
-	case AST_ADD:
-	case AST_SUB:
-	case AST_MUL:
-	case AST_DIV:
-		ASSERT(curr->left && curr->right);
-
-		left = runTree(curr->left);		// *a* (op) b
-		right = runTree(curr->right);	// a (op) *b*
-
-		// spravime aritmeticku operaciu
-		// vraci tmp premennu v symtab node
-		return arithmetic(left,right,curr->type);
-
-// logicke operace
-	// tieto su binarne
-	case AST_AND:
-	case AST_OR:
-	case AST_XOR:
-		ASSERT(curr->left && curr->right);
-
-		right = runTree(curr->right);
-		left = runTree(curr->left);
-
-		tmp = makeNewSymbolTable();
-		insertDataBoolean(
-				&tmp,
-				(curr->type == AST_AND) ? (left->data.bool_data && right->data.bool_data):
-				(curr->type == AST_OR)	? (left->data.bool_data || right->data.bool_data):
-				(curr->type == AST_XOR) ? (left->data.bool_data ^ right->data.bool_data): false
-		);
-		return tmp;
-
-	// not je unarna operacia
-	case AST_NOT:
-		assert(curr->left && !curr->right);
-
-		left = runTree(curr->left);
-
-		tmp = makeNewSymbolTable();
-		insertDataBoolean(&tmp,	!(left->data.bool_data));
-		return tmp;
-
-// unarne operacie, vracaju 'tokeny' ast (premenne, int, bool,real...)
-	case AST_ID:
-		ASSERT(curr && curr->data.str && curr->data.str->Length > 0);
-		// mame identifikator, hladame v tabulke symbolov
-		if(curr->data.str)
-			return searchST(&top,curr->data.str);
-		else if(curr->other)
-			return searchST(&top, curr->other);
-		else
-			exit(intern);
-
-	case AST_INT:
-		// pridavame novu lokalnu premennu do tabulky a priradime jej hodnotu z node
-		tmp = makeNewSymbolTable();
-		insertDataInteger(&tmp,curr->data.integer);
-		return tmp;
-
-	case AST_REAL:
-		tmp = makeNewSymbolTable();
-		insertDataReal(&tmp, curr->data.real);
-		return tmp;
-
-	case AST_BOOL:
-		tmp = makeNewSymbolTable();
-		insertDataBoolean(&tmp, curr->data.boolean);
-		return tmp;
-
-	case AST_STR:
-		tmp = makeNewSymbolTable();
-		insertDataString(&tmp, curr->data.str);
-		return tmp;
-
-	case AST_ARR:
-		// AST_ARR má v položce other uloženou strukturu dataTypeArray,
-		// která obsahuje hlavní informace o poli - meze, datový typ a jméno pole.
-		tmp = makeNewSymbolTable();
-		break;
-
-	//zatial neimplementovane builtin funkce
-	case AST_WRITE:
-		tmp_vp = curr->right->other;
-		for(struct queueItem *p=tmp_vp->pars->start; p; )
-		{
-			writeNode(p->value);
-			p = ((struct queueItem*) p)->next;
-		}
-		break;
-
-	case AST_READLN:	// readln(a);
-		ASSERT(curr);
-		ASSERT(curr->right && curr->right->type == AST_NONE);
-
-
-		tmp_vp = curr->right->other;			// vyrvem si varspars
-		tmp_asp = tmp_vp->pars->start->value;	// vyrvem z toho ast node
-		// a z vyjebaneho ast_node->other vyjebem dojebany string ktory este vyhladam v tabulke
-		tmp = searchST(&top, tmp_asp->other);
-		// a po tomto celom bullshite este zavolam funkciu ktora zapise do premennej
-		readNode(tmp);
-
-		break;
-
-	case AST_COPY:
-		ASSERT(curr);
-		ASSERT(curr->right && curr->right->type == AST_NONE);
-
-		tmp_vp = curr->right->other;			// vyrvem si varspars
-		return btnCopy(tmp_vp->pars);
-
-	case AST_FIND:
-		ASSERT(curr);
-		ASSERT(curr->right && curr->right->type == AST_NONE);
-
-		tmp_vp = curr->right->other;			// vyrvem si varspars
-		return btnFind(tmp_vp->pars);
-
-	case AST_LENGTH:
-		ASSERT(curr);
-		ASSERT(curr->right && curr->right->type == AST_NONE);
-
-		tmp_vp = curr->right->other;			// vyrvem si varspars
-		return btnLength(tmp_vp->pars);
-
-	case AST_SORT:
-		ASSERT(curr);
-		ASSERT(curr->right && curr->right->type == AST_NONE);
-
-		tmp_vp = curr->right->other;			// vyrvem si varspars
-		return btnSort(tmp_vp->pars);
-
-	// tieto veci by sa do interpretu nemali dostat
-	case AST_NUM:
-	case AST_END:
-	case AST_NONE:
-	default:
-		ASSERT(false);
-		exit(intern);
-	}
-	return NULL;
-}
-

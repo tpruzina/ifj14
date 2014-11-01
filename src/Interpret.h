@@ -16,4 +16,27 @@ void interpret();
 
 void *runTree(struct astNode *curr);
 
+/* ARITMETICKE OPERACE +,-,... */
+struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTableNode *right,int op);
+bool compare(struct symbolTableNode *left,struct symbolTableNode *right,int op);
+
+/* BUILTIN FUNKCIE */
+struct symbolTableNode *btnCopy(struct queue *pars);
+struct symbolTableNode *btnSort(struct queue *pars);
+struct symbolTableNode *btnFind(struct queue *pars);
+struct symbolTableNode *btnLength(struct queue *pars);
+void writeNode(struct astNode *p);
+void readNode(struct symbolTableNode *p);
+
+/* POMOCNE FUNKCIE */
+void *runTree(struct astNode *curr);
+struct symbolTableNode* searchST(struct symbolTableNode** table, struct String* name);
+struct symbolTableNode convertAST2STN(struct astNode *ast);
+// pomocna funkcie pre volania fcii - zobere varspars a nakopiruje ich do ST
+struct symbolTableNode *pushVarsParsIntoTable(
+		struct queue *call_params,
+		struct queue *function_params,
+		struct queue *function_vars
+);
+
 #endif
