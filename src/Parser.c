@@ -1233,7 +1233,8 @@ struct astNode* parseFunction(){
 			
 		// v pripade dopredne deklarace neni nutne pouzivat parametry
 		stackPop(global.symTable);
-		top = (struct symbolTableNode*)stackTop(global.symTable);
+		//toto nie je nikde pouzite????
+		//top = (struct symbolTableNode*)stackTop(global.symTable);
 						
 	 	// nastaveni navratovy typ
 	 	dekl->dataType = node->dataType;

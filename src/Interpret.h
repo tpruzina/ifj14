@@ -13,7 +13,6 @@
 #include "Parser.h"
 
 void interpret();
-
 void *runTree(struct astNode *curr);
 
 /* ARITMETICKE OPERACE +,-,... */
@@ -29,7 +28,6 @@ void writeNode(struct astNode *p);
 void readNode(struct symbolTableNode *p);
 
 /* POMOCNE FUNKCIE */
-void *runTree(struct astNode *curr);
 struct symbolTableNode* searchST(struct symbolTableNode** table, struct String* name);
 struct symbolTableNode convertAST2STN(struct astNode *ast);
 // pomocna funkcie pre volania fcii - zobere varspars a nakopiruje ich do ST

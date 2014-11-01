@@ -56,15 +56,18 @@ void *runTree(struct astNode *curr)
 		left = runTree(curr->left);	// x :=
 		right = runTree(curr->right);			//ocekavame symtabnode (tmp premenna...)
 
-		if(right->dataType == DT_INT && left->dataType == DT_INT)
+		if(right->dataType != left->dataType)
+			exit(sem_komp);
+
+		if(right->dataType == DT_INT)
 			insertDataInteger(&left, right->data.int_data);
-		else if(right->dataType == DT_STR && left->dataType == DT_STR)
+		else if(right->dataType == DT_STR)
 			insertDataString(&left, right->data.str_data);
-		else if(right->dataType == DT_REAL && left->dataType == DT_REAL)
+		else if(right->dataType == DT_REAL)
 			insertDataReal(&left, right->data.real_data);
-		else if(right->dataType == DT_BOOL && left->dataType == DT_BOOL)
+		else if(right->dataType == DT_BOOL)
 			insertDataBoolean(&left, right->data.bool_data);
-		else if(right->dataType == DT_ARR && left->dataType == DT_ARR)
+		else if(right->dataType == DT_ARR)
 			exit(intern);	//TODO kopirovanie arraya
 		else
 			exit(sem_komp);

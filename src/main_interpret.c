@@ -80,7 +80,6 @@ int main(int argc, char** argv)
 			Log("Printing function table", DEBUG, MAIN);
 			printSymbolTable(global.funcTable, 0);
 #endif
-
 			interpret();
 #ifdef _DEBUG
 			printSymbolTable(top, 0);
