@@ -36,6 +36,7 @@ int init(char* srcpath){
 	global.lineCounter = 0;
 	
 	global.program = NULL;
+	global.globalTable = NULL;
 	global.symTable = makeNewStack();	
 	
 	Log("main:init - done", DEBUG, MAIN);
