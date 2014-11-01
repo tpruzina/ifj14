@@ -51,6 +51,7 @@ enum KA_STATES
 	KA_REAL_EXP_NUM,
 
 	KA_IDENT,
+	
 	KA_COL,
 	KA_ASGN,
 
