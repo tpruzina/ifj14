@@ -169,7 +169,7 @@ struct tokennames tokennames[] = {
 	
 void printTokenType(struct toc* token){
 	if(!PRT) return;
-
+#ifdef _DEBUG
 	for(int i=0; tokennames[i].str; i++){
 		if(token->type == tokennames[i].type){
 			fprintf(stderr, "Token: %s\n", tokennames[i].str);
@@ -179,6 +179,7 @@ void printTokenType(struct toc* token){
 			}
 		}
 	}
+#endif
 }
 
 void printAstStack(struct stack* aststack){
@@ -2348,7 +2349,7 @@ struct astNode* parseCommand(struct toc** cur){
 					struct astNode* first = makeNewAST();
 					first->type = AST_ID;
 					first->dataType = DT_STR;
-					copyString((*cur)->data.str, &(first->other));
+					copyString((*cur)->data.str, (struct String **)&(first->other));
 					queuePush(vp->pars, first);
 				}
 				else if((*cur)->type == T_STR){

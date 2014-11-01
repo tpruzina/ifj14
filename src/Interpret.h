@@ -12,7 +12,7 @@
 #include "Scanner.h"
 #include "Parser.h"
 
-int interpret();
+void interpret();
 
 void *runTree(struct astNode *curr);
 

@@ -1,23 +1,19 @@
 #include "Interpret.h"
 
-int interpret()
+void interpret()
 {
 	ASSERT(global.program);
-
-	// TODO: sem pridat kontrolu na to, aby bola kazda funkcia riadne definovana
-	//printAst(global.funcTable);
 
 	struct astNode *curr = global.program;
 
 	// tabulka symbolov z parsru pouzita ako globalna tabulka - zalohovat pointer
 	global.globalTable = stackTop(global.symTable);
 
+	// v roote by mal byt AST_START
 	if(curr->type == AST_START)
 		runTree(curr);
 	else
 		exit(intern);
-	
-	return 0;
 }
 
 struct symbolTableNode* searchST(struct symbolTableNode** table, struct String* name)
@@ -96,6 +92,8 @@ bool compare(struct symbolTableNode *left,struct symbolTableNode *right,int op)
 		exit(intern);	//todo
 	else
 		exit(intern);	// ak sme sa dostali sem tak sa nieco vazne dosralo
+
+	return false;	// umlcanie warningu, program sa sem nikdy nedostane (exit(intern))
 }
 
 
