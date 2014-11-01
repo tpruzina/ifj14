@@ -169,7 +169,6 @@ struct tokennames tokennames[] = {
 	
 void printTokenType(struct toc* token){
 	if(!PRT) return;
-#ifdef _DEBUG
 	for(int i=0; tokennames[i].str; i++){
 		if(token->type == tokennames[i].type){
 			fprintf(stderr, "Token: %s\n", tokennames[i].str);
@@ -179,7 +178,6 @@ void printTokenType(struct toc* token){
 			}
 		}
 	}
-#endif
 }
 
 void printAstStack(struct stack* aststack){
@@ -233,57 +231,57 @@ void printVarsPars(struct varspars* vp){
 }
 
 void datatypes(int left, int right){
-	char l[10];
-	char r[10];
+#ifdef _DEBUG
+	const char *l = NULL;
+	const char *r = NULL;
 	
 	switch(left){
 		case DT_INT:
-			sprintf(l, "DT_INT");
+			l = "DT_INT";
 			break;
 		case DT_REAL:
-			sprintf(l, "DT_REAL");
+			l = "DT_REAL";
 			break;
 		case DT_BOOL:
-			sprintf(l, "DT_BOOL");
+			l = "DT_BOOL";
 			break;
 		case DT_STR:
-			sprintf(l, "DT_STR");
+			l = "DT_STR";
 			break;
 		case DT_NONE:
-			sprintf(l, "DT_NONE");
+			l = "DT_NONE";
 			break;
 		case DT_ARR:
-			sprintf(l, "DT_ARR");
+			l = "DT_ARR";
 			break;
 		default:
-			sprintf(l, "??????");
+			l = "??????";
 			break;
 	}
 	
 	switch(right){
 		case DT_INT:
-			sprintf(r, "DT_INT");
+			r = "DT_INT";
 			break;
 		case DT_REAL:
-			sprintf(r, "DT_REAL");
+			r = "DT_REAL";
 			break;
 		case DT_BOOL:
-			sprintf(r, "DT_BOOL");
+			r = "DT_BOOL";
 			break;
 		case DT_STR:
-			sprintf(r, "DT_STR");
+			r = "DT_STR";
 			break;
 		case DT_NONE:
-			sprintf(r, "DT_NONE");
+			r = "DT_NONE";
 			break;
 		case DT_ARR:
-			sprintf(r, "DT_ARR");
+			r = "DT_ARR";
 			break;
 		default:
-			sprintf(l, "??????");
+			l = "??????";
 			break;
 	}
-#ifdef _DEBUG
 	fprintf(stderr, "%s< Comparison between %s and %s >%s\n", ((right==left)?COLOR_LGRN:COLOR_LRED), l, r, COLOR_NRM);	
 #endif
 }

@@ -324,11 +324,6 @@ void *runTree(struct astNode *curr)
 		tmp_vp = curr->right->other;			// vyrvem si varspars
 		return btnSort(tmp_vp->pars);
 
-	// tieto veci by sa do interpretu nemali dostat
-	//	case AST_NUM:
-	//	case AST_END:
-	//	case AST_NONE:
-	//  ....
 	default:
 		ASSERT(false);
 		exit(intern);
@@ -641,6 +636,7 @@ void readNode(struct symbolTableNode *p)
 		ASSERT(false);
 }
 
+// konvertuje astNode na sTN (typicke pouzitie v stringovych literaloch a AST_ID)
 struct symbolTableNode convertAST2STN(struct astNode *ast)
 {
 	struct symbolTableNode tmp = {0};
@@ -676,6 +672,8 @@ struct symbolTableNode convertAST2STN(struct astNode *ast)
 	return tmp;
 }
 
+// pomocna funkcia pre  volanie funkcii, vytvori novu tabulku symbolov do ktorej nakopiruje
+// jednotlive parametre / vytvori premenne
 struct symbolTableNode *pushVarsParsIntoTable(
 		struct queue *call_params,
 		struct queue *function_params,
@@ -688,7 +686,6 @@ struct symbolTableNode *pushVarsParsIntoTable(
 	struct queueItem *currFPItem = function_params->start;
 
 	struct astNode *ast_src, *ast_dest;
-//	struct symbolTableNode *stn_src, *stn_dest;
 
 	static struct symbolTableNode stn_src;
 	static struct symbolTableNode stn_dest;
@@ -723,8 +720,6 @@ struct symbolTableNode *pushVarsParsIntoTable(
 
 	// do docasnej tabulky symbolov narveme vars
 	struct queueItem *varsQueue = function_vars->start;
-
-	// rovnaky loop ako vyssie
 	while(varsQueue)
 	{
 		ast_src = varsQueue->value;
@@ -755,7 +750,6 @@ struct symbolTableNode *btnCopy(struct queue *pars)
 			p2node.data.int_data
 	);
 	res->dataType = DT_STR;
-
 	return res;
 }
 
@@ -770,8 +764,6 @@ struct symbolTableNode *btnSort(struct queue *pars)
 	return res;
 }
 
-
-
 struct symbolTableNode *btnFind(struct queue *pars)
 {
 	struct astNode *p0 = pars->start->value;
@@ -784,7 +776,6 @@ struct symbolTableNode *btnFind(struct queue *pars)
 	insertDataInteger(&res,find(p0node.data.str_data,p1node.data.str_data));
 	return res;
 }
-
 
 struct symbolTableNode *btnLength(struct queue *pars)
 {
