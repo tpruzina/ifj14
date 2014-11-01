@@ -296,7 +296,6 @@ void *runTree(struct astNode *curr)
 		tmp = searchST(&top, tmp_asp->other);
 		// a po tomto celom bullshite este zavolam funkciu ktora zapise do premennej
 		readNode(tmp);
-
 		break;
 
 	case AST_COPY:
@@ -399,15 +398,13 @@ bool compare(struct symbolTableNode *left,struct symbolTableNode *right,int op)
 	}
 	else if(left->dataType == DT_STR)
 	{
-		switch(op)
-		{
-		case AST_EQV:
-				return (compareStrings(left->data.str_data, right->data.str_data)) ?
+		ASSERT(op == AST_EQV || op == AST_NEQV);
+		if(op == AST_EQV)
+			return (compareStrings(left->data.str_data, right->data.str_data)) ?
 						false : true;
-		case AST_NEQV:
+		else	// (op == AST_NEQV)
 			return (compareStrings(left->data.str_data, right->data.str_data)) ?
 						true: false;
-		}
 	}
 	else if(left->dataType == DT_BOOL)
 	{
