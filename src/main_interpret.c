@@ -56,8 +56,6 @@ void quit(){
 
 int main(int argc, char** argv)
 {
-
-
 	if(argc == 2)
 	{
 		if(init(argv[1]) != True){

@@ -151,6 +151,9 @@ struct mainAll {
 	struct astNode* program;
 	struct stack* symTable;
 	struct symbolTableNode* funcTable;
+
+	struct symbolTableNode* globalTable;
+
 	int errno;
 };
 extern struct mainAll global;

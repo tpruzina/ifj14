@@ -9,12 +9,25 @@ int interpret()
 
 	struct astNode *curr = global.program;
 
+	// tabulka symbolov z parsru pouzita ako globalna tabulka - zalohovat pointer
+	global.globalTable = stackTop(global.symTable);
+
 	if(curr->type == AST_START)
 		runTree(curr);
 	else
 		exit(intern);
 	
 	return 0;
+}
+
+struct symbolTableNode* searchST(struct symbolTableNode** table, struct String* name)
+{
+	ASSERT(global.globalTable);
+
+	struct symbolTableNode* tmp = search(table, name);
+	if(!tmp) // ak sme nenasli v lokalnej tabulke, tak sa pozrieme do globalu
+		tmp = search(&(global.globalTable), name);
+	return tmp;
 }
 
 // porovnavame dve premenne rovnakeho typu
@@ -213,7 +226,7 @@ void writeNode(struct astNode *p)
 	if(AST_ID == p->type)
 	{
 		struct symbolTableNode *top = stackTop(global.symTable);
-		id = search(&top,p->other);
+		id = searchST(&top,p->other);
 		// nedefinovana premenna???
 		ASSERT(id);
 
@@ -532,7 +545,7 @@ void *runTree(struct astNode *curr)
 		printSymbolTable(top, 0);
 #endif		
 		// vratime return hodnotu ( AST_CALL robi cleanup )
-		return search(&top, curr->other);
+		return searchST(&top, curr->other);
 	break;
 
 	case AST_CALL:
@@ -542,7 +555,7 @@ void *runTree(struct astNode *curr)
  */
 		// vyhledame s v tabulke funkcii pozadovanu funkciu
 		// curr->other (struct string *) jmeno_funkcie
-		tmp = search(&global.funcTable,(struct String *)curr->other);
+		tmp = searchST(&global.funcTable,(struct String *)curr->other);
 		ASSERT(tmp);	//teoreticky je toto riesene uz v parsri
 		tmp_vp = curr->right->other;	//tu budu parametry
 		tmp_asp = tmp->other;	//telo: todo smazat
@@ -675,9 +688,9 @@ void *runTree(struct astNode *curr)
 		ASSERT(curr && curr->data.str && curr->data.str->Length > 0);
 		// mame identifikator, hladame v tabulke symbolov
 		if(curr->data.str)
-			return search(&top,curr->data.str);
+			return searchST(&top,curr->data.str);
 		else if(curr->other)
-			return search(&top, curr->other);
+			return searchST(&top, curr->other);
 		else
 			exit(intern);
 
@@ -726,7 +739,7 @@ void *runTree(struct astNode *curr)
 		tmp_vp = curr->right->other;			// vyrvem si varspars
 		tmp_asp = tmp_vp->pars->start->value;	// vyrvem z toho ast node
 		// a z vyjebaneho ast_node->other vyjebem dojebany string ktory este vyhladam v tabulke
-		tmp = search(&top, tmp_asp->other);
+		tmp = searchST(&top, tmp_asp->other);
 		// a po tomto celom bullshite este zavolam funkciu ktora zapise do premennej
 		readNode(tmp);
 

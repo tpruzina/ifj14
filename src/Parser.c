@@ -2447,7 +2447,7 @@ struct astNode* parseCommand(struct toc** cur){
 				nd->dataType = DT_STR;
 				
 				// jmeno promenne
-				struct String* name;
+				struct String* name = NULL;
 				copyString(var->name, &name);
 				nd->other = name;
 				
@@ -2515,7 +2515,7 @@ struct astNode* parseCommand(struct toc** cur){
 				nid->dataType = var->dataType;
 				
 				// kopie jmena
-				struct String* name;
+				struct String* name = NULL;
 				copyString((*cur)->data.str, &name);
 				nid->other = name;
 				
