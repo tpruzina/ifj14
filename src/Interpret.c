@@ -154,11 +154,19 @@ void *runTree(struct astNode *curr)
 		}
 		break;
 
+	case AST_REPEAT:
+		ASSERT(curr->left && curr->other);
+		do
+		{
+			runTree(curr->left);	// telo
+			tmp = runTree(curr->other);	//podmienka
+		} while(tmp->data.bool_data);
+		break;
+
 	case AST_FOR:
 	case AST_FOR_TO:
 	case AST_FOR_DOWNTO:
 	case AST_SWITCH:
-	case AST_REPEAT:
 		exit(intern);	// todo
 		break;
 
