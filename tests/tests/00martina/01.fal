@@ -1,0 +1,8 @@
+Program; 
+	var
+		a: integer;
+
+	begin
+		write('Hello Word!');
+	end
+end.
