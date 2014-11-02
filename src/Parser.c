@@ -2023,7 +2023,11 @@ struct astNode* parseCommand(struct toc** cur){
 		case T_KW_END:
 		case T_KW_IF:
 		case T_KW_WHILE:
+<<<<<<< HEAD
 		case T_RPT:
+=======
+		case T_KW_RPT:
+>>>>>>> parent of e9529b9... pridany tondov Parser.c
 		case T_KW_CASE:
 		case T_KW_FOR:
 		case T_KW_WRT:
@@ -2077,7 +2081,11 @@ struct astNode* parseCommand(struct toc** cur){
 				exit(synt);
 			}
 		}
+<<<<<<< HEAD
 		case T_RPT: {
+=======
+		case T_KW_RPT: {
+>>>>>>> parent of e9529b9... pridany tondov Parser.c
 			D("REPEAT command");
 			struct astNode* rpt = repeatStatement(cur);
 			if(!rpt)
@@ -2293,7 +2301,11 @@ struct astNode* parseCommand(struct toc** cur){
 			
 			*cur = getToc();
 			
+<<<<<<< HEAD
 			rdln->left = NULL;			
+=======
+			rdln->left = NULL;
+>>>>>>> parent of e9529b9... pridany tondov Parser.c
 			return rdln;
 		}
 		case T_KW_FIND: {
@@ -2339,12 +2351,20 @@ struct astNode* parseCommand(struct toc** cur){
 					}
 				
 					struct String* name;
+<<<<<<< HEAD
 					copyString(var->name, &name);
+=======
+					copyString((*cur)->data.str, &name);
+>>>>>>> parent of e9529b9... pridany tondov Parser.c
 				
 					struct astNode* first = makeNewAST();
 					first->type = AST_ID;
 					first->dataType = DT_STR;
+<<<<<<< HEAD
 					first->other = name;
+=======
+					copyString((*cur)->data.str, (struct String **)&(first->other));
+>>>>>>> parent of e9529b9... pridany tondov Parser.c
 					queuePush(vp->pars, first);
 				}
 				else if((*cur)->type == T_STR){
@@ -2352,7 +2372,12 @@ struct astNode* parseCommand(struct toc** cur){
 					struct astNode* first = makeNewAST();
 					first->type = AST_STR;
 					first->dataType = DT_STR;
+<<<<<<< HEAD
 					first->data.str = (*cur)->data.str;
+=======
+					first->data.str = makeNewString();
+					copyString((*cur)->data.str, &(first->data.str));
+>>>>>>> parent of e9529b9... pridany tondov Parser.c
 								
 					queuePush(vp->pars, first);
 				}
@@ -2442,7 +2467,11 @@ struct astNode* parseCommand(struct toc** cur){
 				nd->dataType = DT_STR;
 				
 				// jmeno promenne
+<<<<<<< HEAD
 				struct String* name;
+=======
+				struct String* name = NULL;
+>>>>>>> parent of e9529b9... pridany tondov Parser.c
 				copyString(var->name, &name);
 				nd->other = name;
 				
@@ -2510,7 +2539,11 @@ struct astNode* parseCommand(struct toc** cur){
 				nid->dataType = var->dataType;
 				
 				// kopie jmena
+<<<<<<< HEAD
 				struct String* name;
+=======
+				struct String* name = NULL;
+>>>>>>> parent of e9529b9... pridany tondov Parser.c
 				copyString((*cur)->data.str, &name);
 				nid->other = name;
 				
@@ -2541,6 +2574,7 @@ struct astNode* parseCommand(struct toc** cur){
 			
 			// ocekavat 2x int
 			for(int i = 0; i < 2; i++){
+<<<<<<< HEAD
 				*cur = getToc();
 				
 				if((*cur)->type == T_INT){
@@ -2560,6 +2594,27 @@ struct astNode* parseCommand(struct toc** cur){
 				
 				
 				*cur = getToc();
+=======
+				*cur = getToc();
+				
+				if((*cur)->type == T_INT){
+					// novy uzel		
+					struct astNode* nint = makeNewAST();
+					nint->type = AST_INT;
+					nint->dataType = DT_INT;
+					nint->data.integer = (*cur)->data.integer;
+					
+					// pushnuti do fronty
+					queuePush(vp->pars, nint);					
+				}
+				else {
+					E("Semantic error - last two parameters must be integers");
+					exit(sem_komp);
+				}
+				
+				
+				*cur = getToc();
+>>>>>>> parent of e9529b9... pridany tondov Parser.c
 				if(i == 0 && (*cur)->type == T_COM){
 					continue;
 				}
