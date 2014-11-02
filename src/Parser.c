@@ -1959,6 +1959,8 @@ struct astNode* caseStatement(struct toc** cur){
 			switchNode->right->type = AST_STR;
 			switchNode->right->dataType = DT_STR;
 			break;
+		default:
+			break;
 	}
 	switchNode->right->other = name;
 	
@@ -2720,6 +2722,11 @@ struct astNode* parseCommand(struct toc** cur){
 				exit(synt);
 			}		
 			break;
+		default:
+			//ostatni nejsou povolene
+			E("cmd: Syntax error - unsuported command");
+			printTokenType(*cur);
+			exit(synt);
 	}	
 	
 	return NULL;
@@ -2742,7 +2749,7 @@ struct astNode* parseExpression(struct toc** cur){
 
 	// zacatek podminky
 	(*cur) = getToc();
-
+	struct astNode *cmd;
 // spinavy hack ktory riesi problem old_cur := cur();
 	switch((*cur)->type){
 		case T_KW_COPY:
@@ -2750,7 +2757,7 @@ struct astNode* parseExpression(struct toc** cur){
 		case T_KW_FIND:
 		case T_KW_SORT:
 		case T_KW_LENGTH:
-			struct astNode *cmd = parseCommand(cur);
+			cmd = parseCommand(cur);
 			stackPush(aststack, cmd);
 	//		if((*cur)->type == T_KW_END){
 	//			D("body: gets END");
