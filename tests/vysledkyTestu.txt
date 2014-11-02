@@ -1,5 +1,0 @@
-[] [Sun Nov 2 18:23:47] [OutOK: 31/68 (45%) | OutERR: 37/68 (54%) | RetOK: 27/68 (39%) | RetERR: 41/68 (60%)] [./tests]
-[] [Sun Nov 2 18:16:21] [OutOK: 31/68 (45%) | OutERR: 37/68 (54%) | RetOK: 26/68 (38%) | RetERR: 42/68 (61%)] [./tests]
-[] [Sun Nov 2 18:16:06] [OutOK: 31/68 (45%) | OutERR: 37/68 (54%) | RetOK: 26/68 (38%) | RetERR: 42/68 (61%)] [./tests]
-[] [Sun Nov 2 18:13:55] [OutOK: 31/68 (45%) | OutERR: 37/68 (54%) | RetOK: 26/68 (38%) | RetERR: 42/68 (61%)] [./tests]
-[] [Sun Nov 2 18:10:45] [OutOK: 31/68 (45%) | OutERR: 37/68 (54%) | RetOK: 25/68 (36%) | RetERR: 43/68 (63%)] [./tests]
