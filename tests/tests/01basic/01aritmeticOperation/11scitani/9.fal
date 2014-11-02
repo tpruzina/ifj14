@@ -1,0 +1,7 @@
+program;
+var
+	karel: real;
+begin
+	karel:= 45e2 + 88e1 + 12e15 - 4e0;
+	write(karel)
+end.

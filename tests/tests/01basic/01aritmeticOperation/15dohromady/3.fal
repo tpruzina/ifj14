@@ -1,0 +1,7 @@
+program;
+var
+	a: real;
+begin
+	a:= 88e1 / 44.0e1 * 2.0;
+	write(a)
+end.

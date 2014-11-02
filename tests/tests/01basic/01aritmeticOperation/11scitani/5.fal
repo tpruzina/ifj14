@@ -1,0 +1,7 @@
+program;
+var
+	aa: real;
+begin
+	aa:= 48e2 - 48e-1;
+	write(aa)
+end.

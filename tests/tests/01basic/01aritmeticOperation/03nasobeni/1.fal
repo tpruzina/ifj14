@@ -1,0 +1,7 @@
+program;
+var
+	a: integer;
+begin
+	a:= 1 * 1;
+	write(a)
+end.

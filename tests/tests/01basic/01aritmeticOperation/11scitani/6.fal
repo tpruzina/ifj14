@@ -1,0 +1,7 @@
+program;
+var
+	kozel: real;
+begin
+	kozel:= 2e+2 - 2e-2;
+	write(kozel)
+end.

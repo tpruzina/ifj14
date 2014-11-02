@@ -1,0 +1,7 @@
+program;
+var
+	samuraj: real;
+begin
+	samuraj:= 4.2e2 - 4.2e2;
+	write(samuraj)
+end.

@@ -1,0 +1,7 @@
+program;
+var
+	a: real;
+begin
+	a:= (2.0e0 + 1.0e0) + (2.0e0 + 1.0e0);
+	write(a)
+end.
