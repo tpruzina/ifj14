@@ -1,7 +1,15 @@
-program;
-var
-	x: real;
-begin
-	x:= 2.1 + 2.0;
-	write(x)
+Program hello;
+	var
+		a: integer;
+		b: string;
+
+	begin
+		b:='Hello word!';
+		a:=0;
+		repeat
+			begin
+				write(b)
+			end
+		until a = 0
+	end
 end.
