@@ -440,7 +440,8 @@ struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTab
 		type = DT_STR;
 	else if(	//ak je jeden z typov real a druhy int, vysledok bude real
 			(DT_REAL == left->dataType && DT_INT == right->dataType) ||
-			(DT_REAL == right->dataType && DT_INT == left->dataType))
+			(DT_REAL == right->dataType && DT_INT == left->dataType) ||
+			(DT_REAL == right->dataType && DT_REAL == left->dataType) )
 		type = DT_REAL;
 	else
 		exit(4);	//jinak mame chybu v typoch, toto by malo byt osetrena v parsri ?
