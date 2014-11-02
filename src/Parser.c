@@ -125,7 +125,7 @@ struct tokennames tokennames[] = {
 	{"T_KW_WHILE",T_KW_WHILE},
 	{"T_KW_WRT", T_KW_WRT},
 	{"T_KW_PROGRAM",T_KW_PROGRAM},
-	{"T_RPT",T_RPT},
+	{"T_KW_RPT",T_KW_RPT},
 	{"T_UNTIL",T_UNTIL},
 	{"T_ID",T_ID},
 	{"T_TEXT",T_TEXT},
@@ -169,7 +169,6 @@ struct tokennames tokennames[] = {
 	
 void printTokenType(struct toc* token){
 	if(!PRT) return;
-
 	for(int i=0; tokennames[i].str; i++){
 		if(token->type == tokennames[i].type){
 			fprintf(stderr, "Token: %s\n", tokennames[i].str);
@@ -232,59 +231,61 @@ void printVarsPars(struct varspars* vp){
 }
 
 void datatypes(int left, int right){
-	char l[10];
-	char r[10];
+#ifdef _DEBUG
+	const char *l = NULL;
+	const char *r = NULL;
 	
 	switch(left){
 		case DT_INT:
-			sprintf(l, "DT_INT");
+			l = "DT_INT";
 			break;
 		case DT_REAL:
-			sprintf(l, "DT_REAL");
+			l = "DT_REAL";
 			break;
 		case DT_BOOL:
-			sprintf(l, "DT_BOOL");
+			l = "DT_BOOL";
 			break;
 		case DT_STR:
-			sprintf(l, "DT_STR");
+			l = "DT_STR";
 			break;
 		case DT_NONE:
-			sprintf(l, "DT_NONE");
+			l = "DT_NONE";
 			break;
 		case DT_ARR:
-			sprintf(l, "DT_ARR");
+			l = "DT_ARR";
 			break;
 		default:
-			sprintf(l, "??????");
+			l = "??????";
 			break;
 	}
 	
 	switch(right){
 		case DT_INT:
-			sprintf(r, "DT_INT");
+			r = "DT_INT";
 			break;
 		case DT_REAL:
-			sprintf(r, "DT_REAL");
+			r = "DT_REAL";
 			break;
 		case DT_BOOL:
-			sprintf(r, "DT_BOOL");
+			r = "DT_BOOL";
 			break;
 		case DT_STR:
-			sprintf(r, "DT_STR");
+			r = "DT_STR";
 			break;
 		case DT_NONE:
-			sprintf(r, "DT_NONE");
+			r = "DT_NONE";
 			break;
 		case DT_ARR:
-			sprintf(r, "DT_ARR");
+			r = "DT_ARR";
 			break;
 		default:
-			sprintf(l, "??????");
+			l = "??????";
 			break;
 	}
-	
 	fprintf(stderr, "%s< Comparison between %s and %s >%s\n", ((right==left)?COLOR_LGRN:COLOR_LRED), l, r, COLOR_NRM);	
+#endif
 }
+
 int valid(struct astNode* left, struct astNode* right, int op){	
 	if(op == AST_NOT){
 		if(left == NULL){
@@ -822,15 +823,15 @@ struct queue* parseVars(struct toc** cur){
 			
 				// odkladiste pro nove promenne do tabulky symbolu				
 				struct symbolTableNode* new = NULL;
-				
+				struct dataTypeArray* dta;
 				(*cur) = getToc();
 				if((*cur)->type == T_COL){
 					//printTokenType(*cur);
-					// dostal dvojtecku --> ocekavat typ
+					// dostal dvojtecku --> ocekavat typ								
 														
 					(*cur) = getToc();
 					switch((*cur)->type){
-						case T_KW_INT: {
+						case T_KW_INT:
 							var->type = AST_INT;
 							
 							// vytvorit novy zaznam v tabulce
@@ -841,8 +842,7 @@ struct queue* parseVars(struct toc** cur){
 							
 							new->dataType = DT_INT;													
 							break;
-						}
-						case T_KW_REAL: {
+						case T_KW_REAL: 
 							var->type = AST_REAL;
 							
 							new = insertValue(&top, name, DT_REAL);
@@ -851,8 +851,7 @@ struct queue* parseVars(struct toc** cur){
 								
 							new->dataType = DT_REAL;
 							break;
-						}
-						case T_KW_BOOLEAN: {
+						case T_KW_BOOLEAN: 
 							var->type = AST_BOOL;
 											
 							new = insertValue(&top, name, DT_BOOL);
@@ -861,8 +860,7 @@ struct queue* parseVars(struct toc** cur){
 								
 							new->dataType = DT_BOOL;
 							break;
-						}
-						case T_KW_STRING: {
+						case T_KW_STRING:
 							var->type = AST_STR;
 														
 							new = insertValue(&top, name, DT_STR);
@@ -871,11 +869,10 @@ struct queue* parseVars(struct toc** cur){
 								
 							new->dataType = DT_STR;
 							break;
-						}
-						case T_ARR: {
+						case T_ARR:
 							var->type = AST_ARR;
 						
-							struct dataTypeArray* dta = (struct dataTypeArray*)gcMalloc(sizeof(struct dataTypeArray));
+							dta = (struct dataTypeArray*)gcMalloc(sizeof(struct dataTypeArray));
 							if(!dta)
 								return NULL;
 							if(!(copyString(var->data.str, &(dta->id))))
@@ -928,22 +925,18 @@ struct queue* parseVars(struct toc** cur){
 								// nacteni typu promenne
 								(*cur) = getToc();
 								switch((*cur)->type){
-									case T_KW_INT: {
+									case T_KW_INT: 
 										dta->type = DT_INT;
 										break;
-									}
-									case T_KW_REAL: {
+									case T_KW_REAL: 
 										dta->type = DT_REAL;
 										break;
-									}
-									case T_KW_BOOLEAN: {
+									case T_KW_BOOLEAN: 
 										dta->type = DT_BOOL;
 										break;
-									}
-									case T_KW_STRING: {
+									case T_KW_STRING: 
 										dta->type = DT_STR;
 										break;
-									}
 									default:
 										E("vars: Syntax error - unsupported type of array");
 										//printTokenType(*cur);
@@ -968,7 +961,6 @@ struct queue* parseVars(struct toc** cur){
 							}
 							
 							break;
-						}
 						default:
 							E("vars: Syntax error - expected type");
 							exit(synt);	
@@ -980,8 +972,7 @@ struct queue* parseVars(struct toc** cur){
 					E("vars: Syntax error - expected semicolon after var deklaration");
 					//printTokenType(*cur);
 					exit(synt);
-				}
-								
+				}								
 								
 				// vlozit prvek
 				queuePush(vars, var);
@@ -1061,26 +1052,22 @@ struct queue* parseParams(){
 				// nacteni datoveho typu parametru
 				cur = getToc();
 				switch(cur->type){
-					case T_KW_INT: {
+					case T_KW_INT: 
 						par->type = AST_INT;
 						par->dataType = DT_INT;
 						break;
-					}
-					case T_KW_REAL: {
+					case T_KW_REAL: 
 						par->type = AST_REAL;
 						par->dataType = DT_REAL;
 						break;
-					}
-					case T_KW_BOOLEAN: {
+					case T_KW_BOOLEAN: 
 						par->type = AST_BOOL;
 						par->dataType = DT_BOOL;
 						break;
-					}
-					case T_KW_STRING: {
+					case T_KW_STRING:
 						par->type = AST_STR;
 						par->dataType = DT_STR;
 						break;
-					}
 					default:
 						E("params: Syntax error - unsupported type of parameter");
 						//printTokenType(cur);
@@ -1143,7 +1130,9 @@ struct astNode* parseFunction(){
 	// skopirovani jmena
 	struct String* name = makeNewString();
 	copyString(cur->data.str, &name);
+#ifdef _DEBUG
 	printString(name);
+#endif
 	node->other = name;
 
 	// sparsovat parametry
@@ -1173,28 +1162,23 @@ struct astNode* parseFunction(){
 	// dostal dvojtecku -> typ
 	cur = getToc();
 	switch(cur->type){
-		case T_KW_INT: {
+		case T_KW_INT:
 			// navratovy typ
 			node->dataType = DT_INT;
 			break;
-		}
-		case T_KW_REAL: {
+		case T_KW_REAL:
 			node->dataType = DT_REAL;			
 			break;
-		}
-		case T_KW_BOOLEAN: {
+		case T_KW_BOOLEAN: 
 			node->dataType = DT_BOOL;
 			break;
-		}
-		case T_KW_STRING: {
+		case T_KW_STRING: 
 			node->dataType = DT_STR;		
 			break;
-		}
-		default: {
+		default:
 			E("function: Syntax error - unsupported returning type of function");
 			//printTokenType(cur);
 			exit(synt);
-		}
 	}	
 	// typ OK
 	cur = getToc();
@@ -1230,7 +1214,8 @@ struct astNode* parseFunction(){
 			
 		// v pripade dopredne deklarace neni nutne pouzivat parametry
 		stackPop(global.symTable);
-		top = (struct symbolTableNode*)stackTop(global.symTable);
+		//toto nie je nikde pouzite????
+		//top = (struct symbolTableNode*)stackTop(global.symTable);
 						
 	 	// nastaveni navratovy typ
 	 	dekl->dataType = node->dataType;
@@ -1331,12 +1316,14 @@ struct queue* parseCallParams(struct toc** cur){
 	while((*cur)->type != T_RPAR){
 		struct astNode* nd;
 		
+		struct symbolTableNode* top;
+		struct symbolTableNode* id;
 		switch((*cur)->type){
-			case T_ID: {
+			case T_ID:
 				// predana promenna
 				
-				struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
-				struct symbolTableNode* id = search(&top, (*cur)->data.str);
+				top = (struct symbolTableNode*)stackTop(global.symTable);
+				id = search(&top, (*cur)->data.str);
 				if(!id){
 					E("callPars: Undefined variable");
 					exit(sem_prog);
@@ -1351,8 +1338,7 @@ struct queue* parseCallParams(struct toc** cur){
 				datatypes(nd->dataType, id->dataType);
 				
 				break;
-			}
-			case T_INT: {
+			case T_INT: 
 				// predany parametr je typu INT
 				
 				if(!(nd = makeNewAST()))
@@ -1363,8 +1349,7 @@ struct queue* parseCallParams(struct toc** cur){
 				nd->data.integer = (*cur)->data.integer;
 							
 				break;
-			}
-			case T_REAL: {
+			case T_REAL: 
 				// predany parametr typu real
 				if(!(nd = makeNewAST()))
 					return NULL;
@@ -1374,8 +1359,7 @@ struct queue* parseCallParams(struct toc** cur){
 				nd->data.real = (*cur)->data.real;
 				
 				break;
-			}
-			case T_BOOL: {
+			case T_BOOL: 
 				// predany parametr typu bool
 				if(!(nd = makeNewAST()))
 					return NULL;
@@ -1383,10 +1367,8 @@ struct queue* parseCallParams(struct toc** cur){
 				nd->type = AST_BOOL;
 				nd->dataType = DT_BOOL;
 				nd->data.boolean = (*cur)->data.boolean;
-				
 				break;
-			}
-			case T_STR: {
+			case T_STR:
 				// predany parametry typu string
 				if(!(nd = makeNewAST()))
 					return NULL;
@@ -1395,7 +1377,6 @@ struct queue* parseCallParams(struct toc** cur){
 				nd->dataType = DT_STR;
 				copyString((*cur)->data.str, &(nd->data.str));		
 				break;
-			}
 			default:
 				E("callPars: Syntax error - invalid parameter type");
 				//printTokenType((*cur));
@@ -1911,7 +1892,7 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 			printTokenType(*cur);
 			exit(synt);
 		}
-		//*cur = getToc();
+		// *cur = getToc();
 	}
 	else {
 		D("Parse command");
@@ -1923,7 +1904,7 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 			exit(synt);	
 		}
 		
-		//*cur = getToc();
+		// *cur = getToc();
 	}
 	
 	D("case element RETURNING");
@@ -1962,26 +1943,22 @@ struct astNode* caseStatement(struct toc** cur){
 	// vytvoreni uzlu pro promennou
 	switchNode->right = makeNewAST();
 	switch((*cur)->type){
-		case T_INT: {
+		case T_INT:
 			switchNode->right->type = AST_INT;
 			switchNode->right->dataType = DT_INT;
 			break;
-		}
-		case T_REAL: {
+		case T_REAL:
 			switchNode->right->type = AST_REAL;
 			switchNode->right->dataType = DT_REAL;
 			break;
-		}
-		case T_BOOL: {
+		case T_BOOL:
 			switchNode->right->type = AST_BOOL;
 			switchNode->right->dataType = DT_BOOL;
 			break;
-		}
-		case T_STR: {
+		case T_STR:
 			switchNode->right->type = AST_STR;
 			switchNode->right->dataType = DT_STR;
 			break;
-		}
 	}
 	switchNode->right->other = name;
 	
@@ -2012,6 +1989,571 @@ struct astNode* caseStatement(struct toc** cur){
 	return switchNode;
 }
 
+struct astNode* writeStatement(struct toc** cur){
+	struct astNode* node = makeNewAST();
+	node->type = AST_WRITE;
+
+	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
+	vp->vars = NULL;
+	vp->pars = makeNewQueue();
+			
+	*cur = getToc();
+	if((*cur)->type != T_LPAR){
+		E("Syntax error - expecting left parenthesis");
+		//printTokenType(*cur);
+		exit(synt);
+	}
+	
+	// projistotu nacist top		
+	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+	
+	*cur = getToc();
+	// nacitat parametry
+	while((*cur)->type != T_RPAR){
+		// ocekavat cokoliv
+		struct astNode* nd = makeNewAST();
+		struct String* name = NULL;
+		struct symbolTableNode* var;
+		switch((*cur)->type){
+			case T_ID:
+				var = search(&top, (*cur)->data.str);
+				if(!var){
+					E("Semantic error - undefined variable");
+					exit(sem_prog);
+				}
+				// vytvorit novy uzel
+				nd->type = AST_ID;
+				
+				// nazev promenne
+				name = makeNewString();
+				copyString((*cur)->data.str, &name);
+				nd->other = name;
+				// datovy typ promenne
+				nd->dataType = var->dataType;
+				
+				break;
+			case T_INT: 
+				// novy uzel
+				nd->type = AST_INT;
+				nd->dataType = DT_INT;
+				nd->data.integer = (*cur)->data.integer;
+				break;
+			case T_REAL: 
+				// novy uzel
+				nd->type = AST_REAL;
+				nd->dataType = DT_REAL;
+				nd->data.real = (*cur)->data.real;						
+				break;
+			case T_STR: 
+				// novy uzel
+				nd->type = AST_STR;
+				nd->dataType = DT_STR;
+				nd->data.str = (*cur)->data.str;
+				
+				break;
+			case T_BOOL: 						
+				// novy uzel
+				nd->type = AST_BOOL;
+				nd->dataType = DT_BOOL;
+				nd->data.boolean = (*cur)->data.boolean;
+				break;
+			case T_RPAR:
+				break;		
+			default:
+				E("Semantic error - unsupported type of parameter");
+				//printTokenType(*cur);
+				exit(sem_komp);
+		}
+				
+		// push do fronty
+		queuePush(vp->pars, nd);						
+				
+		// dalsi token + dopredu
+		*cur = getToc();
+		// oddelene carkou -> kdyz za carkou bude RPAR chyba				
+		if((*cur)->type == T_COM){
+			// nactena carka
+			*cur = getToc();
+			if((*cur)->type == T_RPAR){
+				// za carkou byla prava zavorka
+				E("Syntax error - after comma cannot be right parenthesis in params list");
+				exit(synt);
+			}
+		}
+	}
+			
+	if((*cur)->type != T_RPAR){
+		E("Syntax error - expecting right parenthesis after call parameters");
+		//printTokenType(*cur);
+		exit(synt);
+	}
+		
+	*cur = getToc();
+			
+	node->right = makeNewAST();
+	node->right->other = vp;
+	return node;			
+}
+
+struct astNode* readlnStatement(struct toc** cur){
+	struct astNode* node = makeNewAST();
+	node->type = AST_READLN;
+		
+	*cur = getToc();
+	if((*cur)->type != T_LPAR){
+		E("Syntax error - expecting left parenthesis");
+		//printTokenType(*cur);
+		exit(synt);
+	}
+
+	*cur = getToc();
+	if((*cur)->type != T_ID){
+		E("Syntax error - expecting identificator as only parameter");
+		//printTokenType(*cur);
+		exit(synt);
+	}
+	
+	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
+	vp->vars = NULL;
+	vp->pars = makeNewQueue();
+	
+	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+	struct symbolTableNode* var = search(&top, (*cur)->data.str);
+	if(!var){
+		E("Semantic error - variable not found");
+		exit(sem_prog);
+	}
+	struct astNode* nd = makeNewAST();
+	nd->type = AST_ID;
+	nd->dataType = var->dataType;
+	
+	struct String* idname = makeNewString();
+	copyString((*cur)->data.str, &idname);
+	nd->other = idname;
+	
+	queuePush(vp->pars, nd);
+		
+	node->right = makeNewAST();
+	node->right->other = vp;
+	
+	*cur = getToc();
+	if((*cur)->type != T_RPAR){
+		E("Syntax error - expecting right parenthesis");
+		//printTokenType(*cur);
+		exit(synt);
+	}
+	
+	*cur = getToc();
+	
+	node->left = NULL;
+	return node;
+}
+
+struct astNode* findStatement(struct toc** cur){
+	struct astNode* find = makeNewAST();
+ 	find->type = AST_FIND;
+	find->dataType = DT_INT;
+			
+	struct String* name = makeNewString();
+	copyFromArray("find", &name);
+	find->other = name;
+	
+	*cur = getToc();
+	if((*cur)->type != T_LPAR){
+		E("Syntax error - expecting left parenthesis");
+		//printTokenType(*cur);
+		exit(synt);
+	}
+	
+	find->right = makeNewAST();
+	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
+	vp->vars = NULL;
+	vp->pars = makeNewQueue();
+			
+	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+	for(int i = 0; i < 2; i++){
+		// iterace, ocekavam dva stejny parametry
+		
+		*cur = getToc();
+		if((*cur)->type == T_ID){
+			// nacitani z promenne -> tabulka symbolu
+			struct symbolTableNode* var = search(&top, (*cur)->data.str);
+			if(!var){
+				E("Semantic error - undefined variable cannot be used as parameter");
+				exit(sem_prog);
+			}
+		
+			if(var->dataType != DT_STR){
+				E("Semantic error - INLINE find expected STRING as first parameter");
+				exit(sem_komp);
+			}
+		
+			struct String* name;
+			copyString((*cur)->data.str, &name);
+		
+			struct astNode* first = makeNewAST();
+			first->type = AST_ID;
+			first->dataType = DT_STR;
+			copyString((*cur)->data.str, (struct String **)&(first->other));
+			queuePush(vp->pars, first);
+		}
+		else if((*cur)->type == T_STR){
+			// nacitani literalu
+			struct astNode* first = makeNewAST();
+			first->type = AST_STR;
+			first->dataType = DT_STR;
+			first->data.str = makeNewString();
+			copyString((*cur)->data.str, &(first->data.str));
+						
+			queuePush(vp->pars, first);
+		}
+		else {
+			if(i == 0){
+				E("Syntax error - INLINE find expected string as first parameter data type");
+			}
+			else {
+				E("Syntax error - INLINE find expected string as second parameter data type");
+			}
+			//printTokenType(*cur);
+			exit(synt);
+		}
+			
+		// oddelovac nebo prava zavorka
+		*cur = getToc();
+		if(i == 0){
+			// ocekavam carku
+			if((*cur)->type != T_COM){
+				E("Syntax error - parameters must be separate by comma");
+				//printTokenType(*cur);
+				exit(synt);
+			}
+		}
+		else if(i == 1){
+			// ocekavam pravou zavorku
+			if((*cur)->type != T_RPAR){
+				E("Syntax error - expected right parenthesis");
+				//printTokenType(*cur);
+				exit(synt);
+			}
+		}
+	}
+	
+	// dalsi token
+	*cur = getToc();			
+	
+	find->right = makeNewAST();
+	find->right->other = vp;
+	return find;
+}
+
+struct astNode* sortStatement(struct toc** cur){
+	struct astNode* node = makeNewAST();
+	node->type = AST_SORT;
+	node->dataType = DT_STR;
+	
+	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
+	vp->vars = NULL;
+	vp->pars = makeNewQueue();
+	
+	// nacist jeden string parametr
+	*cur = getToc();
+	if((*cur)->type != T_LPAR){
+		E("Syntax error - expected left parenthesis");
+		//printTokenType(*cur);
+		exit(synt);
+	}
+		
+	*cur = getToc();
+	if((*cur)->type == T_ID){
+		struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+		struct symbolTableNode* var = search(&top, (*cur)->data.str);
+		
+		if(!var){
+			E("Semantic error - variable of parameter not found");
+			exit(sem_prog);
+		}
+	
+		// uzel pro promennou
+		struct astNode* nd = makeNewAST();
+		nd->type = AST_ID;
+		nd->dataType = DT_STR;
+	
+		// jmeno promenne
+		struct String* name = NULL;
+		copyString(var->name, &name);
+		nd->other = name;
+	
+		queuePush(vp->pars, nd);
+	}
+	else if((*cur)->type == T_STR){
+		// novy uzel pro literal
+		struct astNode* nd = makeNewAST();
+		nd->type = AST_STR;
+		nd->dataType = DT_STR;
+		nd->data.str = (*cur)->data.str;
+		// pushnuti do fronty
+		queuePush(vp->pars, nd);
+	}
+	else {
+		E("Semantic error - expected string as parameter data type");
+		exit(sem_komp);
+	}
+	
+	*cur = getToc();
+	if((*cur)->type != T_RPAR){
+		E("Syntax error - expected right parenthesis");
+		//printTokenType(*cur);
+		exit(synt);
+	}
+	// nacteni dalsiho tokenu
+	*cur = getToc();
+	
+	node->right = makeNewAST();
+	node->right->other = vp;
+	
+	return node;
+}
+struct astNode* lengthStatement(struct toc** cur){
+	struct astNode* node = makeNewAST();
+	node->type = AST_LENGTH;
+	node->dataType = DT_INT;
+	
+	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
+	vp->vars = NULL;
+	vp->pars = makeNewQueue();
+	
+	// nacist jeden string parametr
+	*cur = getToc();
+	if((*cur)->type != T_LPAR){
+		E("Syntax error - expected left parenthesis");
+		//printTokenType(*cur);
+		exit(synt);
+	}
+		
+	*cur = getToc();
+	if((*cur)->type == T_ID){
+		struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+		struct symbolTableNode* var = search(&top, (*cur)->data.str);
+		
+		if(!var){
+			E("Semantic error - variable of parameter not found");
+			exit(sem_prog);
+		}
+	
+		// uzel pro promennou
+		struct astNode* nd = makeNewAST();
+		nd->type = AST_ID;
+		nd->dataType = DT_STR;
+	
+		// jmeno promenne
+		struct String* name = NULL;
+		copyString(var->name, &name);
+		nd->other = name;
+	
+		queuePush(vp->pars, nd);
+	}
+	else if((*cur)->type == T_STR){
+		// novy uzel pro literal
+		struct astNode* nd = makeNewAST();
+		nd->type = AST_STR;
+		nd->dataType = DT_STR;
+		nd->data.str = (*cur)->data.str;
+		// pushnuti do fronty
+		queuePush(vp->pars, nd);
+	}
+	else {
+		E("Semantic error - expected string as parameter data type");
+		exit(sem_komp);
+	}
+	
+	*cur = getToc();
+	if((*cur)->type != T_RPAR){
+		E("Syntax error - expected right parenthesis");
+		//printTokenType(*cur);
+		exit(synt);
+	}
+	// nacteni dalsiho tokenu
+	*cur = getToc();
+	
+	node->right = makeNewAST();
+	node->right->other = vp;
+	
+	return node;
+}
+
+struct astNode* copyStatement(struct toc** cur){
+	struct astNode* copy = makeNewAST();
+	copy->type = AST_COPY;
+	copy->dataType = DT_STR;
+	
+	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
+	vp->vars = NULL;
+	vp->pars = makeNewQueue();
+	
+	*cur = getToc();
+	if((*cur)->type != T_LPAR){
+		E("Syntax error - expected left parenthesis");
+		//printTokenType(*cur);
+		exit(synt);
+	}
+	
+	*cur = getToc();
+	if((*cur)->type == T_ID){
+		// najit v tabulce symbolu
+		struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+		struct symbolTableNode* var = search(&top, (*cur)->data.str);
+		if(!var){
+			E("Semantic error - variable of parameter not found");
+			exit(sem_prog);
+		}
+					
+		// novy uzel
+		struct astNode* nid = makeNewAST();
+		nid->type = AST_ID;
+		nid->dataType = var->dataType;
+		
+		// kopie jmena
+		struct String* name = NULL;
+		copyString((*cur)->data.str, &name);
+		nid->other = name;
+		
+		// push prvniho parametru
+		queuePush(vp->pars, nid);				
+	}
+	else if((*cur)->type == T_STR){
+		// predelat do nodu
+		
+		struct astNode* nstr = makeNewAST();
+		nstr->type = AST_STR;
+		nstr->dataType = DT_STR;
+		nstr->data.str = (*cur)->data.str;
+		
+		queuePush(vp->pars, nstr);				
+	}
+	else {
+		E("Semantic error - expected STRING data type of parameter");
+		exit(sem_komp);
+	}
+	
+	*cur = getToc();
+	if((*cur)->type != T_COM){
+		E("Syntax error - expected comma after parameter");
+		//printTokenType(*cur);
+		exit(synt);
+	}
+	
+	// ocekavat 2x int
+	for(int i = 0; i < 2; i++){
+		*cur = getToc();
+		
+		if((*cur)->type == T_INT){
+			// novy uzel		
+			struct astNode* nint = makeNewAST();
+			nint->type = AST_INT;
+			nint->dataType = DT_INT;
+			nint->data.integer = (*cur)->data.integer;
+			
+			// pushnuti do fronty
+			queuePush(vp->pars, nint);					
+		}
+		else {
+			E("Semantic error - last two parameters must be integers");
+			exit(sem_komp);
+		}
+		
+		
+		*cur = getToc();
+		if(i == 0 && (*cur)->type == T_COM){
+			continue;
+		}
+		else if(i == 1 && (*cur)->type == T_RPAR){
+			continue;
+		}
+		else {
+			E("Syntax error - copy parameters error");
+			exit(synt);
+		}
+	}
+	
+	if((*cur)->type != T_RPAR){
+		E("Syntax error - expected right parenthesis");
+		//printTokenType(*cur);
+		exit(synt);
+	}
+	
+	*cur = getToc();
+	
+	copy->right = makeNewAST();
+	copy->right->other = vp;
+	return copy;	
+}
+
+struct astNode* arrayIndexStatement(struct toc** cur){
+	struct astNode* arrid = makeNewAST();
+	arrid->type = AST_ARR;
+	struct String* name = NULL;
+	copyString((*cur)->data.str, &name);
+	arrid->other = name;
+				
+	*cur = getToc();
+	if((*cur)->type != T_INT){
+		E("Syntax error - expected int as array index");
+		printTokenType(*cur);
+		exit(synt);
+	}
+	// index do datove struktury
+	arrid->data.integer = (*cur)->data.integer;
+		
+	*cur = getToc();
+	if((*cur)->type != T_RBRC){
+		E("Syntax error - expected right brace after array index");
+		printTokenType(*cur);
+		exit(synt);
+	}
+				
+	*cur = getToc();
+	return arrid;
+} 
+
+struct astNode* assignStatement(struct toc** cur){
+	// levy uzel je T_ID
+	// pravy uzel je expression
+	struct astNode* left = makeNewAST();
+	if(!left)
+		return NULL;					
+	left->type = AST_ID;
+	copyString((*cur)->data.str, &(left->data.str));
+		
+	// skopirovani informaci z tabulky symbolu
+	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+	struct symbolTableNode* nd = search(&top, left->data.str);				
+	if(!nd){
+		E("cmd: Syntax error - variable not found");
+		exit(synt);
+	}
+	left->dataType = nd->dataType;
+		
+	// prava strana je vyraz
+	struct astNode* right = parseExpression(cur);
+	if(!right) 
+		return NULL;
+	D("cmd: After expr parsing");
+	//printTokenType(*cur);
+	if(left->dataType != right->dataType){
+		datatypes(left->dataType, right->dataType);
+		E("cmd: Semantic error - L-value has not same value as R-value");
+		exit(sem_komp);
+	}
+								
+	// vytvorit uzel prirazeni a vratit jej
+	struct astNode* asgn = makeNewAST();
+	asgn->type = AST_ASGN;
+	asgn->left = left;
+	asgn->right = right;
+	asgn->other = NULL;
+	D("cmd: Returning asgn node");
+	return asgn;
+}
 /**
  * Vyhodnoti vsechny moznosti prikazu, ktere se muzou vyskytovat v tele funkce/programu
  * ------------------------------------------------------------------------------------
@@ -2023,11 +2565,7 @@ struct astNode* parseCommand(struct toc** cur){
 		case T_KW_END:
 		case T_KW_IF:
 		case T_KW_WHILE:
-<<<<<<< HEAD
-		case T_RPT:
-=======
 		case T_KW_RPT:
->>>>>>> parent of e9529b9... pridany tondov Parser.c
 		case T_KW_CASE:
 		case T_KW_FOR:
 		case T_KW_WRT:
@@ -2041,74 +2579,71 @@ struct astNode* parseCommand(struct toc** cur){
 			(*cur) = getToc();
 	}
 	
+	struct astNode* node = NULL;
+	struct toc* next;
+	
 	printTokenType(*cur);
 	switch((*cur)->type){
-		case T_KW_END: {
+		case T_KW_END:
 			// narazil hned na END -> po stredniku nasledoval END chyba 
 			// 						  NEBO telo nema prvky
 			E("cmd: Syntax error - semicolon after last cmd or body without commands");
 			exit(synt);
-		}	
-		case T_KW_IF:{	
+		case T_KW_IF:
 			D("IF command");		
-			struct astNode* ifstat = ifStatement(cur);
-			if(!ifstat)
+			node = ifStatement(cur);
+			if(!node)
 				return NULL;
 				
 			if((*cur)->type == T_KW_END){			
 				*cur = getToc();
-				return ifstat;
+				return node;
 			}
 			else {
 				E("cmd: Syntax error - expected END (if)");
 				//printTokenType(*cur);
 				exit(synt);
 			}	
-		}
-		case T_KW_WHILE: {
+			break;
+		case T_KW_WHILE:
 			D("WHILE command");
-			struct astNode* whl = whileStatement(cur);
-			if(!whl)
+			node = whileStatement(cur);
+			if(!node)
 				return NULL;
 			
 			if((*cur)->type == T_KW_END){
 				*cur = getToc();
-				return whl;			
+				return node;			
 			}
 			else {
 				E("cmd: Syntax error - expected END (while)");			
 				//printTokenType(*cur);
 				exit(synt);
 			}
-		}
-<<<<<<< HEAD
-		case T_RPT: {
-=======
-		case T_KW_RPT: {
->>>>>>> parent of e9529b9... pridany tondov Parser.c
+			break;
+		case T_KW_RPT:
 			D("REPEAT command");
-			struct astNode* rpt = repeatStatement(cur);
-			if(!rpt)
+			node = repeatStatement(cur);
+			if(!node)
 				return NULL;
 			
 			if((*cur)->type == T_KW_END){
 				*cur = getToc();
-				return rpt;
+				return node;
 			}
 			else {
 				E("cmd: Syntax error - expected END (repeat)");
 				//printTokenType(*cur);
 				exit(synt);
 			}
-			return rpt;
-		}
-		case T_KW_CASE: {
+			break;
+		case T_KW_CASE:
 			D("CASE cmd");
-			struct astNode* cas = caseStatement(cur);
+			node = caseStatement(cur);
 			
 			if((*cur)->type == T_KW_END){
 				*cur= getToc();
-				return cas;
+				return node;
 			}
 			else {
 				E("cmd: Syntax error - expected END (case)");
@@ -2116,582 +2651,68 @@ struct astNode* parseCommand(struct toc** cur){
 				printTokenType(*cur);
 				exit(synt);
 			}
-			return cas;
-		}
-		case T_KW_FOR: {
+			break;
+		case T_KW_FOR:
 			/* for(asgn, int, int) */
 			D("FOR cmd");
 			
-			struct astNode* nd = forStatement(cur);
+			node = forStatement(cur);
 			if((*cur)->type == T_KW_END){
 				*cur = getToc();
-				return nd;
+				return node;
 			}
 			else {
 				E("cmd: Syntax error - expected END (for)");
 				printTokenType(*cur);
 				exit(synt);
-			}
-			return nd;			
-		}
-		case T_KW_WRT: {
+			}		
+			break;	
+		case T_KW_WRT:
 			/* write(params) */
 			D("WRITE");
-			
-			struct astNode* wrt = makeNewAST();
-			wrt->type = AST_WRITE;
-
-			struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
-			vp->vars = NULL;
-			vp->pars = makeNewQueue();
-			
-			*cur = getToc();
-			if((*cur)->type != T_LPAR){
-				E("Syntax error - expecting left parenthesis");
-				//printTokenType(*cur);
-				exit(synt);
-			}
-
-			// projistotu nacist top		
-			struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
-			
-			*cur = getToc();
-			// nacitat parametry
-			while((*cur)->type != T_RPAR){
-				// ocekavat cokoliv
-				struct astNode* node = makeNewAST();
-				switch((*cur)->type){
-					case T_ID: {
-						struct symbolTableNode* var = search(&top, (*cur)->data.str);
-						if(!var){
-							E("Semantic error - undefined variable");
-							exit(sem_prog);
-						}
-						// vytvorit novy uzel
-						node->type = AST_ID;
-						
-						// nazev promenne
-						struct String* name = makeNewString();
-						copyString((*cur)->data.str, &name);
-						node->other = name;
-
-						// datovy typ promenne
-						node->dataType = var->dataType;
-						
-						break;
-					}
-					case T_INT: {
-						// novy uzel
-						node->type = AST_INT;
-						node->dataType = DT_INT;
-						node->data.integer = (*cur)->data.integer;
-						break;
-					}	
-					case T_REAL: {
-						// novy uzel
-						node->type = AST_REAL;
-						node->dataType = DT_REAL;
-						node->data.real = (*cur)->data.real;						
-						break;
-					}	
-					case T_STR: {
-						// novy uzel
-						node->type = AST_STR;
-						node->dataType = DT_STR;
-						node->data.str = (*cur)->data.str;
-						
-						break;
-					}	
-					case T_BOOL: {						
-						// novy uzel
-						node->type = AST_BOOL;
-						node->dataType = DT_BOOL;
-						node->data.boolean = (*cur)->data.boolean;
-	
-						break;
-					}	
-					case T_RPAR:
-						break;		
-					default:
-						E("Semantic error - unsupported type of parameter");
-						//printTokenType(*cur);
-						exit(sem_komp);
-				}
-				
-				// push do fronty
-				queuePush(vp->pars, node);						
-						
-				// dalsi token + dopredu
-				*cur = getToc();
-				// oddelene carkou -> kdyz za carkou bude RPAR chyba				
-				if((*cur)->type == T_COM){
-					// nactena carka
-					*cur = getToc();
-					if((*cur)->type == T_RPAR){
-						// za carkou byla prava zavorka
-						E("Syntax error - after comma cannot be right parenthesis in params list");
-						exit(synt);
-					}
-				}
-			}
-			
-			if((*cur)->type != T_RPAR){
-				E("Syntax error - expecting right parenthesis after call parameters");
-				//printTokenType(*cur);
-				exit(synt);
-			}
-			
-			*cur = getToc();
-			
-			wrt->right = makeNewAST();
-			wrt->right->other = vp;
-			
-			return wrt;
-		}
-		case T_KW_READLN: {
+			node = writeStatement(cur);
+			return node;
+		case T_KW_READLN:
 			/* readln(id) */
 			D("READLN");
+			node = readlnStatement(cur);
 			
-			struct astNode* rdln = makeNewAST();
-			rdln->type = AST_READLN;
-			
-			*cur = getToc();
-			if((*cur)->type != T_LPAR){
-				E("Syntax error - expecting left parenthesis");
-				//printTokenType(*cur);
-				exit(synt);
-			}
-			
-			*cur = getToc();
-			if((*cur)->type != T_ID){
-				E("Syntax error - expecting identificator as only parameter");
-				//printTokenType(*cur);
-				exit(synt);
-			}
-			
-			struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
-			vp->vars = NULL;
-			vp->pars = makeNewQueue();
-			
-			struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
-			struct symbolTableNode* var = search(&top, (*cur)->data.str);
-			if(!var){
-				E("Semantic error - variable not found");
-				exit(sem_prog);
-			}
-			struct astNode* nd = makeNewAST();
-			nd->type = AST_ID;
-			nd->dataType = var->dataType;
-			
-			struct String* idname = makeNewString();
-			copyString((*cur)->data.str, &idname);
-			nd->other = idname;
-			
-			queuePush(vp->pars, nd);
-			
-			rdln->right = makeNewAST();
-			rdln->right->other = vp;
-			
-			*cur = getToc();
-			if((*cur)->type != T_RPAR){
-				E("Syntax error - expecting right parenthesis");
-				//printTokenType(*cur);
-				exit(synt);
-			}
-			
-			*cur = getToc();
-			
-<<<<<<< HEAD
-			rdln->left = NULL;			
-=======
-			rdln->left = NULL;
->>>>>>> parent of e9529b9... pridany tondov Parser.c
-			return rdln;
-		}
-		case T_KW_FIND: {
+			return node;
+		case T_KW_FIND:
 			/* find(str, str) */
 			D("FIND");
+			node = findStatement(cur);		
 			
-			struct astNode* find = makeNewAST();
-			find->type = AST_FIND;
-			find->dataType = DT_INT;
-			
-			struct String* name = makeNewString();
-			copyFromArray("find", &name);
-			find->other = name;
-			
-			*cur = getToc();
-			if((*cur)->type != T_LPAR){
-				E("Syntax error - expecting left parenthesis");
-				//printTokenType(*cur);
-				exit(synt);
-			}
-			
-			find->right = makeNewAST();
-			struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
-			vp->vars = NULL;
-			vp->pars = makeNewQueue();
-			
-			struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
-			for(int i = 0; i < 2; i++){
-				// iterace, ocekavam dva stejny parametry
-				
-				*cur = getToc();
-				if((*cur)->type == T_ID){
-					// nacitani z promenne -> tabulka symbolu
-					struct symbolTableNode* var = search(&top, (*cur)->data.str);
-					if(!var){
-						E("Semantic error - undefined variable cannot be used as parameter");
-						exit(sem_prog);
-					}
-				
-					if(var->dataType != DT_STR){
-						E("Semantic error - INLINE find expected STRING as first parameter");
-						exit(sem_komp);
-					}
-				
-					struct String* name;
-<<<<<<< HEAD
-					copyString(var->name, &name);
-=======
-					copyString((*cur)->data.str, &name);
->>>>>>> parent of e9529b9... pridany tondov Parser.c
-				
-					struct astNode* first = makeNewAST();
-					first->type = AST_ID;
-					first->dataType = DT_STR;
-<<<<<<< HEAD
-					first->other = name;
-=======
-					copyString((*cur)->data.str, (struct String **)&(first->other));
->>>>>>> parent of e9529b9... pridany tondov Parser.c
-					queuePush(vp->pars, first);
-				}
-				else if((*cur)->type == T_STR){
-					// nacitani literalu
-					struct astNode* first = makeNewAST();
-					first->type = AST_STR;
-					first->dataType = DT_STR;
-<<<<<<< HEAD
-					first->data.str = (*cur)->data.str;
-=======
-					first->data.str = makeNewString();
-					copyString((*cur)->data.str, &(first->data.str));
->>>>>>> parent of e9529b9... pridany tondov Parser.c
-								
-					queuePush(vp->pars, first);
-				}
-				else {
-					if(i == 0){
-						E("Syntax error - INLINE find expected string as first parameter data type");
-					}
-					else {
-						E("Syntax error - INLINE find expected string as second parameter data type");
-					}
-					//printTokenType(*cur);
-					exit(synt);
-				}
-					
-			
-				// oddelovac nebo prava zavorka
-				*cur = getToc();
-				if(i == 0){
-					// ocekavam carku
-					if((*cur)->type != T_COM){
-						E("Syntax error - parameters must be separate by comma");
-						//printTokenType(*cur);
-						exit(synt);
-					}
-				}
-				else if(i == 1){
-					// ocekavam pravou zavorku
-					if((*cur)->type != T_RPAR){
-						E("Syntax error - expected right parenthesis");
-						//printTokenType(*cur);
-						exit(synt);
-					}
-				}
-			}
-			
-			// dalsi token
-			*cur = getToc();			
-			
-			find->right = makeNewAST();
-			find->right->other = vp;
-			
-			return find;
-		}
+			return node;
 		case T_KW_SORT:
-		case T_KW_LENGTH: {
-			/* sort(str) */	
-			struct astNode* sort = makeNewAST();
-					
-			D("SORT/LENGTH");
-			if((*cur)->type == T_KW_SORT)
-			{
-				sort->type = AST_SORT;
-				sort->dataType = DT_STR;
-			}
-			else
-			{
-				sort->type = AST_LENGTH;
-				sort->dataType = DT_INT;
-			}
-
-
-			struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
-			vp->vars = NULL;
-			vp->pars = makeNewQueue();
-			
-			// nacist jeden string parametr
-			*cur = getToc();
-			if((*cur)->type != T_LPAR){
-				E("Syntax error - expected left parenthesis");
-				//printTokenType(*cur);
-				exit(synt);
-			}
-			
-			*cur = getToc();
-			if((*cur)->type == T_ID){
-				struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
-				struct symbolTableNode* var = search(&top, (*cur)->data.str);
-				
-				if(!var){
-					E("Semantic error - variable of parameter not found");
-					exit(sem_prog);
-				}
-			
-				// uzel pro promennou
-				struct astNode* nd = makeNewAST();
-				nd->type = AST_ID;
-				nd->dataType = DT_STR;
-				
-				// jmeno promenne
-<<<<<<< HEAD
-				struct String* name;
-=======
-				struct String* name = NULL;
->>>>>>> parent of e9529b9... pridany tondov Parser.c
-				copyString(var->name, &name);
-				nd->other = name;
-				
-				queuePush(vp->pars, nd);
-			}
-			else if((*cur)->type == T_STR){
-				// novy uzel pro literal
-				struct astNode* nd = makeNewAST();
-				nd->type = AST_STR;
-				nd->dataType = DT_STR;
-				nd->data.str = (*cur)->data.str;
-				// pushnuti do fronty
-				queuePush(vp->pars, nd);
-			}
-			else {
-				E("Semantic error - expected string as parameter data type");
-				exit(sem_komp);
-			}
-			
-			*cur = getToc();
-			if((*cur)->type != T_RPAR){
-				E("Syntax error - expected right parenthesis");
-				//printTokenType(*cur);
-				exit(synt);
-			}
-			// nacteni dalsiho tokenu
-			*cur = getToc();
-			
-			sort->right = makeNewAST();
-			sort->right->other = vp;
-			
-			return sort;
-		}
-		case T_KW_COPY: {
+			node = sortStatement(cur);
+			return node;
+		case T_KW_LENGTH: 
+			node = lengthStatement(cur);
+			return node;
+		case T_KW_COPY:
 			D("COPY");
 			/* copy(str, int, int) */
-			struct astNode* copy = makeNewAST();
-			copy->type = AST_COPY;
-			copy->dataType = DT_STR;
-			
-			struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
-			vp->vars = NULL;
-			vp->pars = makeNewQueue();
-			
-			*cur = getToc();
-			if((*cur)->type != T_LPAR){
-				E("Syntax error - expected left parenthesis");
-				//printTokenType(*cur);
-				exit(synt);
-			}
-			
-			*cur = getToc();
-			if((*cur)->type == T_ID){
-				// najit v tabulce symbolu
-				struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
-				struct symbolTableNode* var = search(&top, (*cur)->data.str);
-				if(!var){
-					E("Semantic error - variable of parameter not found");
-					exit(sem_prog);
-				}
-							
-				// novy uzel
-				struct astNode* nid = makeNewAST();
-				nid->type = AST_ID;
-				nid->dataType = var->dataType;
-				
-				// kopie jmena
-<<<<<<< HEAD
-				struct String* name;
-=======
-				struct String* name = NULL;
->>>>>>> parent of e9529b9... pridany tondov Parser.c
-				copyString((*cur)->data.str, &name);
-				nid->other = name;
-				
-				// push prvniho parametru
-				queuePush(vp->pars, nid);				
-			}
-			else if((*cur)->type == T_STR){
-				// predelat do nodu
-				
-				struct astNode* nstr = makeNewAST();
-				nstr->type = AST_STR;
-				nstr->dataType = DT_STR;
-				nstr->data.str = (*cur)->data.str;
-				
-				queuePush(vp->pars, nstr);				
-			}
-			else {
-				E("Semantic error - expected STRING data type of parameter");
-				exit(sem_komp);
-			}
-			
-			*cur = getToc();
-			if((*cur)->type != T_COM){
-				E("Syntax error - expected comma after parameter");
-				//printTokenType(*cur);
-				exit(synt);
-			}
-			
-			// ocekavat 2x int
-			for(int i = 0; i < 2; i++){
-<<<<<<< HEAD
-				*cur = getToc();
-				
-				if((*cur)->type == T_INT){
-					// novy uzel		
-					struct astNode* nint = makeNewAST();
-					nint->type = AST_INT;
-					nint->dataType = DT_INT;
-					nint->data.integer = (*cur)->data.integer;
-					
-					// pushnuti do fronty
-					queuePush(vp->pars, nint);					
-				}
-				else {
-					E("Semantic error - last two parameters must be integers");
-					exit(sem_komp);
-				}
-				
-				
-				*cur = getToc();
-=======
-				*cur = getToc();
-				
-				if((*cur)->type == T_INT){
-					// novy uzel		
-					struct astNode* nint = makeNewAST();
-					nint->type = AST_INT;
-					nint->dataType = DT_INT;
-					nint->data.integer = (*cur)->data.integer;
-					
-					// pushnuti do fronty
-					queuePush(vp->pars, nint);					
-				}
-				else {
-					E("Semantic error - last two parameters must be integers");
-					exit(sem_komp);
-				}
-				
-				
-				*cur = getToc();
->>>>>>> parent of e9529b9... pridany tondov Parser.c
-				if(i == 0 && (*cur)->type == T_COM){
-					continue;
-				}
-				else if(i == 1 && (*cur)->type == T_RPAR){
-					continue;
-				}
-				else {
-					E("Syntax error - copy parameters error");
-					exit(synt);
-				}
-			}
-			
-			if((*cur)->type != T_RPAR){
-				E("Syntax error - expected right parenthesis");
-				//printTokenType(*cur);
-				exit(synt);
-			}
-			
-			*cur = getToc();
-			
-			copy->right = makeNewAST();
-			copy->right->other = vp;
-			
-			return copy;
-		}
-		case T_ID: {
-			struct toc* next = getToc();
+			node = copyStatement(cur);
+			return node;
+		case T_ID:
+			next = getToc();
 			if(next->type == T_LPAR){
 				// pravdepodobne volani funkce
 				D("Probably func call");
 				//printTokenType(*cur);
 				return parseFuncCall(cur);
 			}
+			else if(next->type == T_LBRC){
+				// index poley				
+				return arrayIndexStatement(cur);				
+			}
 			else if(next->type == T_ASGN){
 				// pravdepodobne prirazeni
 				D("cmd: cur and next token");
 				//printTokenType(*cur);
-				//printTokenType(next);
-				
-				// levy uzel je T_ID
-				// pravy uzel je expression
-				struct astNode* left = makeNewAST();
-				if(!left)
-					return NULL;					
-				left->type = AST_ID;
-				copyString((*cur)->data.str, &(left->data.str));
-				
-				// skopirovani informaci z tabulky symbolu
-				struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
-				struct symbolTableNode* nd = search(&top, left->data.str);				
-				if(!nd){
-					E("cmd: Syntax error - variable not found");
-					exit(synt);
-				}
-				left->dataType = nd->dataType;
-				
-				// prava strana je vyraz
-				struct astNode* right = parseExpression(cur);
-				if(!right) 
-					return NULL;
-				D("cmd: After expr parsing");
-				//printTokenType(*cur);
-			
-				if(left->dataType != right->dataType){
-					datatypes(left->dataType, right->dataType);
-					E("cmd: Semantic error - L-value has not same value as R-value");
-					exit(sem_komp);
-				}
-								
-				// vytvorit uzel prirazeni a vratit jej
-				struct astNode* asgn = makeNewAST();
-				asgn->type = AST_ASGN;
-				asgn->left = left;
-				asgn->right = right;
-				asgn->other = NULL;
-				D("cmd: Returning asgn node");
-				return asgn;
+				//printTokenType(next);				
+				return assignStatement(cur);
 			}
 			else {
 				E("cmd: Syntax error - expected funcCall or assign");
@@ -2699,7 +2720,6 @@ struct astNode* parseCommand(struct toc** cur){
 				exit(synt);
 			}		
 			break;
-		}
 	}	
 	
 	return NULL;
@@ -2717,10 +2737,6 @@ struct astNode* parseExpression(struct toc** cur){
 	// zasobnik pro chystani AST
 	struct stack* aststack = makeNewStack();
 
-	// potrebne pre inline funkcie v assigne
-	struct toc *cur_backup = *cur;
-	
-	
 	bool readNew = true;
 	
 
@@ -2728,33 +2744,31 @@ struct astNode* parseExpression(struct toc** cur){
 	(*cur) = getToc();
 
 // spinavy hack ktory riesi problem old_cur := cur();
-	switch((*cur)->type)
-	{
-	case T_KW_COPY:
-	case T_KW_READLN:
-	case T_KW_FIND:
-	case T_KW_SORT:
-	case T_KW_LENGTH:
-		{
-		struct astNode *cmd = parseCommand(cur);
-		stackPush(aststack, cmd);
-//		if((*cur)->type == T_KW_END){
-//			D("body: gets END");
-//			// ukonceni bloku kodu
-//			if(cmd == NULL){
-//				W("body: WARNING - statement without effect");
-//
-//				body->left = NULL;
-//				return body;
-//			}
-//
-//			body->left = makeNewAST();
-//			body->left->type = AST_CMD;
-//			body->left->left = NULL;
-//			body->left->right = cmd;
-//			return body;S
-		}
-	default: break;
+	switch((*cur)->type){
+		case T_KW_COPY:
+		case T_KW_READLN:
+		case T_KW_FIND:
+		case T_KW_SORT:
+		case T_KW_LENGTH:
+			struct astNode *cmd = parseCommand(cur);
+			stackPush(aststack, cmd);
+	//		if((*cur)->type == T_KW_END){
+	//			D("body: gets END");
+	//			// ukonceni bloku kodu
+	//			if(cmd == NULL){
+	//				W("body: WARNING - statement without effect");
+	//
+	//				body->left = NULL;
+	//				return body;
+	//			}
+	//
+	//			body->left = makeNewAST();
+	//			body->left->type = AST_CMD;
+	//			body->left->left = NULL;
+	//			body->left->right = cmd;
+	//			return body;S
+		default: 
+			break;
 	}
 		
 	// <id>(
@@ -2810,23 +2824,28 @@ struct astNode* parseExpression(struct toc** cur){
 	// 		tokeny ;, THEN, DO by mely vesmes ukoncovat vyrazy	
 	while((*cur) != NULL){
 		D("expr: new token");
+#ifdef _DEBUG
 		fprintf(stderr, "readNew type = %d \n", readNew);
+#endif		
+		struct toc* t;
+		struct toc* top;
+		struct toc* now;
+		struct astNode* node;
 		
 		//printTokenType(*cur);
 		switch((*cur)->type){
 			// leva zavorka
-			case T_LPAR: {
+			case T_LPAR: 
 				W("T_LPAR comes");
 			
 				if(!stackPush(stack, (*cur)))
 					return NULL;
 				break;
-			}
 			// prava zavorka
-			case T_RPAR: {
+			case T_RPAR:
 				W("T_RPAR comes");
 			
-				struct toc* t = (struct toc*)stackPop(stack);
+				t = (struct toc*)stackPop(stack);
 				if(t == NULL){
 					// pravdepodobne chyba syntaxe
 					E("expression: Syntax error - no Left parenthesis before Right parenthesis");
@@ -2845,7 +2864,6 @@ struct astNode* parseExpression(struct toc** cur){
 					////printTokenType(t);
 				}				
 				break;
-			}
 			// operandy
 			case T_ID:
 			case T_INT:
@@ -2853,11 +2871,11 @@ struct astNode* parseExpression(struct toc** cur){
 			case T_STR:
 			case T_BOOL: 
 			case T_KW_TRUE:
-			case T_KW_FALSE:{
+			case T_KW_FALSE:
 				W("Literal comes");
 				//printTokenType(*cur);
 				
-				struct astNode* node = makeNewAST();
+				node = makeNewAST();
 				
 				if((*cur)->type == T_ID){
 					struct toc* new = getToc();
@@ -2938,7 +2956,6 @@ struct astNode* parseExpression(struct toc** cur){
 				if(!stackPush(aststack, node))
 					return NULL;			
 				break;
-			}
 			case T_EQV:
 			case T_NEQV:
 			case T_GRT:
@@ -2961,8 +2978,6 @@ struct astNode* parseExpression(struct toc** cur){
 				// 		pokud je na vrcholu operator s nizsi prioritou
 				// pokud je na vrcholu operator s vyssi prioritou -> 
 				// 		presunout na vystup a opakovat 3. krok
-			
-				struct toc* top;
 				if(stackEmpty(stack)){
 					// v pripade, ze je to prvni zaznam do stacku, tak ho tam proste vrazit
 					if(!stackPush(stack, (*cur)))
@@ -3002,7 +3017,7 @@ struct astNode* parseExpression(struct toc** cur){
 				while(!stackEmpty(stack)){
 					D("expr: STACK STATE START =======");
 				
-					struct toc* now = (struct toc*)stackPop(stack);
+					now = (struct toc*)stackPop(stack);
 					//printTokenType(now);
 					
 					
