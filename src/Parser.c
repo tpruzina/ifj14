@@ -1915,7 +1915,7 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 			printTokenType(*cur);
 			exit(synt);
 		}
-		//*cur = getToc();
+		// *cur = getToc();
 	}
 	else {
 		D("Parse command");
@@ -1927,7 +1927,7 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 			exit(synt);	
 		}
 		
-		//*cur = getToc();
+		// *cur = getToc();
 	}
 	
 	D("case element RETURNING");
