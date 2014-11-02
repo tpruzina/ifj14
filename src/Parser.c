@@ -2039,9 +2039,9 @@ struct astNode* writeStatement(struct toc** cur){
 		// ocekavat cokoliv
 		struct astNode* nd = makeNewAST();
 		struct String* name = NULL;
+		struct symbolTableNode* var = NULL;
 		switch((*cur)->type){
-			case T_ID:
-				struct symbolTableNode* var = search(&top, (*cur)->data.str);
+				var = search(&top, (*cur)->data.str);
 				if(!var){
 					E("Semantic error - undefined variable");
 					exit(sem_prog);
