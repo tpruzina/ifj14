@@ -1,4 +1,3 @@
-// chybne cislo, retcode 1
 program;
 var
 	a: real;
