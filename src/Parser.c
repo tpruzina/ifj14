@@ -2598,6 +2598,32 @@ struct astNode* parseCommand(struct toc** cur){
 				//printTokenType(*cur);
 				return parseFuncCall(cur);
 			}
+			else if(next->type == T_LBRC){
+				// index pole
+				
+				struct astNode* arrid = makeNewAST();
+				arrid->type = AST_ARR;
+				copyString((*cur)->data.str, &(arrid->other));
+				
+				*cur = getToc();
+				if((*cur)->type != T_INT){
+					E("Syntax error - expected int as array index");
+					printTokenType(*cur);
+					exit(synt);
+				}
+				// index do datove struktury
+				arrid->data.integer = (*cur)->data.integer;
+				
+				*cur = getToc();
+				if((*cur)->type != T_RBRC){
+					E("Syntax error - expected right brace after array index");
+					printTokenType(*cur);
+					exit(synt);
+				}
+				
+				*cur = getToc();
+				return arrid;				
+			}
 			else if(next->type == T_ASGN){
 				// pravdepodobne prirazeni
 				D("cmd: cur and next token");
