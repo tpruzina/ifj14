@@ -150,10 +150,9 @@ void *runTree(struct astNode *curr)
 		while(true)
 		{
 			tmp = runTree(curr->other);	// evaluujeme podmienku
-			if(tmp->data.bool_data)
-				runTree(curr->left);	// ak true, tak bezime telo
-			else
+			if(!tmp->data.bool_data)
 				break;
+			runTree(curr->left);	// ak true, tak bezime telo
 		}
 		break;
 

@@ -1,18 +1,15 @@
-program jmeno;
-var 
-	x: integer;
-	a: real;
-	m: integer;
-	text: string;
-	
-begin
-	x := 0;
-	
-	while x < 10 do
+Program hello;
+	var
+		a: integer;
+		b: string;
+
 	begin
-		x := x + 1;
-		write(x,''#10'')
+		b:='Hello word!';
+		a:=0;
+		repeat
+			begin
+				write(b)
+			end
+		until a = 0
 	end
-	{m := a;}
-	
 end.

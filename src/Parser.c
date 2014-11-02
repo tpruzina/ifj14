@@ -125,7 +125,7 @@ struct tokennames tokennames[] = {
 	{"T_KW_WHILE",T_KW_WHILE},
 	{"T_KW_WRT", T_KW_WRT},
 	{"T_KW_PROGRAM",T_KW_PROGRAM},
-	{"T_RPT",T_RPT},
+	{"T_RPT",T_KW_RPT},
 	{"T_UNTIL",T_UNTIL},
 	{"T_ID",T_ID},
 	{"T_TEXT",T_TEXT},
@@ -2027,7 +2027,7 @@ struct astNode* parseCommand(struct toc** cur){
 		case T_KW_END:
 		case T_KW_IF:
 		case T_KW_WHILE:
-		case T_RPT:
+		case T_KW_RPT:
 		case T_KW_CASE:
 		case T_KW_FOR:
 		case T_KW_WRT:
@@ -2081,7 +2081,7 @@ struct astNode* parseCommand(struct toc** cur){
 				exit(synt);
 			}
 		}
-		case T_RPT: {
+		case T_KW_RPT: {
 			D("REPEAT command");
 			struct astNode* rpt = repeatStatement(cur);
 			if(!rpt)

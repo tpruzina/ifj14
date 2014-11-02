@@ -371,6 +371,8 @@ getToc()
 					toc->type = T_KW_WHILE;
 				else if (!compareString(str,"write"))
 					toc->type = T_KW_WRT;
+				else if(!compareString(str, "repeat"))
+					toc->type = T_KW_RPT;
 				else if(!compareString(str,"program"))
 					toc->type = T_KW_PROGRAM;
 				else if(!compareString(str,"do"))
