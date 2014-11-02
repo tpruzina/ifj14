@@ -95,7 +95,7 @@ getToc()
 				return toc;
 			}
 			else
-				exit(lex);
+				state = KA_ERR;
 			break;
 
 // jednopismenkove stavy - copy & paste
@@ -462,7 +462,7 @@ void skipWSandComments()
 		{
 			while(c != '}' && c != EOF )
 				c = getChar();
-			return;
+//			return;
 		}
 		else if(!isspace(c))
 			break;

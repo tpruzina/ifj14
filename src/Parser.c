@@ -801,10 +801,10 @@ struct astNode* parseBody(struct toc** cur){
  */
 struct queue* parseVars(struct toc** cur){
 	W("parseVars");
-	
+
 	if((*cur)->type != T_KW_VAR)
 		(*cur) = getToc();
-		
+
 	if((*cur)->type == T_KW_VAR){
 		// zacinat parsovat promenne
 		
