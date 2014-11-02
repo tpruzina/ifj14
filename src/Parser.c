@@ -788,6 +788,10 @@ struct astNode* parseBody(struct toc** cur){
 			}			
 		}
 	}
+	else if((*cur)->type != T_KW_END){
+		E("body: expected end after command")
+				exit(synt);
+	}
 	return body;
 }
 

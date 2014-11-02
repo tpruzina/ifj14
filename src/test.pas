@@ -1,7 +1,21 @@
 program;
 var
-	x: real;
+	a: real;
+	b: real;
+	c: real;
+	d: real;
 begin
-	x:= 2.1 + 2.0;
-	write(x)
+	a:= 1.0;
+	b:= 1.0;
+	c:= 3.0;
+	d:= 4.0;
+
+	if a >= b then
+		begin
+			write(c)
+		ende
+	else
+		begin
+			write(d)
+		end
 end.
