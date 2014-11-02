@@ -95,7 +95,7 @@ getToc()
 				return toc;
 			}
 			else
-				toc->type = KA_ERR;
+				exit(lex);
 			break;
 
 // jednopismenkove stavy - copy & paste
