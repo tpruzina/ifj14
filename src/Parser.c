@@ -1613,7 +1613,7 @@ struct astNode* ifStatement(struct toc** cur){
 	D("@---- Prt token type after true statement")
 	printTokenType(*cur);
 	struct toc* next = getToc();
-	printTokenType(*cur);	
+	printTokenType(next);	
 		
 	// pokud else pak pokracovat telem
 	if(next->type == T_KW_ELSE){
@@ -1622,6 +1622,8 @@ struct astNode* ifStatement(struct toc** cur){
 			return NULL;
 	
 		D("@---- Prt token type after false statement");
+		printTokenType(next);
+		next = getToc();
 		printTokenType(next);	
 	}
 	
@@ -1645,16 +1647,12 @@ struct astNode* whileStatement(struct toc** cur){
 	}
 
 	struct astNode* node = makeNewAST();				
-	if(!node)
-		return NULL;
 	// ulozeni podminky
 	node->other = condition;
 	node->type = AST_WHILE;
 	
 	// kompletace tela
 	node->left = parseBody(cur);
-	if(!node->left)
-		return NULL;
 	node->right = NULL;
 	
 	// navraceni stromu 
@@ -1692,8 +1690,6 @@ struct astNode* repeatStatement(struct toc** cur){
 	
 	// nacetl UNTIL
 	rpt->other = parseExpression(cur);
-	if(!rpt->other)
-		return NULL;
 	
 	return rpt;
 }
@@ -1719,6 +1715,11 @@ struct astNode* forStatement(struct toc** cur){
 			E("for: Semantic error - for variable not found in local variables");
 			exit(sem_prog);
 		}	
+		// spatny datovy typ
+		if(var->dataType != DT_INT){
+			E("for: Semantic error - for variable has not INT data type");
+			exit(sem_komp);
+		}
 		
 		// ulozeni idcka doleva
 		forCond->left = makeNewAST();
@@ -1738,30 +1739,14 @@ struct astNode* forStatement(struct toc** cur){
 	*cur = getToc();
 	struct astNode* lit = makeNewAST();
 	D("lit twice alloced");
-	switch((*cur)->type){
-		case T_INT:
-			lit->type = AST_INT;
-			lit->dataType = DT_INT;
-			lit->data.integer = (*cur)->data.integer;
-			break;	
-		case T_REAL:
-			lit->type = AST_REAL;
-			lit->dataType = DT_REAL;
-			lit->data.real = (*cur)->data.real;
-			break;
-		case T_BOOL:
-			lit->type = AST_BOOL;
-			lit->dataType = DT_BOOL;
-			lit->data.boolean = (*cur)->data.boolean;
-			break;
-		case T_STR: 
-			lit->type = AST_STR;
-			lit->dataType = DT_STR;
-			lit->data.str = (*cur)->data.str;
-			break;
-		default:
-			E("Syntax error - expected literal in right side of assign part of for");
-			exit(synt);
+	if((*cur)->type == T_INT){
+		lit->type = AST_INT;
+		lit->dataType = DT_INT;
+		lit->data.integer = (*cur)->data.integer;
+	}	
+	else {
+		E("Syntax error - expected int literal in right side of assign part of for");
+		exit(synt);
 	}
 	forCond->right = lit;
 	
@@ -1788,30 +1773,14 @@ struct astNode* forStatement(struct toc** cur){
 	// nacitat literal
 	*cur = getToc();
 	lit = makeNewAST();
-	switch((*cur)->type){
-		case T_INT:
+	if((*cur)->type == T_INT){
 			lit->type = AST_INT;
 			lit->dataType = DT_INT;
 			lit->data.integer = (*cur)->data.integer;
-			break;	
-		case T_REAL:
-			lit->type = AST_REAL;
-			lit->dataType = DT_REAL;
-			lit->data.real = (*cur)->data.real;
-			break;
-		case T_BOOL:
-			lit->type = AST_BOOL;
-			lit->dataType = DT_BOOL;
-			lit->data.boolean = (*cur)->data.boolean;
-			break;
-		case T_STR: 
-			lit->type = AST_STR;
-			lit->dataType = DT_STR;
-			lit->data.str = (*cur)->data.str;
-			break;
-		default:
-			E("Syntax error - expected literal after TO/DOWNTO keyword");
-			exit(synt);
+	}
+	else {
+		E("Syntax error - expected int literal after TO/DOWNTO keyword");
+		exit(synt);
 	}
 	// ulozeni koncove hodnoty do praveho uzlu 
 	forNode->right->right = lit;
@@ -2614,25 +2583,14 @@ struct astNode* parseCommand(struct toc** cur){
 			node = ifStatement(cur);
 			if(!node)
 				return NULL;
-				
+
 			return node;
-			break;
 		case T_KW_WHILE:
 			D("WHILE command");
 			node = whileStatement(cur);
 			if(!node)
 				return NULL;
-			
-			if((*cur)->type == T_KW_END){
-				*cur = getToc();
-				return node;			
-			}
-			else {
-				E("cmd: Syntax error - expected END (while)");			
-				//printTokenType(*cur);
-				exit(synt);
-			}
-			break;
+			return node;
 		case T_KW_RPT:
 			D("REPEAT command");
 			node = repeatStatement(cur);
@@ -2817,6 +2775,12 @@ struct astNode* parseExpression(struct toc** cur){
 				
 			struct symbolTableNode* stable = (struct symbolTableNode*)stackTop(global.symTable);
 			struct symbolTableNode* nd = (struct symbolTableNode*)search(&stable, node->data.str);
+			if(!nd){
+				// nedefinovana promenna
+				
+				E("expr: Semantic error - undefined variable");
+				exit(synt);
+			}
 			
 			node->dataType = nd->dataType;				
 			node->left = NULL;
