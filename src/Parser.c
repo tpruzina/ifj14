@@ -2571,6 +2571,7 @@ struct astNode* parseCommand(struct toc** cur){
 		case T_KW_WHILE:
 		case T_KW_RPT:
 		case T_KW_CASE:
+		case T_KW_READLN:
 		case T_KW_FOR:
 		case T_KW_WRT:
 		case T_KW_FIND:
@@ -2680,7 +2681,7 @@ struct astNode* parseCommand(struct toc** cur){
 			/* readln(id) */
 			D("READLN");
 			node = readlnStatement(cur);
-			
+
 			return node;
 		case T_KW_FIND:
 			/* find(str, str) */
@@ -2724,8 +2725,7 @@ struct astNode* parseCommand(struct toc** cur){
 				exit(synt);
 			}		
 			break;
-	}	
-	
+	}
 	return NULL;
 }
 

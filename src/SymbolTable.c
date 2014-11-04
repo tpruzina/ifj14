@@ -3,269 +3,11 @@
 #include <string.h>
 
 #include "Structs.h"
-#include "String.h"
-#include "ial.h"
-#include "Log.h"
 #include "GC.h"
+#include "Stack.h"
+#include "Log.h"
+#include "SymbolTable.h"
 
-
-#define E(x) { Log(x, ERROR, IAL); }
-
-/**
- * INLINE funkce pro substring
- * --------------------
- * str: string pro ziskani dat
- * i:	pocatecni index
- * n:	delka vyrezavaneho retezce
- */
-struct String* copy(struct String *str, int i, int n){
-	if(str == NULL){
-		E("Internal error - string from parameter is null");
-		exit(intern);
-	}
-	if(str->Value == NULL){
-		E("Internal error - string value is null");
-		exit(intern);
-	}
-
-	// start index
-	if(i <= 0){
-		E("Semantic error - start index cannot be negative");
-		exit(sem_else);
-	}
-
-	// length
-	if(n <= 0){
-		E("Semantic error - length of copy cannot be negative");
-		exit(sem_else);
-	}
-
-	// nova instance
-	struct String* new = makeNewString();
-	
-	// zarovnani na C-like indexovani
-	i--;
-		
-	// kopirovani, dokud je co
-	for(int j = 0; j < n; j++){
-		if(j+i < str->Length){
-			// pokud se novy index vleze jeste do rozmezi
-			addChar(new, str->Value[j+i]);
-		}		
-		else
-			break;
-	}
-
-	return new;
-}
-
-/**
- * INLINE funkce pro vraceni delky textu
- * --------------------
- * str: predany text
- */
-int length(struct String* str){
-	return str->Length;
-}
-
-void partition (struct String *str, int left, int right, int* i_, int* j_)
-{
-	int i = *i_;
-	int j = *j_;
-
-	char PM;
-	int c; // pro presun
-
-	i = left;
-	j = right;
-
-	PM = str->Value [(i+j)/2];
-
-	do
-	{
-		while (str->Value [i] < PM) i++;
-		while (str->Value [j] > PM) j--;
-
-		if (i <= j)
-		{
-			c = str->Value [i];
-			str->Value [i] = str->Value [j];
-			str->Value [j] = c;
-
-			i++;
-			j--;
-		}
-
-	} while (i < j);
-
-	*i_ = i;
-	*j_ = j;
-
-	return;
-}
-
-void quicksort (struct String *str, int left, int right)
-{
-	int i = 0;
-	int j = 0;
-
-	partition (str, left, right, &i, &j);
-	if (left < j) quicksort (str, left, j);
-	if (i < right) quicksort (str, i, right);
-
-	return;
-}
-
-void sortString (struct String *str)
-{
-	// printf ("sortuju\n");
-
-	// provedu pocatecni nastaveni
-	int left = 0;
-	int right = str->Length-1;
-
-	// zavolam vlastni quicksort
-	quicksort (str, left, right);
-
-	return;
-}
-
-///**
-// * Doprovodna funkce pro pocitani QuickSortu
-// * --------------------
-// * *A: pole hodnot
-// * left: 	leva mez
-// * right:	prava mez
-// * *i: 		posuvne indexy
-// * *j:		posuvne indexy
-// */
-//void partition(int *A, int left, int right, int *i, int *j){
-//	int PM;
-//	*i = left;
-//	*j = right;
-//
-//	PM = A[(*i + *j)/2]; // pseudomedián
-//
-//	while(1){
-//		while(A[*i] < PM){	// nic co je menší než PM mě nezajímá
-//			*i+=1;
-//		}
-//		while(A[*j] > PM){	// tady mě nezajímá nic většího než PM
-//			*j-=1;
-//		}
-//
-//		// pokud se indexy nepřekřížili, prohodím prvky, na které ukazují
-//		if(*i<*j){
-//			// v přednáškách je i<=j, ale nemá cenu přehazovat prvek
-//			// se sebou samým
-//			int tmp = A[*i];
-//			A[*i] = A[*j];
-//			A[*j] = tmp;
-//			*i+=1;
-//			*j-=1;
-//		}else{				// jinak skončím cyklus (repeat ... until(i>j)) v přednáškách until(i>=j),
-//			break;			// ale nemá cenu přehazovat prvek se sebou samým
-//		}
-//	}
-//}
-//
-///**
-// * Funkce QuickSort
-// * --------------------
-// * *A: 		Pole na serazeni
-// * left:	Leva mez
-// * right:	Prava mez
-// */
-//void quickSort(int *A, int left, int right){
-//	int i,j;
-//	partition(A,left,right,&i,&j);	// rozdělím na dvě části
-//
-//	if(left<j){
-//		quickSort(A,left,j);		// sortnu levou část
-//	}
-//
-//	if(right>i){
-//		quickSort(A,i,right);		// sortnu pravou část
-//	}
-//}
-/**
- * INLINE funkce pro razeni retezcu
- * --------------------
- * str: string pro serazeni
- */
-struct String* sort(struct String* src){
-	if(src == NULL){
-		E("Semantic error - string is null");
-		exit(sem_else);
-	}
-
-	// udelat kopii
-	struct String *res = makeNewString();
-	copyString(src,&res);
-
-	sortString(res);
-
-	return res;
-}
-
-/**
- * INLINE funkce pro vyhledavani v retezcich
- * --------------------
- * text: 		podkladovy text pro vyhledavani
- * pattern: 	sablona textu, ktery se ma vyhledat
- */
-int find(struct String* text, struct String* pattern){
-	int result; // pozice, prvniho nalezu
-      	
-	int len_pattern = strlen(pattern->Value);
-	int len_text = strlen(text->Value);
-	
-	// vektor fail
-    int* fail = (int*)gcMalloc(sizeof(int) * len_pattern);
-    // index hledaneho podretezce, index v retezci, dalsi pozice
-    int pattern_inx, text_inx, next; 
-
-
-	fail[0] = -1;
-
-
-	//prochazim slovo - KMP graf
-	for(int k = 1; k < len_pattern; k++){
-		next = fail[k-1];
-
-		while(next > -1 && (pattern->Value[next] != pattern->Value[k-1])){
-			next = fail[next];
-		}
-		fail[k] = next+1;
-    }
-
-	//hledani podretezce
-	text_inx = 0;
-	pattern_inx = 0;
-
-	while((text_inx < len_text) && (pattern_inx < len_pattern)){
-		if(pattern_inx == -1 || (text->Value[text_inx] == pattern->Value[pattern_inx])){
-			text_inx++;
-			pattern_inx++;
-		}
-		else{
-			//pujde podle pole fail
-			pattern_inx=fail[pattern_inx];   
-		}
-	}
-
-	if(pattern_inx == len_pattern){
-		result = text_inx - len_pattern + 1;
-	}
-	else{
-		result = text_inx;
-	}
-
-	return result;
-}
-
-
-//// SYMBOL TABLE
 
 /**
  * Vytvori cisty uzel do tabulky. Bez jmena vyplneneho.
@@ -274,21 +16,21 @@ struct symbolTableNode* makeNewSymbolTable(){
 	// alokace tabulky
 	struct symbolTableNode* table = (struct symbolTableNode*)gcMalloc(sizeof(struct symbolTableNode));
 	if(table == NULL){
-		E("symTable: Allocation error");
+		Log("symTable: Allocation error", ERROR, SYMTABLE);
 		exit(intern);	
 	}
 	
 	table->name = makeNewString();
+	if(table->name == NULL)
+		return NULL;
 	
-	table->dataType = DT_NONE;
-
-//	table->data.str_data = NULL;
-//	table->data.int_data = 0;
-//	table->data.real_data = 0;
-//	table->data.bool_data = False;
-//
-//	table->left = NULL;
-//	table->right = NULL;
+	table->data.str_data = NULL;
+	table->data.int_data = 0;
+	table->data.real_data = 0;
+	table->data.bool_data = False;
+	
+	table->left = NULL;
+	table->right = NULL;
 	
 	return table;
 }
@@ -306,7 +48,6 @@ struct symbolTableNode* makeNewNamedNode(struct String* name){
 		
 	stn->left = NULL;
 	stn->right = NULL;
-	stn->init = NULL;
 	
 	return stn;
 }
@@ -336,13 +77,12 @@ struct symbolTableNode* search(struct symbolTableNode** table, struct String* na
  */
 struct symbolTableNode* insertValue(struct symbolTableNode** table, struct String* name, int dtype){
 	if((*table) == NULL){
-	
-		
 		// v pripade, ze se vklada do prazdne tabulky
 		if(!((*table) = makeNewNamedNode(name))){
 			return NULL;		
 		}		
 		(*table)->dataType = dtype;
+		(*table)->init = false;
 		//printSymbolTable((*table), 0);
 		return (*table);
 	}
@@ -376,7 +116,7 @@ struct symbolTableNode* insertValue(struct symbolTableNode** table, struct Strin
 				return insertValue(&((*table)->right), name, dtype);
 		}
 		else {
-			E("insertValue: Redefinition!");
+			Log("insertValue: Redefinition!", ERROR, SYMTABLE);
 			exit(sem_prog);
 		}
 	}
@@ -433,10 +173,11 @@ int insertDataString(struct symbolTableNode** table, struct String* value){
 	if(value == NULL)
 		return False;
 	
-	(*table)->init = true;
 	(*table)->dataType = DT_STR;
 	if(!(copyString(value, &((*table)->data.str_data))))
 		return False;
+		
+	(*table)->init = true;
 	return True;
 }
 
@@ -446,7 +187,6 @@ int insertDataString(struct symbolTableNode** table, struct String* value){
  */
 int copyTable(struct symbolTableNode* src, struct symbolTableNode** dest){
 	if(src != NULL){
-		Log("copyTable: src not null", DEBUG, IAL);
 		(*dest) = makeNewNamedNode(src->name);
 		
 		
@@ -468,20 +208,16 @@ int copyTable(struct symbolTableNode* src, struct symbolTableNode** dest){
 			case DT_BOOL:
 				(*dest)->data.bool_data = src->data.bool_data;
 				break;
-			case DT_NONE:
-				Log("copyTable: unintialized variable", DEBUG, IAL);
-				break;
 			default:
-				E("copy: Invalid data type");
+				Log("copy: Invalid data type", ERROR, PARSER);
 				exit(sem_komp);
 		}
 		copyTable(src->left, &((*dest)->left));
 		copyTable(src->right, &((*dest)->right));	
 	}
-	else {
-		Log("copyTable: src == NULL!!!!", DEBUG, IAL);
+	else
 		(*dest) = NULL;	
-	}
+		
 	return True;
 }
 /**
@@ -489,7 +225,7 @@ int copyTable(struct symbolTableNode* src, struct symbolTableNode** dest){
  */
 int delete(struct symbolTableNode* node){
 	if(node == NULL){
-		Log("delete: Cannot free NULL", WARNING, IAL);
+		Log("delete: Cannot free NULL", WARNING, SYMTABLE);
 		return False;
 	}
 	
@@ -506,7 +242,7 @@ int delete(struct symbolTableNode* node){
 int deleteTable(struct symbolTableNode** table){
 	// kontrola na neprazdnost 
 	if(*table == NULL){
-		Log("deleteTable: Empty table", WARNING, IAL);
+		Log("deleteTable: Empty table", WARNING, SYMTABLE);
 		return False;
 	}	
 	

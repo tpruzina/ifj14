@@ -76,6 +76,8 @@ void *runTree(struct astNode *curr)
 		if(!right->name || (right->name && right->name->Length == 0))
 			deleteTable(&right);
 
+		left->init = true;
+
 		return left;
 		break;
 
@@ -185,6 +187,9 @@ void *runTree(struct astNode *curr)
 		left = runTree(curr->left);
 		right = runTree(curr->right);
 
+		if(!left->init || !right->init)
+			exit(run_ninit);
+
 		// pripravime tmp premennu typu bool na vysledek
 		tmp = makeNewSymbolTable();
 		insertDataBoolean(
@@ -203,6 +208,9 @@ void *runTree(struct astNode *curr)
 		left = runTree(curr->left);		// *a* (op) b
 		right = runTree(curr->right);	// a (op) *b*
 
+		if(!left->init || !right->init)
+			exit(run_ninit);
+
 		// spravime aritmeticku operaciu
 		// vraci tmp premennu v symtab node
 		return arithmetic(left,right,curr->type);
@@ -216,6 +224,9 @@ void *runTree(struct astNode *curr)
 
 		right = runTree(curr->right);
 		left = runTree(curr->left);
+
+		if(!left->init || !right->init)
+			exit(run_ninit);
 
 		tmp = makeNewSymbolTable();
 		insertDataBoolean(
@@ -231,6 +242,9 @@ void *runTree(struct astNode *curr)
 		assert(curr->left && !curr->right);
 
 		left = runTree(curr->left);
+
+		if(!left->init)
+			exit(run_ninit);
 
 		tmp = makeNewSymbolTable();
 		insertDataBoolean(&tmp,	!(left->data.bool_data));
@@ -274,7 +288,6 @@ void *runTree(struct astNode *curr)
 		tmp = makeNewSymbolTable();
 		break;
 
-	//zatial neimplementovane builtin funkce
 	case AST_WRITE:
 		tmp_vp = curr->right->other;
 		for(struct queueItem *p=tmp_vp->pars->start; p; )
@@ -350,6 +363,9 @@ struct symbolTableNode* searchST(struct symbolTableNode** table, struct String* 
 bool compare(struct symbolTableNode *left,struct symbolTableNode *right,int op)
 {
 	ASSERT(left && right);
+
+	if(!left->init || !right->init)
+		exit(run_ninit);
 
 	// ak nie je rovnaky typ tak zarveme chybu (teoreticky to failne uz v parsri)
 	if(left->dataType != right->dataType)
@@ -437,6 +453,10 @@ struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTab
 	struct symbolTableNode *tmp = makeNewSymbolTable();
 	if(!tmp)
 		exit(intern);
+
+	if(!left->init || !right->init)
+		exit(run_ninit);
+
 	// pomocna premenna type, budeme musiet rozlisovat typy
 	int type;
 
@@ -558,7 +578,8 @@ void writeNode(struct astNode *p)
 		struct symbolTableNode *top = stackTop(global.symTable);
 		id = searchST(&top,p->other);
 		// nedefinovana premenna???
-		ASSERT(id);
+		if(!id || !id->init)
+			exit(run_ninit);
 
 		p = makeNewAST();
 
@@ -613,6 +634,8 @@ void readNode(struct symbolTableNode *p)
 	else
 		ungetc(c,stdin);
 
+	p->init = true;
+
 	if(p->dataType == DT_STR)
 	{
 		while(((c = fgetc(stdin)) != EOF) && c != '\n')
@@ -648,9 +671,16 @@ void readNode(struct symbolTableNode *p)
 struct symbolTableNode convertAST2STN(struct astNode *ast)
 {
 	struct symbolTableNode tmp = {0};
+
+	tmp.init = true;
+
 	if(ast->type == AST_ID)
 	{
 		struct symbolTableNode *p = runTree(ast);
+
+		if(!p->init)
+			exit(run_ninit);
+
 		tmp = *p;
 		return tmp;
 	}
@@ -757,6 +787,7 @@ struct symbolTableNode *btnCopy(struct queue *pars)
 			p1node.data.int_data,
 			p2node.data.int_data
 	);
+	res->init = true;
 	res->dataType = DT_STR;
 	return res;
 }
@@ -781,6 +812,7 @@ struct symbolTableNode *btnFind(struct queue *pars)
 	struct symbolTableNode p1node = convertAST2STN(p1);
 
 	struct symbolTableNode *res = makeNewSymbolTable();
+
 	insertDataInteger(&res,find(p0node.data.str_data,p1node.data.str_data));
 	return res;
 }
