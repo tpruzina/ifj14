@@ -1,0 +1,10 @@
+{program na spatne lexemy}
+program;
+	var
+		_i: integer;
+		_r1: real;
+		_1: boolean;
+		1prom: string;
+begin
+	
+end.
