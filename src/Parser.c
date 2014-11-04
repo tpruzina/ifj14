@@ -735,6 +735,8 @@ struct astNode* parseBody(struct toc** cur){
 	if((*cur)->type == T_KW_END){
 		// prazdne telo 
 		D("PRAZDNE TELO");
+		
+		W("parseBody end");
 		return body;	
 	}
 	
@@ -746,6 +748,8 @@ struct astNode* parseBody(struct toc** cur){
 			W("body: WARNING - statement without effect");
 			
 			body->left = NULL;
+			
+			W("parseBody end");
 			return body;
 		}
 		
@@ -753,6 +757,8 @@ struct astNode* parseBody(struct toc** cur){
 		body->left->type = AST_CMD;
 		body->left->left = NULL;
 		body->left->right = cmd;
+		
+		W("parseBody end");
 		return body;		
 	}
 	else if((*cur)->type == T_SCOL){	
@@ -777,6 +783,7 @@ struct astNode* parseBody(struct toc** cur){
 			else if((*cur)->type == T_SCOL){
 				// hledat dalsi
 				D("Gets scol");
+				*cur = getToc();
 				cmd = parseCommand(cur);
 				continue;
 			}
@@ -787,6 +794,8 @@ struct astNode* parseBody(struct toc** cur){
 			}			
 		}
 	}
+
+	W("parseBody end");
 	return body;
 }
 
@@ -1601,23 +1610,22 @@ struct astNode* ifStatement(struct toc** cur){
 	if(!ifnode->left)
 		return NULL;
 			
-	fprintf(stderr,"@---- Prt token type after true statement\n");
-	printTokenType(*cur);		
-			
-	// ulozeni dalsiho tokenu
-	(*cur) = getToc();
-	
+	D("@---- Prt token type after true statement")
+	printTokenType(*cur);
+	struct toc* next = getToc();
+	printTokenType(*cur);	
+		
 	// pokud else pak pokracovat telem
-	if((*cur)->type == T_KW_ELSE){
-		ifnode->right = parseBody(cur);
+	if(next->type == T_KW_ELSE){
+		ifnode->right = parseBody(&next);
 		if(!ifnode->right)
 			return NULL;
 	
-		fprintf(stderr,"@---- Prt token type after false statement\n");
-		printTokenType(*cur);		
+		D("@---- Prt token type after false statement");
+		printTokenType(next);	
 	}
 	
-		
+	*cur = next;	
 	return ifnode;
 }
 
@@ -2583,10 +2591,10 @@ struct astNode* parseCommand(struct toc** cur){
 		case T_KW_COPY:
 		case T_KW_LENGTH:
 		case T_ID:
-			fprintf(stderr, "Commands OK\n");
+			//fprintf(stderr, "Commands OK\n");
 			break;
 		default:
-			fprintf(stderr, "Invalid commands\n");
+			//fprintf(stderr, "Invalid commands\n");
 			printTokenType(*cur);
 			(*cur) = getToc();
 	}
@@ -2607,15 +2615,7 @@ struct astNode* parseCommand(struct toc** cur){
 			if(!node)
 				return NULL;
 				
-			if((*cur)->type == T_KW_END){			
-				*cur = getToc();
-				return node;
-			}
-			else {
-				E("cmd: Syntax error - expected END (if)");
-				//printTokenType(*cur);
-				exit(synt);
-			}	
+			return node;
 			break;
 		case T_KW_WHILE:
 			D("WHILE command");

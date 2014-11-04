@@ -27,7 +27,7 @@
 
 #define PRINT 1
 #define DBG 1
-#define WRG 0
+#define WRG 1
 #define PRT 0
 
 enum LogFrom { MAIN, GC, STRING, STACK, AST, IAL, PARSER };
