@@ -2511,8 +2511,8 @@ struct astNode* assignStatement(struct toc** cur){
 	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
 	struct symbolTableNode* nd = search(&top, left->data.str);				
 	if(!nd){
-		E("cmd: Syntax error - variable not found");
-		exit(synt);
+		E("cmd: Semantic error - undefined variable");
+		exit(sem_prog);
 	}
 	left->dataType = nd->dataType;
 		
@@ -2776,7 +2776,7 @@ struct astNode* parseExpression(struct toc** cur){
 				// nedefinovana promenna
 				
 				E("expr: Semantic error - undefined variable");
-				exit(synt);
+				exit(sem_prog);
 			}
 			
 			node->dataType = nd->dataType;				
@@ -2871,6 +2871,10 @@ struct astNode* parseExpression(struct toc** cur){
 						struct symbolTableNode* stable = (struct symbolTableNode*)stackTop(global.symTable);
 						struct symbolTableNode* nd = search(&stable, node->data.str);
 						D("expr: comparison between symtable node and ast node");
+						if(!nd){
+							E("expr: Semantic error - undefined variable");
+							exit(sem_prog);
+						}
 						datatypes(nd->dataType, node->dataType);
 					
 						node->dataType = nd->dataType;					

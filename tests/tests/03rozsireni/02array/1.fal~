@@ -5,7 +5,6 @@ var
     b : array[1..2] of string;
     message : string;
     i : integer;
-    
 begin
     a[0] := 10 - 5;
     a[7] := 0 - 10;
