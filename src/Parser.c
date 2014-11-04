@@ -168,7 +168,7 @@ struct tokennames tokennames[] = {
 	{NULL, 0}};
 	
 void printTokenType(struct toc* token){
-	if(!PRT) return;
+	//if(!PRT) return;
 	for(int i=0; tokennames[i].str; i++){
 		if(token->type == tokennames[i].type){
 			fprintf(stderr, "Token: %s\n", tokennames[i].str);
@@ -2571,6 +2571,7 @@ struct astNode* parseCommand(struct toc** cur){
 		case T_KW_CASE:
 		case T_KW_FOR:
 		case T_KW_WRT:
+		case T_KW_READLN:
 		case T_KW_FIND:
 		case T_KW_SORT:
 		case T_KW_COPY:
@@ -2678,7 +2679,7 @@ struct astNode* parseCommand(struct toc** cur){
 			/* readln(id) */
 			D("READLN");
 			node = readlnStatement(cur);
-			
+			printTokenType(*cur);
 			return node;
 		case T_KW_FIND:
 			/* find(str, str) */

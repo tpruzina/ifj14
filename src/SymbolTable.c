@@ -82,6 +82,7 @@ struct symbolTableNode* insertValue(struct symbolTableNode** table, struct Strin
 			return NULL;		
 		}		
 		(*table)->dataType = dtype;
+		(*table)->init = false;
 		//printSymbolTable((*table), 0);
 		return (*table);
 	}
@@ -132,6 +133,7 @@ int insertDataInteger(struct symbolTableNode** table, int value){
 		
 	(*table)->dataType = DT_INT;
 	(*table)->data.int_data = value;
+	(*table)->init = true;
 	return True;
 }
 /**
@@ -144,6 +146,7 @@ int insertDataReal(struct symbolTableNode** table, double value){
 		
 	(*table)->dataType = DT_REAL;
 	(*table)->data.real_data = value;
+	(*table)->init = true;
 	return True;
 }
 /**
@@ -156,6 +159,7 @@ int insertDataBoolean(struct symbolTableNode** table, bool value){
 		
 	(*table)->dataType = DT_BOOL;
 	(*table)->data.bool_data = value;
+	(*table)->init = true;
 	return True;
 }
 /**
@@ -172,6 +176,8 @@ int insertDataString(struct symbolTableNode** table, struct String* value){
 	(*table)->dataType = DT_STR;
 	if(!(copyString(value, &((*table)->data.str_data))))
 		return False;
+		
+	(*table)->init = true;
 	return True;
 }
 
