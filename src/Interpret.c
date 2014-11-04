@@ -16,6 +16,36 @@ void interpret()
 		exit(intern);
 }
 
+void for_to_downto(struct astNode *curr)
+{
+	struct astNode *body = curr->left;
+	struct astNode *cond = curr->right;
+
+	struct astNode *asgn = cond->left;
+	struct symbolTableNode *id = runTree(asgn->left);
+
+	struct symbolTableNode value = convertAST2STN(asgn->right);
+	struct symbolTableNode literal = convertAST2STN(cond->right);
+
+	insertDataInteger(&id,value.data.int_data);
+
+	int boundary = literal.data.int_data;
+	int *iterator = &(id->data.int_data);
+
+	if(cond->type == AST_FOR_TO)
+	{
+		while(*iterator <= boundary)
+			runTree(body);
+	}
+	else if(cond->type == AST_FOR_DOWNTO)
+	{
+		while(*iterator >= boundary)
+			runTree(body);
+	}
+	else
+		exit(intern);
+}
+
 void *runTree(struct astNode *curr)
 {
 	if(!curr)
@@ -171,7 +201,11 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_FOR:
-	case AST_FOR_TO:
+		ASSERT(curr->left && curr->right);
+		for_to_downto(curr);
+
+		return NULL;
+
 	case AST_FOR_DOWNTO:
 	case AST_SWITCH:
 		exit(intern);	// todo
