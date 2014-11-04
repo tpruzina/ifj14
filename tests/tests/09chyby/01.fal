@@ -1,6 +1,0 @@
-program;
-	var
-		i: real;
-begin
-	i := 0.0a9
-end.

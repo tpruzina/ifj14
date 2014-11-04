@@ -1,6 +1,0 @@
-program;
-var
-	r:real;
-begin
-	r := 1.2 e+8
-end.

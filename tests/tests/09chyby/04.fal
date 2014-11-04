@@ -1,6 +1,0 @@
-program;
-	var
-		i: ret;
-begin
-	ret := 1 + 2.0 + true + 'ahoj'
-end.

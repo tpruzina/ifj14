@@ -1,7 +1,0 @@
-program;
-	var 
-		i: integer;
-		i: real;
-begin
-	
-end.
