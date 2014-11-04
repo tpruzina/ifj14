@@ -1,0 +1,8 @@
+// chyba deleni nulou
+program;
+var
+	a: real;
+begin
+	a:= (2.0e+1 + 1.0e+1) + (2.0e+1 + 1.0e-2)/(2.0e+1 - 2.0e+1);
+	write(a)
+end.

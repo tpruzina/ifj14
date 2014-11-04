@@ -1,0 +1,7 @@
+program;
+var
+	a:real;
+begin
+	a:= (2e0 + 1e0) + (2e0 + 1e0);
+	write(a)
+end.

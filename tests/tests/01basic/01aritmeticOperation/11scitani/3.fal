@@ -1,0 +1,7 @@
+program;
+var
+	rozzlobenimuzi: integer;
+begin
+	rozzlobenimuzi:= 2e0 + 2e1+ 2e2 + 2e3 + 2e4 + 2e5;
+	write(rozzlobenimuzi)
+end.

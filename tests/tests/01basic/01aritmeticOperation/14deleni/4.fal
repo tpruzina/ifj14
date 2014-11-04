@@ -1,0 +1,7 @@
+program;
+var
+	i: real;
+begin
+	i:= 4e2 / 2e2 / 1e1;
+	write(i)
+end.

@@ -1,0 +1,7 @@
+program;
+var
+	y: integer;
+begin
+	y:= 3 - 2 - 1;
+	write(y)
+end.

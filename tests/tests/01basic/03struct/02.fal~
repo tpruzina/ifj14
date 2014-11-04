@@ -1,0 +1,11 @@
+program;
+	var
+		i: integer;
+begin
+	i := 0;
+
+	if i = 0 then
+	begin
+	
+	end
+end.

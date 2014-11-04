@@ -1,0 +1,7 @@
+program;
+var
+	a: inreger;
+begin
+	a:= (2e0 + 2e1);
+	write(a)
+end.

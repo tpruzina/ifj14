@@ -1,0 +1,7 @@
+program;
+var
+	a:real;
+begin
+	a:= 6.0 / 3.0  / 1.5;
+	write(a)
+end.

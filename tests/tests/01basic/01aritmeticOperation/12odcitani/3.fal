@@ -1,0 +1,7 @@
+program;
+var
+	ah: real;
+begin
+	ah:= 4e+2 - 4e-2;
+	write(ah)
+end.

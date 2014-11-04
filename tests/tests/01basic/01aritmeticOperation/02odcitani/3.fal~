@@ -1,0 +1,8 @@
+// zde do x prirazuji real i kdyz je integer
+program;
+var
+	x: integer;
+begin
+	x:= 3.0 - 2.8;
+	write(x)
+end.

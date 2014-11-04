@@ -1,0 +1,9 @@
+program;
+	var
+		i: integer;
+begin
+	while i = 0 do
+	begin
+
+	end
+end.
