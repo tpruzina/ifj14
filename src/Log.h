@@ -26,7 +26,7 @@
 #define COLOR_LCYN "\033[01;36m"
 
 #define PRINT 1
-#define DBG 0
+#define DBG 1
 #define WRG 0
 #define PRT 0
 

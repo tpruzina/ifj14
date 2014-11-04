@@ -680,12 +680,7 @@ struct astNode* parseProgram(){
 		cur = getToc();		
 		if(cur->type == T_SCOL)
 			cur = getToc();
-				
-		//printTokenType(cur);		
 	}
-	//printTokenType(cur);
-	
-	//printTokenType(cur);
 	
 	// nasleduje telo programu
 	struct astNode* body = parseBody(&cur);		
@@ -694,7 +689,8 @@ struct astNode* parseProgram(){
 	program->left = body;
 	
 	D("program: after body");
-	//printTokenType(cur);
+	printTokenType(cur);
+	
 	
 	cur = getToc();
 	if(cur->type != T_DOT){
@@ -771,19 +767,22 @@ struct astNode* parseBody(struct toc** cur){
 			item->left->left = NULL;
 			item->left->right = cmd;
 		
+			
 			D("Waiting for end or scol");
-			printTokenType(*cur);
 			// pokud narazi na END tak ukoncit hledani dalsich 
-			if((*cur)->type == T_KW_END)
+			if((*cur)->type == T_KW_END){
+				D("Gets end");
 				break;
+			}
 			else if((*cur)->type == T_SCOL){
 				// hledat dalsi
+				D("Gets scol");
 				cmd = parseCommand(cur);
 				continue;
 			}
 			else {
 				E("body: Syntax error - expected END or SEMICOLON");
-				//printTokenType(*cur);
+				printTokenType(*cur);
 				exit(synt);			
 			}			
 		}
@@ -1602,6 +1601,9 @@ struct astNode* ifStatement(struct toc** cur){
 	if(!ifnode->left)
 		return NULL;
 			
+	fprintf(stderr,"@---- Prt token type after true statement\n");
+	printTokenType(*cur);		
+			
 	// ulozeni dalsiho tokenu
 	(*cur) = getToc();
 	
@@ -1610,7 +1612,11 @@ struct astNode* ifStatement(struct toc** cur){
 		ifnode->right = parseBody(cur);
 		if(!ifnode->right)
 			return NULL;
+	
+		fprintf(stderr,"@---- Prt token type after false statement\n");
+		printTokenType(*cur);		
 	}
+	
 		
 	return ifnode;
 }
@@ -2577,8 +2583,11 @@ struct astNode* parseCommand(struct toc** cur){
 		case T_KW_COPY:
 		case T_KW_LENGTH:
 		case T_ID:
+			fprintf(stderr, "Commands OK\n");
 			break;
 		default:
+			fprintf(stderr, "Invalid commands\n");
+			printTokenType(*cur);
 			(*cur) = getToc();
 	}
 	
