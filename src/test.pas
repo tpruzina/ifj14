@@ -1,13 +1,13 @@
 program;
 var
 	a : integer;
-
+	b : integer;
+	c : integer;
 begin
-	
-	a := 1;
-
-	if a = 0 then
+	b := 10;
+	a := c + b
+	{if a = 0 then
 	begin
 
-	end
+	end}
 end.

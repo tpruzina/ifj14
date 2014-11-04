@@ -2585,10 +2585,14 @@ struct astNode* parseCommand(struct toc** cur){
 		case T_KW_COPY:
 		case T_KW_LENGTH:
 		case T_ID:
+#ifdef _DEBUG
 			fprintf(stderr, "Commands OK\n");
-			break;
+#endif
+		break;
 		default:
+#ifdef _DEBUG
 			fprintf(stderr, "Invalid commands\n");
+#endif
 			printTokenType(*cur);
 			(*cur) = getToc();
 	}

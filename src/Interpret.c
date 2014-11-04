@@ -56,6 +56,9 @@ void *runTree(struct astNode *curr)
 		left = runTree(curr->left);	// x :=
 		right = runTree(curr->right);			//ocekavame symtabnode (tmp premenna...)
 
+		if(!right->init)
+			exit(run_ninit);
+
 		if(right->dataType != left->dataType)
 			exit(sem_komp);
 
