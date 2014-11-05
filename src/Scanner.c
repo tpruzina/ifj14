@@ -25,8 +25,11 @@ getToc()
 
 // makro na vratenie charu na vstup a return tokenu
 #define UNGETC_AND_RETURN_TOKEN() do {	\
-		unGetChar(c); 		\
-		return toc;		\
+		unGetChar(c); 					\
+		if(toc->type != T_ID &&			\
+			toc->type != T_STR)			\
+					freeString(str);	\
+		return toc;						\
 		} while(0)
 		
 	tocInit(&toc);
