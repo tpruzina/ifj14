@@ -1,0 +1,8 @@
+{ test na var }
+program;
+
+	x : boolean;
+
+begin 
+
+end.
