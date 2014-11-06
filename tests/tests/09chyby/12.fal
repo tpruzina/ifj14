@@ -1,0 +1,10 @@
+program;
+var
+	bool: boolean;
+
+begin
+	bool := true;
+	bool := TRUE;
+	bool := false;
+	bool := FALSE
+end.
