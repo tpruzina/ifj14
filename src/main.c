@@ -47,6 +47,7 @@ int init(char* srcpath){
 	if(!global.src)
 	{
 		fprintf(stderr, "Failed to open a file %s\n", srcpath);
+		exit(intern);
 	}
 	global.errno = ok;
 	
