@@ -38,10 +38,17 @@ else
 		../docs/dokumentace/dokumentace.pdf \
 	. || exit 1
 	
+
 	##pridaj test build po nakopirovani zdrojakov???????
 	
 	tar cvfz ../${1}.tar.gz * || exit 1
 	cd .. && rm -r .tmp
 
+	echo "########## created ################"
+	
+
+	echo "######### running is_it_ok.sh #####"
 	bash scripts/is_it_ok.sh ${1}.tar.gz .tmp || exit 1
+	
+	echo "######### is_it_ok DONE ###########"
 fi
