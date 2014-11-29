@@ -14,10 +14,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "Structs.h"
-#include "Log.h"
-#include "Stack.h"
-#include "GC.h"
+#include "structs.h"
+#include "log.h"
+#include "stack.h"
+#include "gc.h"
 
 /**
  * Vytvori novou strukturu zasobniku. S vynulovanym vrcholem a nulovou delkou.

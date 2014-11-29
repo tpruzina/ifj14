@@ -14,8 +14,8 @@
 
 
 #include <ctype.h> 	// tolower()
-#include "Scanner.h"
-#include "Log.h"
+#include "scanner.h"
+#include "log.h"
 
 /* get_toc - cita zo suboru dalsi token
  * @vstup:	otvoreny file descriptor

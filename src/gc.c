@@ -14,9 +14,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "GC.h"
-#include "Structs.h"
-#include "Log.h"
+#include "gc.h"
+#include "structs.h"
+#include "log.h"
 
 struct mainAll global;
 

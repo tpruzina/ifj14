@@ -16,11 +16,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "Structs.h"
-#include "String.h"
+#include "structs.h"
+#include "string.h"
 #include "ial.h"
-#include "Log.h"
-#include "GC.h"
+#include "log.h"
+#include "gc.h"
 
 
 #define E(x) { Log(x, ERROR, IAL); }

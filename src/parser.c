@@ -15,12 +15,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "Structs.h"
-#include "Stack.h"
-#include "Log.h"
-#include "Ast.h"
-#include "Scanner.h"
-#include "Parser.h"
+#include "structs.h"
+#include "stack.h"
+#include "log.h"
+#include "ast.h"
+#include "scanner.h"
+#include "parser.h"
 #include "ial.h"
 
 #define D(t) { Log(t, DEBUG, PARSER); }

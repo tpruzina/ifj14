@@ -15,10 +15,10 @@
 #ifndef __SCANNER_H__
 #define __SCANNER_H__
 
-#include "Defines.h"
-#include "Structs.h"
-#include "String.h"
-#include "GC.h"
+#include "defines.h"
+#include "structs.h"
+#include "string.h"
+#include "gc.h"
 
 struct toc
 {

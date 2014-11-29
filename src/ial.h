@@ -15,7 +15,7 @@
 #ifndef __IAL_H__
 #define __IAL_H__
 
-#include "Structs.h"
+#include "structs.h"
 
 struct String* copy(struct String*, int, int);
 int length(struct String*);
