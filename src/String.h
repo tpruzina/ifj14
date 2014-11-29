@@ -1,10 +1,17 @@
-/*
- * String.h
- * 
- * Hlavickovy soubor knihovny String.
- * Obsahuje definici struktury String a definice funkci pro praci s ni.
- * 
- */
+/*****************************************************************************
+****                                                                      ****
+****    PROJEKT DO PREDMETU IFJ                                           ****
+****                                                                      ****
+****    Nazev:     Implementace interpretu imperativního jazyka IFJ14     ****
+****    Datum:                                                            ****
+****    Autori:    Marko Antonín    <xmarko07@stud.fit.vutbr.cz>          ****
+****               Pružina Tomáš    <xpruzi01@stud.fit.vutbr.cz>          ****
+****               Kubíček Martin   <xkubic34@stud.fit.vutbr.cz           ****
+****               Juřík Martin     <xjurik08@stud.fit.vutbr.cz           ****
+****               David Petr       <xdavid15@stud.fit.vutbr.cz>          ****
+****                                                                      ****
+*****************************************************************************/
+
 #ifndef _STRINGH_
 #define _STRINGH_
 
