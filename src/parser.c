@@ -184,10 +184,10 @@ struct tokennames tokennames[] = {
 void printTokenType(struct toc* token){
 	if(!PRT) return;
 	for(int i=0; tokennames[i].str; i++){
-		if(token->type == tokennames[i].type){
+		if((int)token->type == (int)tokennames[i].type){
 			fprintf(stderr, "Token: %s\n", tokennames[i].str);
 			
-			if(token->type == T_ID){
+			if((int)token->type == T_ID){
 				fprintf(stderr, "\t%s\n", token->data.str->Value);
 			}
 		}
@@ -195,13 +195,13 @@ void printTokenType(struct toc* token){
 }
 
 int expect(struct toc* cur, int type, int exitcode){
-	if(cur->type != type){
+	if((int)cur->type != type){
 		char str[50];
 		char toctype[50];
 		char exptype[50];
 		
 		for(int i=0; tokennames[i].str; i++){
-			if(cur->type == tokennames[i].type)
+			if((int)cur->type == tokennames[i].type)
 				strcpy(toctype, tokennames[i].str);
 			
 			if(type == tokennames[i].type)
