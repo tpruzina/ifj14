@@ -690,12 +690,15 @@ struct astNode* parseProgram(){
 	// funkci/dopredne definice funkci			
 	// pokud bude nasledujici token BEGIN pak ctu telo
 	// pokud bude nasledujici VAR pak jsou to lokalni
-
-	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
-	vp->vars = parseVars(&cur);
-	// lokalni promenne
-	program->other = vp;
-	printVarsPars(vp);
+	if(cur->type == T_KW_VAR){
+		struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
+		vp->vars = parseVars(&cur);
+		// lokalni promenne
+		program->other = vp;
+		printVarsPars(vp);
+		
+		cur = getToc();
+	}
 	
 	// prochazet definice funkci a vkladat je s telem do tabulky symbolu
 	while(cur->type == T_KW_FUNC){
@@ -711,12 +714,13 @@ struct astNode* parseProgram(){
 			cur = getToc();
 	}
 	
+	
+	expect(cur, T_KW_BEGIN, synt);
 	// nasleduje telo programu
 	struct astNode* body = parseBody(&cur);		
 	if(!body)
 		return NULL;
 	program->left = body;
-
 
 	// predpoklad ze posledni token bude end
 	D("program: after body");
@@ -817,201 +821,192 @@ struct astNode* parseBody(struct toc** cur){
 struct queue* parseVars(struct toc** cur){
 	W("parseVars");
 
-	if((*cur)->type != T_KW_VAR)
+	// zacinat parsovat promenne
+	struct queue* vars = makeNewQueue();		
+	struct symbolTableNode* top = (struct symbolTableNode*)stackPop(global.symTable);
+	
+	while(1){
+		// definice promennych
+		struct astNode* var = makeNewAST();
+		
+		
 		(*cur) = getToc();
-
-	if((*cur)->type == T_KW_VAR){
-		// zacinat parsovat promenne
+		if((*cur)->type == T_ID){
+			// dostal jsem ID -> ocekavam dvoutecku
 		
-		struct queue* vars = makeNewQueue();		
-		struct symbolTableNode* top = (struct symbolTableNode*)stackPop(global.symTable);
+			// kopie jmena promenne
+			struct String* name = makeNewString();
+			copyString((*cur)->data.str, &name);
+			var->other = name;
 		
-		while(1){
-			// definice promennych
-			struct astNode* var = makeNewAST();
-			
+			// odkladiste pro nove promenne do tabulky symbolu				
+			struct symbolTableNode* new = NULL;
+			struct dataTypeArray* dta;
+			(*cur) = getToc();
+			if((*cur)->type == T_COL){
+				//printTokenType(*cur);
+				// dostal dvojtecku --> ocekavat typ								
+													
+				(*cur) = getToc();
+				switch((*cur)->type){
+					case T_KW_INT:
+						var->type = AST_INT;
+						
+						// vytvorit novy zaznam v tabulce
+						new = insertValue(&top, name, DT_INT);
+							
+						if(!new)
+							return NULL;
+						
+						new->dataType = DT_INT;													
+						break;
+					case T_KW_REAL: 
+						var->type = AST_REAL;
+						
+						new = insertValue(&top, name, DT_REAL);
+						if(!new)
+							return NULL;
+							
+						new->dataType = DT_REAL;
+						break;
+					case T_KW_BOOLEAN: 
+						var->type = AST_BOOL;
+										
+						new = insertValue(&top, name, DT_BOOL);
+						if(!new)
+							return NULL;
+							
+						new->dataType = DT_BOOL;
+						break;
+					case T_KW_STRING:
+						var->type = AST_STR;
+													
+						new = insertValue(&top, name, DT_STR);
+						if(!new)
+							return NULL;
+							
+						new->dataType = DT_STR;
+						break;
+					case T_ARR:	// -------------------------------POLE---------------
+						var->type = AST_ARR;
+					
+						dta = (struct dataTypeArray*)gcMalloc(sizeof(struct dataTypeArray));
+						if(!dta)
+							return NULL;
+						if(!(copyString(var->data.str, &(dta->id))))
+							return NULL;
+						
+						(*cur) = getToc();
+						if(expect((*cur), T_LBRC, synt)) {
+							// leva [ -> ocekavat integer								
+							(*cur) = getToc();
+							if((*cur)->type != T_INT){
+								E("vars: Syntax error - expected integer as lower range of array index");
+								//printTokenType(*cur);
+								exit(synt);
+							}
+							dta->low = (*cur)->data.integer;
+							
+							// interval - dve tecky mezi integery
+							(*cur) = getToc();
+							if((*cur)->type != T_DDOT){
+								E("vars: Syntax error - expected two dots");
+								//printTokenType(*cur);
+								exit(synt);
+							}
+							
+							// ocekavat druhy integer
+							(*cur) = getToc();
+							if((*cur)->type != T_INT){
+								E("vars: Syntax error - expected integer as higher range of array index");
+								//printTokenType(*cur);
+								exit(synt);
+							}
+							dta->high = (*cur)->data.integer;
+							
+							// ocekavam konec intervalu
+							(*cur) = getToc();
+							if((*cur)->type != T_RBRC){
+								E("vars: Syntax error - expected right brace");
+								//printTokenType(*cur);
+								exit(synt);
+							}
+							
+							// ocekavat OF
+							(*cur) = getToc();
+							if((*cur)->type != T_OF){
+								E("vars: Syntax error - expected OF for defining type of array");
+								//printTokenType(*cur);
+								exit(synt);
+							}
+							
+							// nacteni typu promenne
+							(*cur) = getToc();
+							switch((*cur)->type){
+								case T_KW_INT: 
+									dta->type = DT_INT;
+									break;
+								case T_KW_REAL: 
+									dta->type = DT_REAL;
+									break;
+								case T_KW_BOOLEAN: 
+									dta->type = DT_BOOL;
+									break;
+								case T_KW_STRING: 
+									dta->type = DT_STR;
+									break;
+								default:
+									E("vars: Syntax error - unsupported type of array");
+									//printTokenType(*cur);
+									exit(synt);
+							}
+							// ulozeni odkazu na strukturu dat
+							var->other = dta;		
+														
+							// vlozeni nazev pole do tabulky
+							new = insertValue(&top, name, DT_ARR);
+							if(!new)
+								return NULL;
+							
+							// nastaveni ze se jedna o pole
+							new->dataType = DT_ARR;					
+							new->other = dta;								
+						}
+													
+						break;
+					default:
+						E("vars: Syntax error - expected type");
+						exit(synt);	
+				}
+			}				
 			
 			(*cur) = getToc();
-			if((*cur)->type == T_ID){
-				// dostal jsem ID -> ocekavam dvoutecku
-			
-				// kopie jmena promenne
-				struct String* name = makeNewString();
-				copyString((*cur)->data.str, &name);
-				var->other = name;
-			
-				// odkladiste pro nove promenne do tabulky symbolu				
-				struct symbolTableNode* new = NULL;
-				struct dataTypeArray* dta;
-				(*cur) = getToc();
-				if((*cur)->type == T_COL){
-					//printTokenType(*cur);
-					// dostal dvojtecku --> ocekavat typ								
-														
-					(*cur) = getToc();
-					switch((*cur)->type){
-						case T_KW_INT:
-							var->type = AST_INT;
+			expect((*cur), T_SCOL, synt);
 							
-							// vytvorit novy zaznam v tabulce
-							new = insertValue(&top, name, DT_INT);
-								
-							if(!new)
-								return NULL;
-							
-							new->dataType = DT_INT;													
-							break;
-						case T_KW_REAL: 
-							var->type = AST_REAL;
-							
-							new = insertValue(&top, name, DT_REAL);
-							if(!new)
-								return NULL;
-								
-							new->dataType = DT_REAL;
-							break;
-						case T_KW_BOOLEAN: 
-							var->type = AST_BOOL;
-											
-							new = insertValue(&top, name, DT_BOOL);
-							if(!new)
-								return NULL;
-								
-							new->dataType = DT_BOOL;
-							break;
-						case T_KW_STRING:
-							var->type = AST_STR;
-														
-							new = insertValue(&top, name, DT_STR);
-							if(!new)
-								return NULL;
-								
-							new->dataType = DT_STR;
-							break;
-						case T_ARR:	// -------------------------------POLE---------------
-							var->type = AST_ARR;
-						
-							dta = (struct dataTypeArray*)gcMalloc(sizeof(struct dataTypeArray));
-							if(!dta)
-								return NULL;
-							if(!(copyString(var->data.str, &(dta->id))))
-								return NULL;
-							
-							(*cur) = getToc();
-							if(expect((*cur), T_LBRC, synt)) {
-								// leva [ -> ocekavat integer								
-								(*cur) = getToc();
-								if((*cur)->type != T_INT){
-									E("vars: Syntax error - expected integer as lower range of array index");
-									//printTokenType(*cur);
-									exit(synt);
-								}
-								dta->low = (*cur)->data.integer;
-								
-								// interval - dve tecky mezi integery
-								(*cur) = getToc();
-								if((*cur)->type != T_DDOT){
-									E("vars: Syntax error - expected two dots");
-									//printTokenType(*cur);
-									exit(synt);
-								}
-								
-								// ocekavat druhy integer
-								(*cur) = getToc();
-								if((*cur)->type != T_INT){
-									E("vars: Syntax error - expected integer as higher range of array index");
-									//printTokenType(*cur);
-									exit(synt);
-								}
-								dta->high = (*cur)->data.integer;
-								
-								// ocekavam konec intervalu
-								(*cur) = getToc();
-								if((*cur)->type != T_RBRC){
-									E("vars: Syntax error - expected right brace");
-									//printTokenType(*cur);
-									exit(synt);
-								}
-								
-								// ocekavat OF
-								(*cur) = getToc();
-								if((*cur)->type != T_OF){
-									E("vars: Syntax error - expected OF for defining type of array");
-									//printTokenType(*cur);
-									exit(synt);
-								}
-								
-								// nacteni typu promenne
-								(*cur) = getToc();
-								switch((*cur)->type){
-									case T_KW_INT: 
-										dta->type = DT_INT;
-										break;
-									case T_KW_REAL: 
-										dta->type = DT_REAL;
-										break;
-									case T_KW_BOOLEAN: 
-										dta->type = DT_BOOL;
-										break;
-									case T_KW_STRING: 
-										dta->type = DT_STR;
-										break;
-									default:
-										E("vars: Syntax error - unsupported type of array");
-										//printTokenType(*cur);
-										exit(synt);
-								}
-								// ulozeni odkazu na strukturu dat
-								var->other = dta;		
-															
-								// vlozeni nazev pole do tabulky
-								new = insertValue(&top, name, DT_ARR);
-								if(!new)
-									return NULL;
-								
-								// nastaveni ze se jedna o pole
-								new->dataType = DT_ARR;					
-								new->other = dta;								
-							}
-														
-							break;
-						default:
-							E("vars: Syntax error - expected type");
-							exit(synt);	
-					}
-				}				
-				
-				(*cur) = getToc();
-				expect((*cur), T_SCOL, synt);
-								
-				// vlozit prvek
-				queuePush(vars, var);
-			}
-			else if((*cur)->type == T_KW_BEGIN){
-				// zacina telo 	
-				break;
-			}
-			else if((*cur)->type == T_KW_FUNC){
-				// zacina definice funkce	
-				break;				
-			}
-			else {
-				E("vars: Syntax error - unsupported token");
-				printTokenType(*cur);
-				exit(synt);			
-			}
+			// vlozit prvek
+			queuePush(vars, var);
 		}
-		
-		printSymbolTable(top, 0);		
-		stackPush(global.symTable, top);
-				
-		// vratit seznam promennych
-		return vars;
+		else if((*cur)->type == T_KW_BEGIN){
+			// zacina telo 	
+			break;
+		}
+		else if((*cur)->type == T_KW_FUNC){
+			// zacina definice funkce	
+			break;				
+		}
+		else {
+			E("vars: Syntax error - unsupported token");
+			printTokenType(*cur);
+			exit(synt);			
+		}
 	}
- 
- 	D("returning null");
- 	//printTokenType(*cur);
-	return NULL;
+	
+	printSymbolTable(top, 0);		
+	stackPush(global.symTable, top);
+			
+	// vratit seznam promennych
+	return vars;
+
 }
 
 /**
