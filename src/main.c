@@ -14,13 +14,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "GC.h"
-#include "Structs.h"
-#include "Log.h"
-#include "Stack.h"
-#include "Ast.h"
-#include "Scanner.h"
-#include "Parser.h"
+#include "gc.h"
+#include "structs.h"
+#include "log.h"
+#include "stack.h"
+#include "ast.h"
+#include "scanner.h"
+#include "parser.h"
 #include "ial.h"
 
 struct mainAll global;

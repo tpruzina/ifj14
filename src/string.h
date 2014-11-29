@@ -12,48 +12,37 @@
 ****                                                                      ****
 *****************************************************************************/
 
-#ifndef STACK_H
-#define STACK_H
+#ifndef _STRINGH_
+#define _STRINGH_
 
-#include "String.h"
-
-/**
- * Struktura prvku zasobniku
- */
-struct stackItem {
-	// int priority
-	void* Value;
-	struct stackItem* Next;
-};
+#include "structs.h"
+struct mainAll;
 
 /**
- * Struktura zasobniku
+ * Struktura stringu
+ * Value 		- obsahuje text v podobe pole charu
+ * Length 		- obsahuje delku textu
+ * Allocated 	- obsahuje pocet alokovanych bytu
  */
-struct stack {
-	struct stackItem* Top;
+struct String {
+	char* Value;
 	int Length;
+	int Allocated;
 };
 
-
-struct stack* makeNewStack();
-int stackPush(struct stack*, void*);
-void* stackPop(struct stack*);
-void* stackTop(struct stack*);
-int stackEmpty(struct stack*);
-
-
-struct queueItem {
-	void* value;
-	struct queueItem* next;
-};
-struct queue {
-	struct queueItem* start;
-	struct queueItem* end;
-};
-struct queue* makeNewQueue();
-int queuePush(struct queue*, void*);
-void* queuePop(struct queue*);
-void* queueTop(struct queue*);
-int queueEmpty(struct queue*);
-
+/*
+ *	Definice funkci knihovny String
+ */
+struct String* makeNewString();
+int addChar(struct String*, char);
+int emptyString(struct String*);
+int printString(struct String*);
+int freeString(struct String*);
+int toLower(struct String*);
+int getCharArrayLength(char*);
+int compareCharArrays(char*, char*);
+int compareString(struct String*, char*);
+int compareStrings(struct String*, struct String*);
+int copyString(struct String*, struct String**);
+int copyFromArray(char*, struct String**);
 #endif

@@ -15,7 +15,7 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
-#include "String.h"
+#include "string.h"
 #include <stdbool.h>
 
 /**

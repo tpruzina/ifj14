@@ -15,10 +15,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "String.h"
-#include "Log.h"
-#include "GC.h"
-#include "Structs.h"
+#include "string.h"
+#include "log.h"
+#include "gc.h"
+#include "structs.h"
 
 const int TOLOWER = (int)('a' - 'A');
 

@@ -12,37 +12,33 @@
 ****                                                                      ****
 *****************************************************************************/
 
-#ifndef _STRINGH_
-#define _STRINGH_
+#ifndef __PARSER_H__
+#define __PARSER_H__
 
-#include "Structs.h"
-struct mainAll;
+#include <stdio.h>
+#include <stdlib.h>
 
-/**
- * Struktura stringu
- * Value 		- obsahuje text v podobe pole charu
- * Length 		- obsahuje delku textu
- * Allocated 	- obsahuje pocet alokovanych bytu
- */
-struct String {
-	char* Value;
-	int Length;
-	int Allocated;
-};
+#include "structs.h"
 
-/*
- *	Definice funkci knihovny String
- */
-struct String* makeNewString();
-int addChar(struct String*, char);
-int emptyString(struct String*);
-int printString(struct String*);
-int freeString(struct String*);
-int toLower(struct String*);
-int getCharArrayLength(char*);
-int compareCharArrays(char*, char*);
-int compareString(struct String*, char*);
-int compareStrings(struct String*, struct String*);
-int copyString(struct String*, struct String**);
-int copyFromArray(char*, struct String**);
-#endif
+int parser();
+
+struct astNode* parseProgram();
+struct astNode* parseBody(struct toc**);
+struct queue* parseVars(struct toc**);
+struct queue* parseParams();
+struct astNode* parseFunction();
+struct queue* parseCallParams(struct toc**);
+struct astNode* parseFuncCall(struct toc**);
+
+struct astNode* ifStatement(struct toc**);
+struct astNode* whileStatement(struct toc**);
+struct astNode* repeatStatement(struct toc**);
+
+struct astNode* parseCommand();
+struct astNode* parseExpression(struct toc**);
+
+void controlCallParams(struct queue*, struct queue*);
+void controlDefinitionParams(struct queue*, struct queue*);
+int checkFunctionDeclarations(struct symbolTableNode*);
+#endif /* __PARSER_H__ */
+

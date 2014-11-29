@@ -14,8 +14,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "Structs.h"
-#include "Log.h"
+#include "structs.h"
+#include "log.h"
 
 /**
  * Pise chybovou zpravu, cervene
