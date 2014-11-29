@@ -1,11 +1,17 @@
-/******************************************************************************
- *
- * Author: Tomas Pruzina <pruzinat@gmail.com>
- *
- * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
- * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
- *
- ******************************************************************************/
+/*****************************************************************************
+****                                                                      ****
+****    PROJEKT DO PREDMETU IFJ                                           ****
+****                                                                      ****
+****    Nazev:     Implementace interpretu imperativního jazyka IFJ14     ****
+****    Datum:                                                            ****
+****    Autori:    Marko Antonín    <xmarko07@stud.fit.vutbr.cz>          ****
+****               Pružina Tomáš    <xpruzi01@stud.fit.vutbr.cz>          ****
+****               Kubíček Martin   <xkubic34@stud.fit.vutbr.cz           ****
+****               Juřík Martin     <xjurik08@stud.fit.vutbr.cz           ****
+****               David Petr       <xdavid15@stud.fit.vutbr.cz>          ****
+****                                                                      ****
+*****************************************************************************/
+
 
 #include <ctype.h> 	// tolower()
 #include "Scanner.h"
