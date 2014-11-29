@@ -1,4 +1,4 @@
-SUBDIRS=docs src tests
+SUBDIRS=src tests
 CLEANDIRS=$(SUBDIRS:%=clean-%)
 TESTDIRS=$(SUBDIRS:%=test-%)
 
