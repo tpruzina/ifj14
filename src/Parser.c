@@ -696,9 +696,6 @@ struct astNode* parseProgram(){
 		// lokalni promenne
 		program->other = vp;
 		printVarsPars(vp);
-
-		
-		//cur = getToc();
 	}
 	
 	// prochazet definice funkci a vkladat je s telem do tabulky symbolu
