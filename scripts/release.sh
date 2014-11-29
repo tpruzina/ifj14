@@ -6,7 +6,7 @@ else
 	echo "########## building && testing"
 	make || exit 1
 
-	echo "########## creating ${1}.tar.gz"
+	echo "########## creating ${1}.zip"
 	#tar uklada veci vcetne cesty takze si vytvorime .tmp adresar
 	mkdir -p .tmp && cd .tmp || exit 1
 	cp \
@@ -41,14 +41,14 @@ else
 
 	##pridaj test build po nakopirovani zdrojakov???????
 	
-	tar cvfz ../${1}.tar.gz * || exit 1
+	zip ../${1}.zip * || exit 1
 	cd .. && rm -r .tmp
 
 	echo "########## created ################"
 	
 
 	echo "######### running is_it_ok.sh #####"
-	bash scripts/is_it_ok.sh ${1}.tar.gz .tmp || exit 1
+	bash scripts/is_it_ok.sh ${1}.zip .tmp || exit 1
 	
 	echo "######### is_it_ok DONE ###########"
 fi
