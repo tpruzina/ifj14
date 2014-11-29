@@ -62,7 +62,6 @@
 #define PRT 0
 #endif
 
-
 enum LogFrom { MAIN, GC, STRING, STACK, AST, IAL, PARSER , SYMTABLE};
 enum LogType { DEBUG, ERROR, WARNING };
 /*

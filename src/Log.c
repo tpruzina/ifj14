@@ -2,8 +2,6 @@
  * Log.c
  *
  * Obstarava kontrolni, chybove, ladici vypisy. Barevne odlisene od obycejnych vypisu.
- * Procedury zacinajici na Log pouzivaji pouze StdOut
- * Procedury zacinajici na Write pouzivaji StdErr
  * 
  */
  

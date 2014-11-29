@@ -1,6 +1,6 @@
 program;
 var
-	a: integer;
+	a: real;
 begin
 	a:= 2e2*2e-2;
 	write(a)

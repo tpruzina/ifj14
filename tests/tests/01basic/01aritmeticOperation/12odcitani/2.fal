@@ -1,6 +1,6 @@
 program;
 var
-	ba: integer;
+	ba: real;
 begin
 	ba:= 4e3 - 4e2;
 	write(ba)

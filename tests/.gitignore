@@ -1,4 +1,7 @@
 vysledkyTestu.txt
 
+*.diffRetcode
+*.diff
 *.retcodeProject
 *.outputProject
+vysledkyTestu.txt

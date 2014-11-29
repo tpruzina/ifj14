@@ -306,6 +306,7 @@ struct symbolTableNode* makeNewNamedNode(struct String* name){
 		
 	stn->left = NULL;
 	stn->right = NULL;
+	stn->init = NULL;
 	
 	return stn;
 }
@@ -392,6 +393,7 @@ int insertDataInteger(struct symbolTableNode** table, int value){
 		
 	(*table)->dataType = DT_INT;
 	(*table)->data.int_data = value;
+	(*table)->init = true;
 	return True;
 }
 /**
@@ -404,6 +406,7 @@ int insertDataReal(struct symbolTableNode** table, double value){
 		
 	(*table)->dataType = DT_REAL;
 	(*table)->data.real_data = value;
+	(*table)->init = true;
 	return True;
 }
 /**
@@ -416,6 +419,7 @@ int insertDataBoolean(struct symbolTableNode** table, bool value){
 		
 	(*table)->dataType = DT_BOOL;
 	(*table)->data.bool_data = value;
+	(*table)->init = true;
 	return True;
 }
 /**
@@ -429,6 +433,7 @@ int insertDataString(struct symbolTableNode** table, struct String* value){
 	if(value == NULL)
 		return False;
 	
+	(*table)->init = true;
 	(*table)->dataType = DT_STR;
 	if(!(copyString(value, &((*table)->data.str_data))))
 		return False;

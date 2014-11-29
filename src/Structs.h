@@ -256,6 +256,8 @@ struct symbolTableNode {
 	
 	struct symbolTableNode* left;
 	struct symbolTableNode* right;	
+	
+	bool init;
 };
 
 struct dataTypeArray {

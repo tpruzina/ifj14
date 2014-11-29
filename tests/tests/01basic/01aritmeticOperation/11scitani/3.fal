@@ -1,6 +1,6 @@
 program;
 var
-	rozzlobenimuzi: integer;
+	rozzlobenimuzi: real;
 begin
 	rozzlobenimuzi:= 2e0 + 2e1+ 2e2 + 2e3 + 2e4 + 2e5;
 	write(rozzlobenimuzi)

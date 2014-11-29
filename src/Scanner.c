@@ -25,8 +25,11 @@ getToc()
 
 // makro na vratenie charu na vstup a return tokenu
 #define UNGETC_AND_RETURN_TOKEN() do {	\
-		unGetChar(c); 		\
-		return toc;		\
+		unGetChar(c); 					\
+		if(toc->type != T_ID &&			\
+			toc->type != T_STR)			\
+					freeString(str);	\
+		return toc;						\
 		} while(0)
 		
 	tocInit(&toc);
@@ -95,7 +98,7 @@ getToc()
 				return toc;
 			}
 			else
-				toc->type = KA_ERR;
+				state = KA_ERR;
 			break;
 
 // jednopismenkove stavy - copy & paste
@@ -462,7 +465,7 @@ void skipWSandComments()
 		{
 			while(c != '}' && c != EOF )
 				c = getChar();
-			return;
+//			return;
 		}
 		else if(!isspace(c))
 			break;

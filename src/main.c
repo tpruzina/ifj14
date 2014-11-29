@@ -68,6 +68,7 @@ int main(int argc, char** argv)
 		Log("main: main_all struct dont allocated garbage collector..", ERROR, MAIN);
 		return False;
 	}
+	atexit(quit);
 		
 	// pokud vse probehlo OK, tak zobrazit strom
 	if(parser()){
@@ -81,6 +82,7 @@ int main(int argc, char** argv)
 		printSymbolTable(global.funcTable, 0);
 	}	
 	
-	atexit(quit);
-	return global.errno;
+	
+	fprintf(stderr, "Error code: %d\n", (int)global.errno);
+	return 0;
 }

@@ -1,15 +1,9 @@
-Program hello;
-	var
-		a: integer;
-		b: string;
-
+program;
+var
+	i : integer;
+begin
+	for i :=10 downto 1 do
 	begin
-		b:='Hello word!';
-		a:=0;
-		repeat
-			begin
-				write(b)
-			end
-		until a = 0
+		i := i - 1
 	end
 end.

@@ -2,6 +2,6 @@ program;
 var
 	a: real;
 begin
-	a:= ((2 + 1) * (2.1 + 20)) / 3 - 1
+	a:= ((2 + 1) * (2.1 + 20)) / 3 - 1;
 	write(a)
 end.
