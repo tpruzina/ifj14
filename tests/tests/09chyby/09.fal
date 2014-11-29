@@ -1,4 +1,4 @@
-program;
+
 var
 	r:real;
 begin

@@ -37,7 +37,6 @@ enum tokenType {
 	T_KW_VAR,	// var
 	T_KW_WHILE, 	// while
 	T_KW_WRT,		// write
-	T_KW_PROGRAM,
 	T_KW_LENGTH,
 	T_KW_COPY,
 	T_KW_FOR,

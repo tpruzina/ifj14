@@ -125,7 +125,6 @@ struct tokennames tokennames[] = {
 	{"T_KW_VAR", T_KW_VAR},
 	{"T_KW_WHILE",T_KW_WHILE},
 	{"T_KW_WRT", T_KW_WRT},
-	{"T_KW_PROGRAM",T_KW_PROGRAM},
 	{"T_KW_RPT",T_KW_RPT},
 	{"T_UNTIL",T_UNTIL},
 	{"T_ID",T_ID},
@@ -667,29 +666,12 @@ struct symbolTableNode* searchOnTop(struct String* name){
  */
 struct astNode* parseProgram(){
 	W("parseProgram");
-	struct toc* cur = getToc();
-
-	expect(cur, T_KW_PROGRAM, synt);
 	
 	struct astNode* program = makeNewAST();
 	program->type = AST_START;
 
+	struct toc* cur = getToc();
 
-	// nalezen start
-	cur = getToc();
-	if(cur->type != T_ID){
-		// chyba, melo nasledovat oznaceni
-		W("Warning - expected name of program");
-	}
-	else {	
-		// kopirovani jmena programu
-		copyString(cur->data.str, &(program->data.str));	
-		// v pripade, ze bylo nactene jmeno, nacist dalsi
-		cur = getToc();
-	}
-
-	expect(cur, T_SCOL, synt);
-					
 	// ok -> nasleduje telo programu nebo definice promennych nebo definice 
 	// funkci/dopredne definice funkci			
 	// pokud bude nasledujici token BEGIN pak ctu telo

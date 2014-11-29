@@ -1,5 +1,5 @@
 { zde do x prirazuji real i kdyz je integer }
-program;
+
 var
 	x: integer;
 begin

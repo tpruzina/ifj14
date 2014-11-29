@@ -376,8 +376,6 @@ getToc()
 					toc->type = T_KW_WRT;
 				else if(!compareString(str, "repeat"))
 					toc->type = T_KW_RPT;
-				else if(!compareString(str,"program"))
-					toc->type = T_KW_PROGRAM;
 				else if(!compareString(str,"do"))
 					toc->type = T_KW_DO;
 				else if(!compareString(str,"else"))
@@ -535,7 +533,6 @@ struct token2str array[] = {
 	{"var", T_KW_VAR },
 	{"while", T_KW_WHILE },
 	{"write", T_KW_WRT },
-	{"program", T_KW_PROGRAM },
 	{"of", T_OF },
 	{"mod", T_MOD },
 	{"and", T_AND },

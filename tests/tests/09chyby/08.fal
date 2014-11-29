@@ -1,5 +1,5 @@
 {vsechny spravne kombinace desetinnych literalu}
-program;
+
 	var 
 		r: real;
 begin

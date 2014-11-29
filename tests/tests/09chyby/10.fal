@@ -1,5 +1,5 @@
 { test pro desetinnou carku }
-program;
+
 var
 	x: real;
 begin

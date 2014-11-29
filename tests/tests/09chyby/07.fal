@@ -1,5 +1,5 @@
 {program na spatne lexemy}
-program;
+
 	var
 		_i: integer;
 		_r1: real;
