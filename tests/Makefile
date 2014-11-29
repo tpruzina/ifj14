@@ -1,6 +1,6 @@
 TEST_SCRIPT="../scripts/testProject.sh"
 TEST_DIR="./tests"
-BIN="../src/interpret"
+BIN="../src/ifj14"
 
 ALL: all
 all: test
