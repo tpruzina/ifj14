@@ -10,7 +10,8 @@ else
 	#tar uklada veci vcetne cesty takze si vytvorime .tmp adresar
 	mkdir -p .tmp && cd .tmp || exit 1
 	cp \
-		../src/makefile		\
+		../rozdeleni		\
+		../src/Makefile		\
 		../src/ast.c		\
 		../src/ast.h		\
 		../src/constants.h	\
@@ -23,7 +24,6 @@ else
 		../src/interpret.h	\
 		../src/log.c		\
 		../src/log.h		\
-		../src/main.c		\
 		../src/main_interpret.c	\
 		../src/parser.c		\
 		../src/parser.h		\
@@ -34,11 +34,14 @@ else
 		../src/string.c		\
 		../src/string.h		\
 		../src/structs.h	\
-		../src/symbolTable.c	\
+		../src/symboltable.c	\
+		../docs/dokumentace/dokumentace.pdf \
 	. || exit 1
 	
 	##pridaj test build po nakopirovani zdrojakov???????
 	
 	tar cvfz ../${1}.tar.gz * || exit 1
 	cd .. && rm -r .tmp
+
+	bash scripts/is_it_ok.sh ${1}.tar.gz .tmp || exit 1
 fi
