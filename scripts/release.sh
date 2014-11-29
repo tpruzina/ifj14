@@ -10,31 +10,31 @@ else
 	#tar uklada veci vcetne cesty takze si vytvorime .tmp adresar
 	mkdir -p .tmp && cd .tmp || exit 1
 	cp \
-		../src/Makefile		\
-		../src/Ast.c		\
-		../src/Ast.h		\
-		../src/Constants.h	\
-		../src/Defines.h	\
-		../src/GC.c		\
-		../src/GC.h		\
+		../src/makefile		\
+		../src/ast.c		\
+		../src/ast.h		\
+		../src/constants.h	\
+		../src/defines.h	\
+		../src/gc.c		\
+		../src/gc.h		\
 		../src/ial.c		\
 		../src/ial.h		\
-		../src/Interpret.c	\
-		../src/Interpret.h	\
-		../src/Log.c		\
-		../src/Log.h		\
+		../src/interpret.c	\
+		../src/interpret.h	\
+		../src/log.c		\
+		../src/log.h		\
 		../src/main.c		\
 		../src/main_interpret.c	\
-		../src/Parser.c		\
-		../src/Parser.h		\
-		../src/Scanner.c	\
-		../src/Scanner.h	\
-		../src/Stack.c		\
-		../src/Stack.h		\
-		../src/String.c		\
-		../src/String.h		\
-		../src/Structs.h	\
-		../src/SymbolTable.c	\
+		../src/parser.c		\
+		../src/parser.h		\
+		../src/scanner.c	\
+		../src/scanner.h	\
+		../src/stack.c		\
+		../src/stack.h		\
+		../src/string.c		\
+		../src/string.h		\
+		../src/structs.h	\
+		../src/symbolTable.c	\
 	. || exit 1
 	
 	##pridaj test build po nakopirovani zdrojakov???????
