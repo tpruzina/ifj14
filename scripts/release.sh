@@ -49,6 +49,7 @@ else
 
 	echo "######### running is_it_ok.sh #####"
 	bash scripts/is_it_ok.sh ${1}.zip .tmp || exit 1
-	
+	rm -rf .tmp
+
 	echo "######### is_it_ok DONE ###########"
 fi
