@@ -3,7 +3,6 @@
 if [ $#	-ne 1 ]; then
 	echo "supply login name as parameter" && exit 1
 else
-	echo "########## building && testing"
 	make || exit 1
 
 	echo "########## creating ${1}.zip"
@@ -38,8 +37,14 @@ else
 		../docs/dokumentace/dokumentace.pdf \
 	. || exit 1
 	
+	echo "########## building && testing #########"
+	make || exit 1
+	
+	make clean || exit 1
 
-	##pridaj test build po nakopirovani zdrojakov???????
+	echo "########## build successful ############"
+
+	echo "########## creating archive ############"
 	
 	zip ../${1}.zip * || exit 1
 	cd .. && rm -r .tmp
@@ -48,8 +53,8 @@ else
 	
 
 	echo "######### running is_it_ok.sh #####"
-	bash scripts/is_it_ok.sh ${1}.zip .tmp || exit 1
-	rm -rf .tmp
+	bash scripts/is_it_ok.sh ${1}.zip .tmp2 || exit 1
+	rm -rf .tmp2
 
 	echo "######### is_it_ok DONE ###########"
 fi
