@@ -512,7 +512,7 @@ int valid(struct astNode* left, struct astNode* right, int op){
  * token: Urcuje typ jakeho by mel byl uzel AST
  * aststack: Urcuje zasobnik ze ktereho bude tahat data a kam bude ukladat vysledek
  */
-int makeAstFromToken(struct toc* token, struct stack** aststack){
+void makeAstFromToken(struct toc* token, struct stack** aststack){
 	D("makeAstFromToken");
 	//printTokenType(token);
 	printAstStack(*aststack);
@@ -525,7 +525,7 @@ int makeAstFromToken(struct toc* token, struct stack** aststack){
 		node->type = convertTokenToNode(token);
 		if((int)node->type == -1){
 			E("Unsuported token type to convert");
-			return False;
+			exit(synt);
 		}
 		
 		node->right = (struct astNode*)stackPop(*aststack);
@@ -573,14 +573,13 @@ int makeAstFromToken(struct toc* token, struct stack** aststack){
 	else {
 		W("Stack error - invalid data");
 		//printTokenType(token);
-		return False;						
+		exit(synt);						
 	}
 	
 	D("Printing ast");
 	// ulozeni zpatky na zasobnik
-	int ret = stackPush(*aststack, node);
+	stackPush(*aststack, node);
 	printAst((struct astNode*)stackTop(*aststack));
-	return ret;
 }
 
 /**
@@ -2710,10 +2709,7 @@ struct astNode* parseExpression(struct toc** cur){
 				while(!stackEmpty(stack) && (t->type != T_LPAR)){
 					//printTokenType(t);
 					// vybira operatory ze zasobniku a hrne je do zasobniku operandu
-					if(!makeAstFromToken(t, &aststack)){
-						E("expr: maft failed");
-						return NULL;	
-					}
+					makeAstFromToken(t, &aststack);
 					
 					t = (struct toc*)stackPop(stack);				
 					////printTokenType(t);
@@ -2834,8 +2830,7 @@ struct astNode* parseExpression(struct toc** cur){
 				// 		presunout na vystup a opakovat 3. krok
 				if(stackEmpty(stack)){
 					// v pripade, ze je to prvni zaznam do stacku, tak ho tam proste vrazit
-					if(!stackPush(stack, (*cur)))
-						return NULL;
+					stackPush(stack, (*cur));
 				}
 				else {	
 					top = (struct toc*)stackTop(stack);
@@ -2846,9 +2841,8 @@ struct astNode* parseExpression(struct toc** cur){
 						top = (struct toc*)stackPop(stack);
 						
 						// vytvori ASTnode z tokenu
-						if(!makeAstFromToken(top, &aststack))
-							return NULL;	
-					
+						makeAstFromToken(top, &aststack);
+						
 						// na promennou za vrchol ulozi top prvek
 						top = (struct toc*)stackTop(stack);
 					}		
@@ -2875,18 +2869,17 @@ struct astNode* parseExpression(struct toc** cur){
 					//printTokenType(now);
 					
 					
-					if(!makeAstFromToken(now, &aststack))
-						return NULL;
+					makeAstFromToken(now, &aststack);
 						
 					D("expr: STACK STATE END =========");
 					printAstStack(aststack);
-				}
-				
+				}				
 			
 				// v pripade, ze je v zasobniku jen jeden prvek, vratit ho, je to vysledek SY algoritmu
 				if(aststack->Length > 1){
 					E("expression: Shunting yard error - stack length is grather then 1");
 					printAstStack(aststack);
+					exit(synt);
 				}
 				else if(aststack->Length == 0){
 					E("expression: Shunting yard error - stack is empty");
