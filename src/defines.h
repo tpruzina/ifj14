@@ -20,7 +20,6 @@
 #include <stdio.h>	
 #include <assert.h>
 
-#ifdef _DEBUG
 // (nekompilovat ak nie je definovany _DEBUG, prepinac "gcc -D_DEBUG")
 #define ASSERT(expr) do {										\
 	if(!(expr)){												\
@@ -28,13 +27,6 @@
 	exit(intern);												\
 	}															\
 } while (0)
-
-#endif // _DEBUG
-
-
-#ifndef _DEBUG	//!(_DEBUG)
-#define ASSERT(X) { } 
-#endif	// !(_DEBUG)
 
 
 #endif /* __DEFINES_H__ */
