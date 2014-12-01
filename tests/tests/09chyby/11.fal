@@ -9,11 +9,11 @@ begin
 	str := '';
 
 	{ zkouska na # znaky }
-	str := '#10';
-	str := '#013';
+	str := ''#10'';
+	str := ''#013'';
 	
 	{ test na apostrof }
-	str := 'Tohle > '' < je apostrof';	
+	str := 'Tohle > '' < je apostrof'
 
 	
 end.
