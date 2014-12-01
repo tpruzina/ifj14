@@ -62,7 +62,7 @@
 #endif
 
 #ifndef _DEBUG
-#define PRINT 0
+#define PRINT 1
 #define DBG 0
 #define WRG 0
 #define PRT 0
