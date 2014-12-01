@@ -21,11 +21,11 @@
 #include <assert.h>
 
 // (nekompilovat ak nie je definovany _DEBUG, prepinac "gcc -D_DEBUG")
-#define ASSERT(expr) do {										\
-	if(!(expr)){												\
+#define ASSERT(expr) do {						\
+	if(!(expr)){							\
 	fprintf(stderr,"Skapal som v %s:%d\n",__FILE__,__LINE__);	\
-	exit(intern);												\
-	}															\
+	exit(intern);							\
+	}								\
 } while (0)
 
 

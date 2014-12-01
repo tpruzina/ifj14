@@ -92,7 +92,7 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_ASGN:	// <command>: <assign>
-		ASSERT(	curr->left &&
+		ASSERT(curr->left &&
 				curr->left->type == AST_ID &&
 				curr->right
 		);
@@ -129,6 +129,7 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_FUNC:
+		ASSERT(curr->other && curr->left);
 		/*
 		 *		Funkce bude uložená v AST_FUNC uzlu, kde levý obsahuje tělo a
 		 *		pravý je typu AST_NONE a v položce OTHER má strukturu varsapars
@@ -147,6 +148,7 @@ void *runTree(struct astNode *curr)
 	break;
 
 	case AST_CALL:
+		ASSERT(curr->other);
 /*	Bude řešeno přes AST_CALL, kde levy poduzel bude prázdný, protože volání neobsahuje tělo
  *  a pravý poduzel bude obsahovat AST_NONE,
  *  kde v OTHER bude uložená struktura varspars s naplněnou položkou pars parametry.
@@ -181,6 +183,8 @@ void *runTree(struct astNode *curr)
 
 // controll konstrukcie (if,while,repeat..)
 	case AST_IF:
+		ASSERT(curr->other);
+
 		tmp = runTree(curr->other);	// podmienka body
 
 		if(tmp->data.bool_data == true)	//vyhodnocena true
@@ -243,6 +247,7 @@ void *runTree(struct astNode *curr)
 
 		// pripravime tmp premennu typu bool na vysledek
 		tmp = makeNewSymbolTable();
+		ASSERT(tmp);
 		insertDataBoolean(
 				&tmp,
 				compare(left,right,curr->type)	//porovnavame a (op) b
@@ -280,6 +285,7 @@ void *runTree(struct astNode *curr)
 			exit(run_ninit);
 
 		tmp = makeNewSymbolTable();
+		ASSERT(tmp);
 		insertDataBoolean(
 				&tmp,
 				(curr->type == AST_AND) ? (left->data.bool_data && right->data.bool_data):
@@ -290,7 +296,7 @@ void *runTree(struct astNode *curr)
 
 	// not je unarna operacia
 	case AST_NOT:
-		assert(curr->left && !curr->right);
+		assert(curr && curr->left && !curr->right);
 
 		left = runTree(curr->left);
 
@@ -298,12 +304,13 @@ void *runTree(struct astNode *curr)
 			exit(run_ninit);
 
 		tmp = makeNewSymbolTable();
+		ASSERT(tmp);
 		insertDataBoolean(&tmp,	!(left->data.bool_data));
 		return tmp;
 
 // unarne operacie, vracaju 'tokeny' ast (premenne, int, bool,real...)
 	case AST_ID:
-		ASSERT(curr && curr->data.str && curr->data.str->Length > 0);
+		ASSERT(curr->data.str && curr->data.str->Length > 0);
 		// mame identifikator, hladame v tabulke symbolov
 		if(curr->data.str)
 			return searchST(&top,curr->data.str);
@@ -315,21 +322,25 @@ void *runTree(struct astNode *curr)
 	case AST_INT:
 		// pridavame novu lokalnu premennu do tabulky a priradime jej hodnotu z node
 		tmp = makeNewSymbolTable();
+		ASSERT(tmp);
 		insertDataInteger(&tmp,curr->data.integer);
 		return tmp;
 
 	case AST_REAL:
 		tmp = makeNewSymbolTable();
+		ASSERT(tmp);
 		insertDataReal(&tmp, curr->data.real);
 		return tmp;
 
 	case AST_BOOL:
 		tmp = makeNewSymbolTable();
+		ASSERT(tmp);
 		insertDataBoolean(&tmp, curr->data.boolean);
 		return tmp;
 
 	case AST_STR:
 		tmp = makeNewSymbolTable();
+		ASSERT(tmp);
 		insertDataString(&tmp, curr->data.str);
 		return tmp;
 
@@ -349,7 +360,6 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_READLN:	// readln(a);
-		ASSERT(curr);
 		ASSERT(curr->right && curr->right->type == AST_NONE);
 
 		// ignorovat hate nizsie, vznikol po 3 hodinach debugovania @4AM
@@ -362,28 +372,24 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_COPY:
-		ASSERT(curr);
 		ASSERT(curr->right && curr->right->type == AST_NONE);
 
 		tmp_vp = curr->right->other;			// vyrvem si varspars
 		return btnCopy(tmp_vp->pars);
 
 	case AST_FIND:
-		ASSERT(curr);
 		ASSERT(curr->right && curr->right->type == AST_NONE);
 
 		tmp_vp = curr->right->other;			// vyrvem si varspars
 		return btnFind(tmp_vp->pars);
 
 	case AST_LENGTH:
-		ASSERT(curr);
 		ASSERT(curr->right && curr->right->type == AST_NONE);
 
 		tmp_vp = curr->right->other;			// vyrvem si varspars
 		return btnLength(tmp_vp->pars);
 
 	case AST_SORT:
-		ASSERT(curr);
 		ASSERT(curr->right && curr->right->type == AST_NONE);
 
 		tmp_vp = curr->right->other;			// vyrvem si varspars
@@ -500,6 +506,7 @@ bool compare(struct symbolTableNode *left,struct symbolTableNode *right,int op)
 // rozdiel je ze vracime dynamicky alokovanu tmp premennu
 struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTableNode *right,int op)
 {
+	ASSERT(left && right);
 	//pomocna premenna node
 	struct symbolTableNode *tmp = makeNewSymbolTable();
 	if(!tmp)
