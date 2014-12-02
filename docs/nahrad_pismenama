@@ -1,0 +1,60 @@
+#!/bin/sh
+
+sed 's/PROGRAM/A/g' |
+sed 's/VARS/B/g' |
+sed 's/VAR_DEFS/C/g' |
+sed 's/VAR_DEF/D/g' |
+sed 's/DT_TYPE/E/g' |
+sed 's/FUNC/F/g' |
+sed 's/AFTER_HEADER/G/g' |
+sed 's/HEADER/H/g' |
+sed 's/DEF_PARAMS/I/g' |
+sed 's/DEF_PAR_LIST/J/g' |
+sed 's/DEF_PAR/K/g' |
+sed 's/BODYN/L/g' |
+sed 's/BODY/M/g' |
+sed 's/CMD_LIST/N/g' |
+sed 's/CMD/O/g' |
+sed 's/ASSIGN/P/g' |
+sed 's/IF_ELSE/Q/g' |
+sed 's/IF/R/g' |
+sed 's/WHILE/S/g' |
+sed 's/CALL/T/g' |
+sed 's/READLN/U/g' |
+sed 's/TERM_LIST/V/g' |
+sed 's/TERM/W/g' |
+sed 's/EXPR/X/g' |
+sed 's/WRITE/Y/g' |
+sed 's/VAR_DEF/Z/g'|
+
+sed 's/begin/a/g' |
+sed 's/enddot/b/g' |
+sed 's/var/c/g' |
+sed 's/id/d/g' |
+sed 's/integer/e/g' |
+sed 's/real/f/g' |
+sed 's/boolean/g/g' |
+sed 's/string/h/g' |
+sed 's/function/i/g' |
+sed 's/forward/j/g' |
+sed 's/end/k/g' |
+sed 's/if/l/g' |
+sed 's/then/m/g' |
+sed 's/else/n/g' |
+sed 's/while/o/g' |
+sed 's/do/p/g' |
+sed 's/sort/q/g' |
+sed 's/find/r/g' |
+sed 's/length/s/g' |
+sed 's/copy/t/g' |
+sed 's/readln/u/g' |
+sed 's/write/v/g' |
+sed 's/dt_int/w/g' |
+sed 's/dt_real/q/g' |
+sed 's/dt_bool/y/g' |
+sed 's/dt_str/z/g' |
+sed 's/vyraz/?/g'|
+
+sed 's/empty/eps/g'
+
+exit 0
