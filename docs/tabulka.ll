@@ -18,7 +18,7 @@ FUNC_HEADER	->	function id ( DEF_PARAMS ) : DT_TYPE ;
 DEF_PARAMS 	->	eps
 DEF_PARAMS	->	DEF_PAR_LIST
 DEF_PAR_LIST	->	DEF_PAR
-DEF_PAR_LIST	->	DEF_PAR_LIST, DEF_PAR
+DEF_PAR_LIST	->	DEF_PAR_LIST , DEF_PAR
 DEF_PAR		->	id : DT_TYPE
 
 BODY		->	begin CMD_LIST end
@@ -43,10 +43,10 @@ IF_ELSE     	->	eps
 IF_ELSE    	->	else BODY
 WHILE        	->	while EXPR do BODY
 CALL        	->	id ( TERM_LIST )
-CALL         	->	sort ( DT_STR )
-CALL         	->	find ( DT_STR , DT_STR )
-CALL         	->	length ( DT_STR )
-CALL         	->	copy ( DT_STR , DT_INT , DT_INT )
+CALL         	->	sort ( dt_str )
+CALL         	->	find ( dt_str , dt_str )
+CALL         	->	length ( dt_str )
+CALL         	->	copy ( dt_str , dt_str , dt_int )
 
 READLN		->	readln ( id )
 
@@ -54,11 +54,12 @@ WRITE		->	write ( TERM_LIST )
 
 TERM_LIST    	->	TERM
 TERM_LIST    	->	TERM_LIST , TERM
+
 TERM        	->	id
-TERM        	->	DT_INT
-TERM        	->	DT_REAL
-TERM        	->	DT_BOOL
-TERM        	->	DT_STR
+TERM        	->	dt_int
+TERM        	->	dt_real
+TERM        	->	dt_bool
+TERM        	->	dt_str
 
 EXPR        	->	vyraz
 
