@@ -32,6 +32,7 @@ sed 's/enddot/b/g' |
 sed 's/var/c/g' |
 sed 's/id/d/g' |
 sed 's/integer/e/g' |
+sed 's/dt_real/x/g' |
 sed 's/real/f/g' |
 sed 's/boolean/g/g' |
 sed 's/string/h/g' |
@@ -50,7 +51,6 @@ sed 's/copy/t/g' |
 sed 's/readln/u/g' |
 sed 's/write/v/g' |
 sed 's/dt_int/w/g' |
-sed 's/dt_real/q/g' |
 sed 's/dt_bool/y/g' |
 sed 's/dt_str/z/g' |
 sed 's/vyraz/?/g'|
