@@ -43,8 +43,9 @@ CMD          	->	WHILE
 CMD          	->	WRITE
 CMD          	->	READLN
 
-ASSIGN       	->	id := EXPR
-ASSIGN       	->	id := CALL
+ASSIGN       	->	id := AFTER_ASSIGN
+AFTER_ASSIGN	->	EXPR
+AFTER_ASSIGN	->	CALL
 
 IF           	->	if EXPR then BODY IF_ELSE
 IF_ELSE     	->	eps
