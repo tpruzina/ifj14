@@ -12,9 +12,13 @@ DT_TYPE		->     	boolean
 DT_TYPE		->	string
 
 FUNC		->	eps
-FUNC	  	->	FUNC_HEADER forward ;
-FUNC		->	FUNC_HEADER VARS BODY;
-FUNC_HEADER	->	function id ( DEF_PARAMS ) : DT_TYPE ;
+FUNC		->	HEADER
+
+HEADER		->	function id ( DEF_PARAMS ) : DT_TYPE ; AFTER_HEADER
+
+AFTER_HEADER	->	forward ;
+AFTER_HEADER	->	VARS BODY ;
+
 DEF_PARAMS 	->	eps
 DEF_PARAMS	->	DEF_PAR_LIST
 DEF_PAR_LIST	->	DEF_PAR
