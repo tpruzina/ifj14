@@ -47,10 +47,11 @@ ASSIGN       	->	id := AFTER_ASSIGN
 AFTER_ASSIGN	->	EXPR
 AFTER_ASSIGN	->	CALL
 
-IF           	->	if EXPR then BODY IF_ELSE
+IF           	->	if EXPR then BODYN IF_ELSE
 IF_ELSE     	->	eps
-IF_ELSE    	->	else BODY
-WHILE        	->	while EXPR do BODY
+IF_ELSE    	->	else BODYN
+WHILE        	->	while EXPR do BODYN
+
 CALL        	->	id ( TERM_LIST )
 CALL         	->	sort ( dt_str )
 CALL         	->	find ( dt_str , dt_str )
@@ -58,11 +59,10 @@ CALL         	->	length ( dt_str )
 CALL         	->	copy ( dt_str , dt_str , dt_int )
 
 READLN		->	readln ( id )
-
 WRITE		->	write ( TERM_LIST )
 
 TERM_LIST    	->	TERM
-TERM_LIST    	->	TERM_LIST , TERM
+TERM_FOLLOW    	->	, TERM TERM_FOLLOW
 
 TERM        	->	id
 TERM        	->	dt_int
