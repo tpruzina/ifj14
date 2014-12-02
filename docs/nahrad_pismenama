@@ -13,6 +13,7 @@ sed 's/DEF_PAR_LIST/J/g' |
 sed 's/DEF_PAR/K/g' |
 sed 's/BODYN/L/g' |
 sed 's/BODY/M/g' |
+sed 's/CMD_LIST_N/AE/g' |
 sed 's/CMD_LIST/N/g' |
 sed 's/CMD_FOLLOW/O/g' |
 sed 's/CMD/P/g' |
