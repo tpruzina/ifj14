@@ -1,8 +1,8 @@
-var
-	i : integer;
+function mul(x:integer; y:integer):integer;
 begin
-	for i :=10 downto 1 do
-	begin
-		i := i - 1
-	end
+	mul := x * y
+end;
+
+begin
+	
 end.
