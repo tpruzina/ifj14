@@ -23,7 +23,7 @@
 int parser();
 
 struct astNode* parseProgram();
-struct astNode* parseBody(struct toc**);
+struct astNode* parseBody(struct toc**, bool, int);
 struct queue* parseVars(struct toc**);
 struct queue* parseParams();
 struct astNode* parseFunction();

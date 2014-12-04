@@ -15,9 +15,12 @@ AFTER_HEADER	->	forward ;
 AFTER_HEADER	->	VARS BODY ;
 DEF_PAR		->	id : DT_TYPE
 DEF_PARAMS	->	DEF_PAR DEF_PAR_LIST
-DEF_PARAMS 	->	eps
-DEF_PAR_LIST	->	, DEF_PAR
+
 DEF_PAR_LIST	->	eps
+DEF_PAR_LIST	->	; DEF_PAR
+
+DEF_PAR		->	id : DT_TYPE
+
 BODYN		-> begin CMD_LIST_N end
 CMD_LIST_N	-> CMD CMD_FOLLOW
 CMD_LIST_N	-> eps
@@ -47,6 +50,8 @@ READLN		->	readln ( id )
 WRITE		->	write ( TERM_LIST )
 TERM_LIST    	->	TERM
 TERM_FOLLOW    	->	, TERM TERM_FOLLOW
+TERM_FOLLOW		->	eps
+
 TERM        	->	id
 TERM        	->	dt_int
 TERM        	->	dt_real

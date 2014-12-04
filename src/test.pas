@@ -1,4 +1,3 @@
-program;
 var
 	i : integer;
 begin
