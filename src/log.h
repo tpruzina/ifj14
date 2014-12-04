@@ -34,9 +34,7 @@
 #define COLOR_LBLU "\033[01;34m"
 #define COLOR_LMGN "\033[01;35m"
 #define COLOR_LCYN "\033[01;36m"
-#endif
-
-#ifndef _COLOR
+#else
 #define COLOR_NRM  ""
 #define COLOR_RED  ""
 #define COLOR_GRN  ""
@@ -54,20 +52,20 @@
 #define COLOR_LCYN ""
 #endif
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
 #define PRINT 1
 #define DBG 1
 #define WRG 1
 #define PRT 1
-#endif
-
+//#endif
+/*
 #ifndef _DEBUG
 #define PRINT 1
 #define DBG 0
 #define WRG 0
 #define PRT 0
 #endif
-
+*/
 enum LogFrom { MAIN, GC, STRING, STACK, AST, IAL, PARSER , SYMTABLE};
 enum LogType { DEBUG, ERROR, WARNING };
 /*
