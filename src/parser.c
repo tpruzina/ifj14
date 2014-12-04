@@ -2,9 +2,9 @@
 ****                                                                      ****
 ****    PROJEKT DO PREDMETU IFJ                                           ****
 ****                                                                      ****
-****    Nazev:     Implementace interpretu imperativního jazyka IFJ14     ****
+****    Nazev:     Implementace interpretu imperativnÃ­ho jazyka IFJ14     ****
 ****    Datum:                                                            ****
-****    Autori:    Marko Antonín    <xmarko07@stud.fit.vutbr.cz>          ****
+****    Autori:    Marko Antoní­n    <xmarko07@stud.fit.vutbr.cz>          ****
 ****               Pružina Tomáš    <xpruzi01@stud.fit.vutbr.cz>          ****
 ****               Kubíček Martin   <xkubic34@stud.fit.vutbr.cz           ****
 ****               Juřík Martin     <xjurik08@stud.fit.vutbr.cz           ****
@@ -707,14 +707,12 @@ struct astNode* parseProgram(){
 		
 		// muze nacitat 
 		cur = getToc();		
-		if(cur->type == T_SCOL)
-			cur = getToc();
 	}
 	
 	
 	expect(cur, T_KW_BEGIN, synt);
 	// nasleduje telo programu
-	struct astNode* body = parseBody(&cur);		
+	struct astNode* body = parseBody(&cur, true, T_KW_END);		
 	if(!body)
 		return NULL;
 	program->left = body;
@@ -736,31 +734,29 @@ struct astNode* parseProgram(){
  * Parsuje telo, pouze zkontroluje zda-li zacina na begin a konci na end.
  * ---------------------------------------------------------------------
  */
-struct astNode* parseBody(struct toc** cur){
+struct astNode* parseBody(struct toc** cur, bool empty, int endtype){
 	W("parseBody");
 	
-	if((*cur)->type != T_KW_BEGIN){ // nebyl nacten BEGIN
-		(*cur) = getToc();
-		
-		expect((*cur), T_KW_BEGIN, synt);
-	}
-
 	// zacatek tela -> spustit prikazy
 	// ukladat je doleva za sebe do typu AST_CMD
 	struct astNode* body = makeNewAST();
 	body->type = AST_CMD;
 		
-	*cur = getToc();
-	if((*cur)->type == T_KW_END){
-		// prazdne telo
-		return body;
+	*cur = getToc(); // prvni token tela!!!
+	if((*cur)->type == endtype){
+		if(empty)
+			return body;
+		else {
+			E("Syntax error - empty body is not supported in this case");
+			exit(synt);		
+		}
 	}
 
 	D("Before command while");
 	printTokenType(*cur);
 
 	struct astNode* cmd = parseCommand(cur);
-	if((*cur)->type == T_KW_END){
+	if((int)((*cur)->type) == endtype){
 		D("body: gets END");
 		// ukonceni bloku kodu
 		if(cmd == NULL){
@@ -776,13 +772,12 @@ struct astNode* parseBody(struct toc** cur){
 		body->left->right = cmd;
 		return body;		
 	}
-	else if((*cur)->type == T_SCOL){	
+	else if((*cur)->type == T_SCOL){
 		D("body: gets SEMICOLON");
+		
+		struct astNode* item = body;
 		// ocekavat dalsi command
 		while(cmd != NULL){
-			struct astNode* item = body;
-			while(item->left != NULL)
-				item = item->left;
 			item->left = makeNewAST();
 			item->left->type = AST_CMD;
 			item->left->left = NULL;
@@ -791,12 +786,18 @@ struct astNode* parseBody(struct toc** cur){
 			D("Waiting for end or scol");
 			printTokenType(*cur);
 			// pokud narazi na END tak ukoncit hledani dalsich 
-			if((*cur)->type == T_KW_END)
+			if((int)((*cur)->type) == endtype){
+				D("Gets endtype");
 				break;
+			}
 			else if((*cur)->type == T_SCOL){
+				// nutno nacist dalsi token
+				*cur = getToc();
+				printTokenType(*cur);
 				// hledat dalsi
 				cmd = parseCommand(cur);
-				continue;
+				// posun na dalsi pole v seznamu prikazu
+				item = item->left;
 			}
 			else {
 				E("body: Syntax error - expected END or SEMICOLON");
@@ -822,183 +823,178 @@ struct queue* parseVars(struct toc** cur){
 	struct queue* vars = makeNewQueue();		
 	struct symbolTableNode* top = (struct symbolTableNode*)stackPop(global.symTable);
 	
-	while(1){
-		// definice promennych
-		struct astNode* var = makeNewAST();
-		
-		
-		(*cur) = getToc();
-		if((*cur)->type == T_ID){
-			// dostal jsem ID -> ocekavam dvoutecku
-		
-			// kopie jmena promenne
-			struct String* name = makeNewString();
-			copyString((*cur)->data.str, &name);
-			var->other = name;
-		
-			// odkladiste pro nove promenne do tabulky symbolu				
-			struct symbolTableNode* new = NULL;
-			struct dataTypeArray* dta;
-			(*cur) = getToc();
-			if((*cur)->type == T_COL){
-				//printTokenType(*cur);
-				// dostal dvojtecku --> ocekavat typ								
-													
-				(*cur) = getToc();
-				switch((*cur)->type){
-					case T_KW_INT:
-						var->type = AST_INT;
-						
-						// vytvorit novy zaznam v tabulce
-						new = insertValue(&top, name, DT_INT);
-							
-						if(!new)
-							return NULL;
-						
-						new->dataType = DT_INT;													
-						break;
-					case T_KW_REAL: 
-						var->type = AST_REAL;
-						
-						new = insertValue(&top, name, DT_REAL);
-						if(!new)
-							return NULL;
-							
-						new->dataType = DT_REAL;
-						break;
-					case T_KW_BOOLEAN: 
-						var->type = AST_BOOL;
-										
-						new = insertValue(&top, name, DT_BOOL);
-						if(!new)
-							return NULL;
-							
-						new->dataType = DT_BOOL;
-						break;
-					case T_KW_STRING:
-						var->type = AST_STR;
-													
-						new = insertValue(&top, name, DT_STR);
-						if(!new)
-							return NULL;
-							
-						new->dataType = DT_STR;
-						break;
-					case T_ARR:	// -------------------------------POLE---------------
-						var->type = AST_ARR;
-					
-						dta = (struct dataTypeArray*)gcMalloc(sizeof(struct dataTypeArray));
-						if(!dta)
-							return NULL;
-						if(!(copyString(var->data.str, &(dta->id))))
-							return NULL;
-						
-						(*cur) = getToc();
-						if(expect((*cur), T_LBRC, synt)) {
-							// leva [ -> ocekavat integer								
-							(*cur) = getToc();
-							if((*cur)->type != T_INT){
-								E("vars: Syntax error - expected integer as lower range of array index");
-								//printTokenType(*cur);
-								exit(synt);
-							}
-							dta->low = (*cur)->data.integer;
-							
-							// interval - dve tecky mezi integery
-							(*cur) = getToc();
-							if((*cur)->type != T_DDOT){
-								E("vars: Syntax error - expected two dots");
-								//printTokenType(*cur);
-								exit(synt);
-							}
-							
-							// ocekavat druhy integer
-							(*cur) = getToc();
-							if((*cur)->type != T_INT){
-								E("vars: Syntax error - expected integer as higher range of array index");
-								//printTokenType(*cur);
-								exit(synt);
-							}
-							dta->high = (*cur)->data.integer;
-							
-							// ocekavam konec intervalu
-							(*cur) = getToc();
-							if((*cur)->type != T_RBRC){
-								E("vars: Syntax error - expected right brace");
-								//printTokenType(*cur);
-								exit(synt);
-							}
-							
-							// ocekavat OF
-							(*cur) = getToc();
-							if((*cur)->type != T_OF){
-								E("vars: Syntax error - expected OF for defining type of array");
-								//printTokenType(*cur);
-								exit(synt);
-							}
-							
-							// nacteni typu promenne
-							(*cur) = getToc();
-							switch((*cur)->type){
-								case T_KW_INT: 
-									dta->type = DT_INT;
-									break;
-								case T_KW_REAL: 
-									dta->type = DT_REAL;
-									break;
-								case T_KW_BOOLEAN: 
-									dta->type = DT_BOOL;
-									break;
-								case T_KW_STRING: 
-									dta->type = DT_STR;
-									break;
-								default:
-									E("vars: Syntax error - unsupported type of array");
-									//printTokenType(*cur);
-									exit(synt);
-							}
-							// ulozeni odkazu na strukturu dat
-							var->other = dta;		
-														
-							// vlozeni nazev pole do tabulky
-							new = insertValue(&top, name, DT_ARR);
-							if(!new)
-								return NULL;
-							
-							// nastaveni ze se jedna o pole
-							new->dataType = DT_ARR;					
-							new->other = dta;								
-						}
-													
-						break;
-					default:
-						E("vars: Syntax error - expected type");
-						exit(synt);	
-				}
-			}				
-			
-			(*cur) = getToc();
-			expect((*cur), T_SCOL, synt);
-							
-			// vlozit prvek
-			queuePush(vars, var);
-		}
-		else if((*cur)->type == T_KW_BEGIN){
-			// zacina telo 	
-			break;
-		}
-		else if((*cur)->type == T_KW_FUNC){
-			// zacina definice funkce	
-			break;				
-		}
-		else {
-			E("vars: Syntax error - unsupported token");
-			printTokenType(*cur);
-			exit(synt);			
-		}
-	}
+	// nacetl VAR
 	
+	struct astNode* var = makeNewAST();
+	
+	// nacte prvni token
+	(*cur) = getToc();
+	
+	// pokud nacetl VAR tak musi nasledovat ID
+	expect(*cur, T_ID, synt);	
+	while((*cur)->type == T_ID){
+		// definice promennych
+		// kopie jmena promenne
+		struct String* name = makeNewString();
+		copyString((*cur)->data.str, &name);
+		var->other = name;
+	
+		// odkladiste pro nove promenne do tabulky symbolu				
+		struct symbolTableNode* new = NULL;
+		struct dataTypeArray* dta;
+		
+		// nacteni dvojtecky
+		(*cur) = getToc();
+		expect((*cur), T_COL, synt);
+
+		// dostal dvojtecku --> ocekavat typ											
+		(*cur) = getToc();
+		switch((*cur)->type){
+			case T_KW_INT:
+				var->type = AST_INT;
+				
+				// vytvorit novy zaznam v tabulce
+				new = insertValue(&top, name, DT_INT);
+					
+				if(!new)
+					return NULL;
+				
+				new->dataType = DT_INT;							
+				break;
+			case T_KW_REAL: 
+				var->type = AST_REAL;
+				
+				new = insertValue(&top, name, DT_REAL);
+				if(!new)
+					return NULL;
+					
+				new->dataType = DT_REAL;
+				break;
+			case T_KW_BOOLEAN: 
+				var->type = AST_BOOL;
+								
+				new = insertValue(&top, name, DT_BOOL);
+				if(!new)
+					return NULL;
+					
+				new->dataType = DT_BOOL;
+				break;
+			case T_KW_STRING:
+				var->type = AST_STR;
+											
+				new = insertValue(&top, name, DT_STR);
+				if(!new)
+					return NULL;
+					
+				new->dataType = DT_STR;
+				break;
+			case T_ARR:	// -------------------------------POLE---------------
+				var->type = AST_ARR;
+			
+				dta = (struct dataTypeArray*)gcMalloc(sizeof(struct dataTypeArray));
+				if(!dta)
+					return NULL;
+				if(!(copyString(var->data.str, &(dta->id))))
+					return NULL;
+				
+				(*cur) = getToc();
+				if(expect((*cur), T_LBRC, synt)) {
+					// leva [ -> ocekavat integer								
+					(*cur) = getToc();
+					if((*cur)->type != T_INT){
+						E("vars: Syntax error - expected integer as lower range of array index");
+						//printTokenType(*cur);
+						exit(synt);
+					}
+					dta->low = (*cur)->data.integer;
+					
+					// interval - dve tecky mezi integery
+					(*cur) = getToc();
+					if((*cur)->type != T_DDOT){
+						E("vars: Syntax error - expected two dots");
+						//printTokenType(*cur);
+						exit(synt);
+					}
+					
+					// ocekavat druhy integer
+					(*cur) = getToc();
+					if((*cur)->type != T_INT){
+						E("vars: Syntax error - expected integer as higher range of array index");
+						//printTokenType(*cur);
+						exit(synt);
+					}
+					dta->high = (*cur)->data.integer;
+					
+					// ocekavam konec intervalu
+					(*cur) = getToc();
+					if((*cur)->type != T_RBRC){
+						E("vars: Syntax error - expected right brace");
+						//printTokenType(*cur);
+						exit(synt);
+					}
+					
+					// ocekavat OF
+					(*cur) = getToc();
+					if((*cur)->type != T_OF){
+						E("vars: Syntax error - expected OF for defining type of array");
+						//printTokenType(*cur);
+						exit(synt);
+					}
+					
+					// nacteni typu promenne
+					(*cur) = getToc();
+					switch((*cur)->type){
+						case T_KW_INT: 
+							dta->type = DT_INT;
+							break;
+						case T_KW_REAL: 
+							dta->type = DT_REAL;
+							break;
+						case T_KW_BOOLEAN: 
+							dta->type = DT_BOOL;
+							break;
+						case T_KW_STRING: 
+							dta->type = DT_STR;
+							break;
+						default:
+							E("vars: Syntax error - unsupported type of array");
+							//printTokenType(*cur);
+							exit(synt);
+					}
+					// ulozeni odkazu na strukturu dat
+					var->other = dta;		
+												
+					// vlozeni nazev pole do tabulky
+					new = insertValue(&top, name, DT_ARR);
+					if(!new)
+						return NULL;
+					
+					// nastaveni ze se jedna o pole
+					new->dataType = DT_ARR;					
+					new->other = dta;								
+				}
+											
+				break;
+			default:
+				E("vars: Syntax error - expected type");
+				exit(synt);	
+		}				
+		
+		// nacist strednik
+		(*cur) = getToc();
+		expect((*cur), T_SCOL, synt);
+						
+		// vlozit prvek
+		queuePush(vars, var);
+		
+		// nacist dalsi token
+		*cur = getToc();
+	}
+		
+#ifdef _DEBUG	
 	printSymbolTable(top, 0);		
+#endif
+
 	stackPush(global.symTable, top);
 			
 	// vratit seznam promennych
@@ -1269,7 +1265,7 @@ struct astNode* parseFunction(){
 		
 		// ocekavat telo
 		D("Body expectation");
-		node->left = parseBody(&cur);	
+		node->left = parseBody(&cur, false, T_KW_END);	
 		
 		cur = getToc();
 		expect(cur, T_SCOL, synt);
@@ -1562,6 +1558,11 @@ struct astNode* ifStatement(struct toc** cur){
 	struct astNode* condition = parseExpression(cur);
 	if(!condition)
 		return NULL;
+	
+	if(condition->dataType != DT_BOOL){
+		E("Semantic error - if condition has not BOOL data type");
+		exit(sem_komp);
+	}
 		
 	expect((*cur), T_KW_THEN, synt);
 		
@@ -1574,7 +1575,10 @@ struct astNode* ifStatement(struct toc** cur){
 	ifnode->other = condition;
 	
 	// telo true
-	ifnode->left = parseBody(cur);
+	*cur = getToc();
+	expect(*cur, T_KW_BEGIN, synt);
+	
+	ifnode->left = parseBody(cur, true, T_KW_END);
 	if(!ifnode->left)
 		return NULL;
 
@@ -1584,7 +1588,10 @@ struct astNode* ifStatement(struct toc** cur){
 
 	// pokud else pak pokracovat telem
 	if((*cur)->type == T_KW_ELSE){
-		ifnode->right = parseBody(cur);
+		*cur = getToc();
+		expect(*cur, T_KW_BEGIN, synt);
+		
+		ifnode->right = parseBody(cur, true, T_KW_END);
 		if(!ifnode->right)
 			return NULL;
 
@@ -1606,6 +1613,11 @@ struct astNode* whileStatement(struct toc** cur){
 	if(!condition)
 		return NULL;
 	
+	if(condition->dataType != DT_BOOL){
+		E("Semantic error - if condition has not BOOL data type");
+		exit(sem_komp);
+	}
+	
 	expect((*cur), T_KW_DO, synt);
 
 	struct astNode* node = makeNewAST();				
@@ -1614,7 +1626,9 @@ struct astNode* whileStatement(struct toc** cur){
 	node->type = AST_WHILE;
 	
 	// kompletace tela
-	node->left = parseBody(cur);
+	*cur = getToc();
+	expect(*cur, T_KW_BEGIN, synt);
+	node->left = parseBody(cur, true, T_KW_END);
 	node->right = NULL;
 
 	// ocekavani endu po BODY
@@ -1642,26 +1656,17 @@ struct astNode* repeatStatement(struct toc** cur){
 		return NULL;
 	rpt->type = AST_REPEAT;
 	// telo cyklu
-	rpt->left = parseBody(cur);
+	rpt->left = parseBody(cur, false, T_UNTIL);
 	if(!rpt->left)
 		return NULL;
-
-	// ocekavani end po tele repeat
-	if(expect(*cur, T_KW_END, 0))
-		*cur = getToc();
-		
-	// rpt->left == AST_CMD
-	// rpt->left->right == prikaz tela
-	if(rpt->left->right == NULL){
-		E("repeat: Syntax error - repeat cycle must have at least one command in the body");
-		exit(synt);
-	}	
-
-	expect((*cur), T_UNTIL, synt);
 	
 	// nacetl UNTIL
-	rpt->other = parseExpression(cur);
-
+	struct astNode* tmp = parseExpression(cur);	
+	if(tmp->dataType != DT_BOOL){
+		E("Semantic error - if condition has not BOOL data type");
+		exit(sem_komp);
+	}
+	rpt->other = tmp;
 	// tezko rict nestli bude cist nebo ne
 	// expresion se zastavi na tom tokenu ktery nezna	
 	
@@ -1758,13 +1763,12 @@ struct astNode* forStatement(struct toc** cur){
 		exit(synt);
 	}
 	
-	// ocekavani tela
-	forNode->left = parseBody(cur);
+	*cur = getToc();
+	expect(*cur, T_KW_BEGIN, synt);
 	
-	if((*cur)->type != T_KW_END){
-		E("Syntax error - expected END keyword at the end of body");
-		exit(synt);		
-	}
+	// ocekavani tela
+	forNode->left = parseBody(cur, true, T_KW_END);
+
 #ifdef _DEBUG
 	printAst(forNode);
 #endif
@@ -1826,11 +1830,11 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 	*cur = getToc();
 	expect((*cur), T_COL, synt);
 	
-	// TODO pracovat jen s řádkovýma příkazama nebo i s těly
+	// TODO pracovat jen s radkama nebo celym telem
 	*cur = getToc();
 	if((*cur)->type == T_KW_BEGIN){
 		D("Parse body");
-		nd->left = parseBody(cur);
+		nd->left = parseBody(cur, false, T_KW_END);
 		
 		expect((*cur), T_KW_END, synt);
 	}
@@ -1844,11 +1848,11 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 }
 struct astNode* caseStatement(struct toc** cur){
 	// konstrukci bude uvozovat AST_SWITCH, 
-	// kde v levém podstromu bude fronta case položek, 
-	// kde v levém poduzlu bude literál, označující ke 
-	// které hodnotě je tento prvek přiřazen, a v pravém poduzlu bude 
-	// tělo položky. V pravém poduzlu hlavního uzlu je AST_ID určující, 
-	// podle čeho se porovnává. 
+	// kde v levem podstromu bude fronta case polozek, 
+	// kde v levem poduzlu bude literal, oznacuji­ci­ ke 
+	// ktere hodnote je tento prvek prirazen, a v pravem poduzlu bude 
+	// telo polozky. V pravem poduzlu hlavn­iho uzlu je AST_ID urcujici­, 
+	// podle ceho se porovnavaji. 
 	struct astNode* switchNode = makeNewAST();
 	switchNode->type = AST_SWITCH;
 	
@@ -1920,12 +1924,18 @@ struct astNode* writeStatement(struct toc** cur){
 	expect((*cur), T_LPAR, synt);
 	
 	*cur = getToc();
+	if((*cur)->type == T_RPAR){
+		E("Syntax error - write must have at least one parameter");
+		exit(synt);
+	}
+	
 	// nacitat parametry
 	while((*cur)->type != T_RPAR){
 		// ocekavat cokoliv
 		struct astNode* nd = makeNewAST();
 		struct String* name = NULL;
 		struct symbolTableNode* var;
+		
 		switch((*cur)->type){
 			case T_ID:
 				var = searchOnTop((*cur)->data.str);
@@ -1968,8 +1978,6 @@ struct astNode* writeStatement(struct toc** cur){
 				nd->type = AST_BOOL;
 				nd->dataType = DT_BOOL;
 				nd->data.boolean = (*cur)->data.boolean;
-				break;
-			case T_RPAR:
 				break;		
 			default:
 				E("Semantic error - unsupported type of parameter");
@@ -2014,13 +2022,17 @@ struct astNode* readlnStatement(struct toc** cur){
 	// pokud nenasleduje ID -> chyba
 	*cur = getToc();
 	expect((*cur), T_ID, synt);
-
+	
 	// jeden parametry - ID
 	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
 	vp->vars = NULL;
 	vp->pars = makeNewQueue();
 	
 	struct symbolTableNode* var = searchOnTop((*cur)->data.str);
+	if(var->dataType == DT_BOOL){
+		E("Semantic error - readln parameter cannot be BOOL");
+		exit(sem_komp);
+	}
 
 	struct astNode* nd = makeNewAST();
 	nd->type = AST_ID;
@@ -2407,12 +2419,9 @@ struct astNode* assignStatement(struct toc** cur){
 	// skopirovani informaci z tabulky symbolu
 	struct symbolTableNode* nd = searchOnTop(left->data.str);				
 	left->dataType = nd->dataType;
-		
-	// prava strana je vyraz
-	struct astNode* right = parseExpression(cur);
-	if(!right) 
-		return NULL;
-
+	
+	struct astNode* right = parseExpression(cur);		
+	
 	if(left->dataType != right->dataType){
 		datatypes(left->dataType, right->dataType);
 		E("cmd: Semantic error - L-value has not same value as R-value");
@@ -2433,43 +2442,21 @@ struct astNode* assignStatement(struct toc** cur){
  */
 struct astNode* parseCommand(struct toc** cur){
 	W("parseCommand");
-	
-	switch((*cur)->type){
-		case T_KW_END:
-		case T_KW_IF:
-		case T_KW_WHILE:
-		case T_KW_RPT:
-		case T_KW_CASE:
-		case T_KW_READLN:
-		case T_KW_FOR:
-		case T_KW_WRT:
-		case T_KW_FIND:
-		case T_KW_SORT:
-		case T_KW_COPY:
-		case T_KW_LENGTH:
-		case T_ID:
-#ifdef _DEBUG
-			fprintf(stderr, "Commands OK\n");
-#endif
-		break;
-		default:
-#ifdef _DEBUG
-			fprintf(stderr, "Invalid commands\n");
-#endif
-			printTokenType(*cur);
-			(*cur) = getToc();
-	}
+
 	
 	struct astNode* node = NULL;
 	struct toc* next;
 	
+#ifdef _DEBUG
 	printTokenType(*cur);
+#endif
+
+	// prvni token je nacteny
 	switch((*cur)->type){
-		case T_KW_END:
-			// narazil hned na END -> po stredniku nasledoval END chyba 
-			// 						  NEBO telo nema prvky
-			E("cmd: Syntax error - semicolon after last cmd or body without commands");
-			exit(synt);
+		case T_KW_BEGIN:
+			// dalsi blok kodu
+			node = parseBody(cur, true, T_KW_END);
+			return node;
 		case T_KW_IF:
 			D("IF command");		
 			node = ifStatement(cur);
@@ -2516,61 +2503,19 @@ struct astNode* parseCommand(struct toc** cur){
 			if(!node)
 				return NULL;
 			return node;
-		case T_KW_FIND:
-			/* find(str, str) */
-			D("FIND");
-			node = findStatement(cur);		
-			if(!node)
-				return NULL;
-			return node;
-		case T_KW_SORT:
-			node = sortStatement(cur);
-			if(!node)
-				return NULL;
-			return node;
-		case T_KW_LENGTH: 
-			node = lengthStatement(cur);
-			if(!node)
-				return NULL;
-			return node;
-		case T_KW_COPY:
-			D("COPY");
-			/* copy(str, int, int) */
-			node = copyStatement(cur);
-			if(!node)
-				return NULL;
-			return node;
 		case T_ID:
+			D("ASSIGN");
+			// podle next tokenu se rozlisi o co jde
 			next = getToc();
-			if(next->type == T_LPAR){
-				// pravdepodobne volani funkce
-				// v cur je ID
-				node = parseFuncCall(cur);
-				if(!node)
-					return NULL;
-				return node;
+			expect(next, T_ASGN, synt);
+			// v cur je ID
+			node = assignStatement(cur);
+			if(!node){
+				D("ASGN node is null");
+				return NULL;
 			}
-			else if(next->type == T_LBRC){
-				// index poley
-				// v cur je ID			
-				node = arrayIndexStatement(cur);
-				if(!node)
-					return NULL;
-				return node;
-			}
-			else if(next->type == T_ASGN){
-				// pravdepodobne prirazeni
-				// v cur je ID
-				node = assignStatement(cur);
-				if(!node)
-					return NULL;
-				return node;
-			}
-			else {
-				E("cmd: Syntax error - expected funcCall, array index or assign");
-				exit(synt);
-			}		
-			break;
+			printTokenType(*cur);
+			return node;
 	}
 	return NULL;
 }
@@ -2594,36 +2539,6 @@ struct astNode* parseExpression(struct toc** cur){
 	// zacatek podminky
 	(*cur) = getToc();
 
-// spinavy hack ktory riesi problem old_cur := cur();
-	switch((*cur)->type){
-		case T_KW_COPY:
-		case T_KW_READLN:
-		case T_KW_FIND:
-		case T_KW_SORT:
-		case T_KW_LENGTH:
-			// parseCmd vrati nasledujici token
-			cmd = parseCommand(cur);
-			stackPush(aststack, cmd);
-			
-	//		if((*cur)->type == T_KW_END){
-	//			D("body: gets END");
-	//			// ukonceni bloku kodu
-	//			if(cmd == NULL){
-	//				W("body: WARNING - statement without effect");
-	//
-	//				body->left = NULL;
-	//				return body;
-	//			}
-	//
-	//			body->left = makeNewAST();
-	//			body->left->type = AST_CMD;
-	//			body->left->left = NULL;
-	//			body->left->right = cmd;
-	//			return body;S
-		default: 
-			break;
-	}
-		
 	// <id>(
 	// <id> <operator> (
 	if((*cur)->type == T_ID){
@@ -2644,6 +2559,10 @@ struct astNode* parseExpression(struct toc** cur){
 			// ulozit na zasobnik funkci
 			stackPush(aststack, nd);
 		}
+		else if((*cur)->type == T_LBRC){
+			// indexing...
+		
+		}		
 		else {
 			D("expr: VARIABLE");
 			// v pripade, ze po ID nebyla zavorka
@@ -2668,7 +2587,7 @@ struct astNode* parseExpression(struct toc** cur){
 	// 2. leva zavorka -> na vrchol zasobniku
 	// 3. operator:
 	// 		pokud je zasobnik prazdny
-	// 		pokud je na vrcholu leva zavorka
+	// 		pokud je na vrcholu parseExleva zavorka
 	// 		pokud je na vrcholu operator s nizsi prioritou
 	// pokud je na vrcholu operator s vyssi prioritou -> 
 	// 		presunout na vystup a opakovat 3. krok
@@ -2680,20 +2599,39 @@ struct astNode* parseExpression(struct toc** cur){
 		D("expr: new token");
 #ifdef _DEBUG
 		fprintf(stderr, "readNew type = %d \n", readNew);
+		printTokenType(*cur);
 #endif		
 		struct toc* t;
 		struct toc* top;
 		struct toc* now;
 		struct astNode* node;
 		
-		//printTokenType(*cur);
 		switch((*cur)->type){
 			// leva zavorka
+			case T_KW_LENGTH:
+				W("builtin -- length");
+				node = lengthStatement(cur);
+				readNew = false;
+				break;
+			case T_KW_SORT:
+				W("builtin -- sort");
+				node = sortStatement(cur);
+				readNew = false;
+				break;
+			case T_KW_FIND:
+				W("builtin -- find");
+				node = findStatement(cur);
+				readNew = false;
+				break;
+			case T_KW_COPY:
+				W("builtin -- copy");
+				node = copyStatement(cur);
+				readNew = false;
+				break;
 			case T_LPAR: 
 				W("T_LPAR comes");
 			
-				if(!stackPush(stack, (*cur)))
-					return NULL;
+				stackPush(stack, (*cur));
 				break;
 			// prava zavorka
 			case T_RPAR:
@@ -2712,7 +2650,7 @@ struct astNode* parseExpression(struct toc** cur){
 					makeAstFromToken(t, &aststack);
 					
 					t = (struct toc*)stackPop(stack);				
-					////printTokenType(t);
+					// popnul vsechno do leve zavorky
 				}				
 				break;
 			// operandy
@@ -2803,8 +2741,7 @@ struct astNode* parseExpression(struct toc** cur){
 				}
 
 				// pushnout vysledek
-				if(!stackPush(aststack, node))
-					return NULL;			
+				stackPush(aststack, node);
 				break;
 			case T_EQV:
 			case T_NEQV:
@@ -2848,8 +2785,7 @@ struct astNode* parseExpression(struct toc** cur){
 					}		
 					
 					// ulozit aktualni prvek na vrchol zasobniku
-					if(!stackPush(stack, (*cur)))
-						return NULL;
+					stackPush(stack, (*cur));
 				}	
 				break;
 			}
@@ -2907,5 +2843,7 @@ struct astNode* parseExpression(struct toc** cur){
 			D("dont read new token");
 		}
 	}
-	return NULL;
+	E("expression: Syntax error");
+	exit(synt);
 }
+

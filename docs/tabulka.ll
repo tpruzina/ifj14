@@ -23,7 +23,7 @@ DEF_PARAMS 	->	eps
 DEF_PARAMS	->	DEF_PAR DEF_PAR_LIST
 
 DEF_PAR_LIST	->	eps
-DEF_PAR_LIST	->	, DEF_PAR
+DEF_PAR_LIST	->	; DEF_PAR
 
 DEF_PAR		->	id : DT_TYPE
 
@@ -63,6 +63,7 @@ WRITE		->	write ( TERM_LIST )
 
 TERM_LIST    	->	TERM
 TERM_FOLLOW    	->	, TERM TERM_FOLLOW
+TERM_FOLLOW		->	eps
 
 TERM        	->	id
 TERM        	->	dt_int
