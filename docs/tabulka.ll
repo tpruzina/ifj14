@@ -45,12 +45,13 @@ CALL         	->	length ( dt_str )
 CALL         	->	copy ( dt_str , dt_str , dt_int )
 READLN		->	readln ( id )
 WRITE		->	write ( TERM_LIST )
-TERM_LIST    	->	TERM
+TERM_LIST    	->	TERM TERM_FOLLOW
 TERM_FOLLOW    	->	, TERM TERM_FOLLOW
+TERM_FOLLOW	->	eps
 TERM        	->	id
 TERM        	->	dt_int
 TERM        	->	dt_real
-TERM        	->	dt_bool
 TERM        	->	dt_str
+TERM        	->	dt_bool
 EXPR        	->	vyraz
 
