@@ -1,0 +1,9 @@
+{ test na redefinici promennych }
+var
+	x: integer;
+	x: string;
+	x: boolean;
+	x: real; 
+begin
+	x := 123
+end.

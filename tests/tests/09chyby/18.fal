@@ -1,0 +1,18 @@
+{ test na redefinice funkce }
+var
+	return: integer;
+
+function x(a:integer): integer;
+begin
+	x := a
+end;
+function x(b:integer): integer;
+begin
+	x := b
+end;
+
+
+begin
+	return := x(5);
+	write(return)
+end.
