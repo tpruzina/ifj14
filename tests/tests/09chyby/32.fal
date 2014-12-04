@@ -1,0 +1,7 @@
+{ test na inline length podle zadani }
+var
+	len: integer;
+begin
+	len := length('x'#10'z');
+	write(len)
+end.

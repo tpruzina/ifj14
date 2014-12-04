@@ -1,0 +1,9 @@
+{ test na copy }
+var
+	out: string;
+begin
+	out := copy('Ahoj', 1, 1);
+
+	{mel by vratit A}
+	write(out)
+end.

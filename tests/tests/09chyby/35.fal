@@ -1,0 +1,9 @@
+{ test na FIND }
+var
+	out: integer;
+begin
+	out := find('Ahoj', 'oj');
+	
+	{mel by vratit 3}
+	write(out)
+end.

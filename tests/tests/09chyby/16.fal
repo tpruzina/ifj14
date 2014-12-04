@@ -1,0 +1,6 @@
+{ prace s neinicializovanou promennou - chyba 7 }
+var
+	x: integer;
+begin
+	write(x)
+end.

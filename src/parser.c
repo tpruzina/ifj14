@@ -1123,14 +1123,16 @@ struct astNode* parseFunction(){
 	// sparsovat parametry
 	struct symbolTableNode* newlayer;
 	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
-	copyTable(top, &newlayer);
-	if(newlayer == NULL){
-		E("function: copy failed");
-		exit(intern);
+	if(top){
+		// osetreni pokud byl top null, aby nekopiroval nic
+		copyTable(top, &newlayer);
+		if(newlayer == NULL){
+			E("function: copy failed");
+			exit(intern);
+		}
+		stackPush(global.symTable, newlayer);
+		top = (struct symbolTableNode*)stackTop(global.symTable);
 	}
-	stackPush(global.symTable, newlayer);
-	top = (struct symbolTableNode*)stackTop(global.symTable);
-	
 	// vyhodnoti parametry a vytvori frontu
 	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
 	vp->pars = parseParams(top);
