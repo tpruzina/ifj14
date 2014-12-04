@@ -603,6 +603,24 @@ void printSymbolTableStack(){
 	fprintf(stderr, "===================  END STACK  ==================\n");
 }
 
+int makeDataType(struct toc* cur){
+	switch(cur->type){
+		case T_KW_INT:
+			return DT_INT;
+		case T_KW_REAL:
+			return DT_REAL;
+		case T_KW_BOOLEAN:
+			return DT_BOOL;
+		case T_KW_STRING:
+			return DT_STR;
+		default:
+			E("Syntax error - expected supported data type");
+			exit(synt);
+	}
+	
+	return DT_NONE;
+}
+
 /**
  * Hlavni funkce parseru - spousti rekurzivni pruchod
  * --------------------
@@ -743,7 +761,7 @@ struct astNode* parseBody(struct toc** cur, bool empty, int endtype){
 	body->type = AST_CMD;
 		
 	*cur = getToc(); // prvni token tela!!!
-	if((*cur)->type == endtype){
+	if((int)(*cur)->type == endtype){
 		if(empty)
 			return body;
 		else {
@@ -943,24 +961,8 @@ struct queue* parseVars(struct toc** cur){
 					
 					// nacteni typu promenne
 					(*cur) = getToc();
-					switch((*cur)->type){
-						case T_KW_INT: 
-							dta->type = DT_INT;
-							break;
-						case T_KW_REAL: 
-							dta->type = DT_REAL;
-							break;
-						case T_KW_BOOLEAN: 
-							dta->type = DT_BOOL;
-							break;
-						case T_KW_STRING: 
-							dta->type = DT_STR;
-							break;
-						default:
-							E("vars: Syntax error - unsupported type of array");
-							//printTokenType(*cur);
-							exit(synt);
-					}
+					dta->type = makeDataType(*cur);
+					
 					// ulozeni odkazu na strukturu dat
 					var->other = dta;		
 												
@@ -1002,6 +1004,8 @@ struct queue* parseVars(struct toc** cur){
 
 }
 
+
+
 /**
  *	Pasruje parametry definice funkce, podle tabulky.
  */
@@ -1033,23 +1037,7 @@ struct astNode* getDefPar(struct toc** cur){
 	
 	// nacteni datoveho typu
 	*cur = getToc();
-	switch((*cur)->type){
-		case T_KW_INT:
-			par->dataType = DT_INT;
-			break;
-		case T_KW_REAL:
-			par->dataType = DT_REAL;
-			break;
-		case T_KW_BOOLEAN:
-			par->dataType = DT_BOOL;
-			break;
-		case T_KW_STRING:
-			par->dataType = DT_STR;
-			break;
-		default:
-			E("Syntax error - expected supported data type");
-			exit(synt);
-	}
+	par->dataType = makeDataType(*cur);
 	
 	return par;
 }
@@ -1060,13 +1048,13 @@ struct astNode* getDefPar(struct toc** cur){
  */
 struct queue* parseParams(struct symbolTableNode* top){
 	W("parseParams");
-	struct toc** cur;
+	struct toc* cur = NULL;
 	struct queue* params = makeNewQueue();
 	if(!params)
 		return NULL;
 	
 	// nelezl levou zavorku -> nacitat dokud nenarazi na pravou zavorku
-	struct astNode* par = getDefPar(cur);
+	struct astNode* par = getDefPar(&cur);
 	// nacitani dokud jsou parametry
 	while(par != NULL){
 		struct String* name = (struct String*)par->other;
@@ -1077,12 +1065,12 @@ struct queue* parseParams(struct symbolTableNode* top){
 		queuePush(params, par);
 		
 		// nacist separator
-		*cur = getToc();
-		if((*cur)->type == T_SCOL){
+		cur = getToc();
+		if(cur->type == T_SCOL){
 			// ocekavat dalsi parametr
-			par = getDefPar(cur);
+			par = getDefPar(&cur);
 		}
-		else if((*cur)->type == T_RPAR){
+		else if(cur->type == T_RPAR){
 			// konec parametru
 			break;
 		}
@@ -1093,6 +1081,7 @@ struct queue* parseParams(struct symbolTableNode* top){
 		}
 	}
 	
+	W("/parseParams");
 	// pouze v pripade, ze byla zadana prava zavorka vratit seznam
 	return params;		
 }
@@ -1112,13 +1101,17 @@ struct astNode* parseFunction(){
 	
 	// nacteni prvniho tokenu za FUNCTION
 	struct toc* cur = getToc();
-	// ocekavani nazvu 
+	// ocekavani nazvu
 	expect(cur, T_ID, synt);
 	
 	// skopirovani jmena
 	struct String* name = makeNewString();
 	copyString(cur->data.str, &name);
 	node->other = name;
+
+	// nacteni leve zavorky na zacatek parametru
+	cur = getToc();
+	expect(cur, T_LPAR, synt);
 
 	// sparsovat parametry
 	struct symbolTableNode* newlayer;
@@ -1136,6 +1129,18 @@ struct astNode* parseFunction(){
 	// vyhodnoti parametry a vytvori frontu
 	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
 	vp->pars = parseParams(top);
+		
+	// za parametry nasleduje dvojtecka
+	cur = getToc();
+	expect(cur, T_COL, synt);
+	
+	// za dvojteckou datovy typ navratove promenne
+	cur = getToc();
+	node->dataType = makeDataType(cur);
+	
+	// za datovym typem nasleduje strednik
+	cur = getToc();
+	expect(cur, T_SCOL, synt);
 		
 	// ulozit do tabulky zastupnou promennou za return spolu s parametry
 	insertValue(&top, name, node->dataType);
@@ -1173,9 +1178,8 @@ struct astNode* parseFunction(){
 	 	node->right = makeNewAST();
 	 	node->right->other = vp;
 	 	D("Printing ast node");
-#ifdef _DEBUG
 	 	printAst(node);	 	
-#endif	
+
 	 	dekl->other = node;
 	 	D("FORWARD declaration");
 	 	
@@ -1195,14 +1199,9 @@ struct astNode* parseFunction(){
 		}
 			
 		// v pripade definovani deklarovane funkce
-		if(dekl->init == false) {
+		if(dekl->init == false && dekl->other != NULL) {
 			// v pripade se jedna o deklarovanou funkci
-			struct astNode* telo = (struct astNode*)(dekl->other);
-			if(!telo){
-				E("Function node is null");
-				exit(intern);			
-			}
-			
+			struct astNode* telo = (struct astNode*)(dekl->other);			
 			struct astNode* vpnode = telo->right;
 			if(!vpnode){
 				E("Right varspars subnode is empty");
