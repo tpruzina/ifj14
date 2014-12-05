@@ -776,15 +776,15 @@ struct symbolTableNode *pushVarsParsIntoTable(
 		struct queue *function_params,
 		struct queue *function_vars)
 {
+	ASSERT(call_params && function_params);
+
 	struct symbolTableNode *table = makeNewSymbolTable();
 	struct symbolTableNode *new = NULL;
+	struct astNode *ast_src, *ast_dest;
 
-	ASSERT(call_params);
 	struct queueItem *currCPItem = call_params->start;
 	ASSERT(function_params);
 	struct queueItem *currFPItem = function_params->start;
-
-	struct astNode *ast_src, *ast_dest;
 
 	static struct symbolTableNode stn_src;
 	static struct symbolTableNode stn_dest;
@@ -796,7 +796,7 @@ struct symbolTableNode *pushVarsParsIntoTable(
 		ast_dest = currFPItem->value;
 
 		stn_src = convertAST2STN(ast_src);
-//		stn_dest = convertAST2STN(ast_dest);
+		//		stn_dest = convertAST2STN(ast_dest);
 
 		if(ast_dest->type == AST_ID)
 		{
