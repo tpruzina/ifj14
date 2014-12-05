@@ -271,7 +271,6 @@ void printVarsPars(struct varspars* vp){
 }
 
 void datatypes(int left, int right){
-#ifdef _DEBUG
 	const char *l = NULL;
 	const char *r = NULL;
 	
@@ -322,6 +321,7 @@ void datatypes(int left, int right){
 			l = "??????";
 			break;
 	}
+#ifdef _DEBUG
 	fprintf(stderr, "%s< Comparison between %s and %s >%s\n", ((right==left)?COLOR_LGRN:COLOR_LRED), l, r, COLOR_NRM);	
 #endif
 }
@@ -587,6 +587,7 @@ void makeAstFromToken(struct toc* token, struct stack** aststack){
  * --------------------------------------
  */
 void printSymbolTableStack(){
+#ifdef _DEBUG
 	fprintf(stderr, "=====================  STACK  ====================\n");
 
 	struct stackItem* item = global.symTable->Top;
@@ -601,6 +602,7 @@ void printSymbolTableStack(){
 	}
 
 	fprintf(stderr, "===================  END STACK  ==================\n");
+#endif
 }
 
 int makeDataType(struct toc* cur){
@@ -653,12 +655,12 @@ int checkFunctionDeclarations(struct symbolTableNode* gft){
 	}
 	
 	// telo funkce
-	struct astNode* telo = (struct astNode*)gft->other;
-	if(telo == NULL){
+	if(gtf->init == false){
 		E("Function without ast node deklaration");
 		exit(sem_prog);
 	}
 	
+	struct astNode* telo = (struct astNode*)gft->other;
 	// hledani posloupnosti prikazu v levem podstromu
 	if(telo->left == NULL){
 		E("Function without body definition");
@@ -853,9 +855,7 @@ struct queue* parseVars(struct toc** cur){
 	while((*cur)->type == T_ID){
 		// definice promennych
 		// kopie jmena promenne
-		struct String* name = makeNewString();
-		copyString((*cur)->data.str, &name);
-		var->other = name;
+		copyString((*cur)->data.str, &(var->data.str));
 	
 		// odkladiste pro nove promenne do tabulky symbolu				
 		struct symbolTableNode* new = NULL;
@@ -1266,7 +1266,7 @@ struct queue* parseCallParams(struct toc** cur){
 	
 	(*cur) = getToc();
 	while((*cur)->type != T_RPAR){
-		struct astNode* nd;
+		struct astNode* nd = makeNewAST();
 		
 		struct symbolTableNode* id;
 		switch((*cur)->type){
@@ -1274,10 +1274,6 @@ struct queue* parseCallParams(struct toc** cur){
 				// predana promenna
 				
 				id = searchOnTop((*cur)->data.str);
-												
-				if(!(nd = makeNewAST()))
-					return NULL;
-				
 				nd->type = AST_ID;
 				copyString((*cur)->data.str, &(nd->data.str));
 				nd->dataType = id->dataType;
@@ -1286,10 +1282,6 @@ struct queue* parseCallParams(struct toc** cur){
 				break;
 			case T_INT: 
 				// predany parametr je typu INT
-				
-				if(!(nd = makeNewAST()))
-					return NULL;
-				
 				nd->type = AST_INT;
 				nd->dataType = DT_INT;
 				nd->data.integer = (*cur)->data.integer;
@@ -1297,9 +1289,6 @@ struct queue* parseCallParams(struct toc** cur){
 				break;
 			case T_REAL: 
 				// predany parametr typu real
-				if(!(nd = makeNewAST()))
-					return NULL;
-				
 				nd->type = AST_REAL;
 				nd->dataType = DT_REAL;
 				nd->data.real = (*cur)->data.real;
@@ -1307,18 +1296,12 @@ struct queue* parseCallParams(struct toc** cur){
 				break;
 			case T_BOOL: 
 				// predany parametr typu bool
-				if(!(nd = makeNewAST()))
-					return NULL;
-				
 				nd->type = AST_BOOL;
 				nd->dataType = DT_BOOL;
 				nd->data.boolean = (*cur)->data.boolean;
 				break;
 			case T_STR:
 				// predany parametry typu string
-				if(!(nd = makeNewAST()))
-					return NULL;
-				
 				nd->type = AST_STR;
 				nd->dataType = DT_STR;
 				copyString((*cur)->data.str, &(nd->data.str));		
