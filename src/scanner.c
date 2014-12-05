@@ -504,10 +504,13 @@ void parse_escape_seq(int *c)
 		{
 			num *= 10;
 			num += tmp_c - '0';
-			if(num == 0 || num > 255)
+			if(num > 255)
 				exit(lex);
 			tmp_c = fgetc(global.src);
 		}
+
+		if(num == 0)
+			exit(lex);
 
 		if('\'' != tmp_c)
 			exit(lex);
