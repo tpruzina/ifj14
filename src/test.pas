@@ -1,14 +1,38 @@
-{ test na vyraz }
 var
-	ret : integer;
-
-function mul(x:integer; y:integer):integer;
+	a : integer;
+	vysl : integer;
+{ Definice funkce pro vypocet hodnoty faktorialu }
+function factorial(n : integer) : integer;
+var
+	temp_result : integer;
+	decremented_n : integer;
 begin
-	mul := x * y
+	if n < 2 then
+	begin
+		factorial := 1
+	end
+	else
+	begin
+		decremented_n := n - 1;
+		temp_result := factorial(decremented_n);
+		factorial := n * temp_result
+	end
 end;
 
-
+{ Hlavni telo programu }
 begin
-	ret := mul(2,3);
-	write(ret)
+	write('Zadejte cislo pro vypocet faktorialu: ');
+	readln(a);
+
+	if a < 0 then{ Pokracovani hlavniho tela programu }
+	begin
+		write('Faktorial nelze spocitat'#10'')
+	end
+	else
+	begin
+
+		vysl := factorial(a);
+		write('Vysledek je: ', vysl, ''#10'')
+	end
 end.
+
