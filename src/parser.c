@@ -1480,7 +1480,7 @@ struct astNode* parseFuncCall(struct toc** id){
 	node->right = makeNewAST();
 	// parametry volani
 	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
-	vp->vars = NULL;
+	vp->vars = makeNewQueue();
 	vp->pars = parseCallParams(id);
 	node->right->other = vp;
 	
@@ -1872,7 +1872,7 @@ struct astNode* writeStatement(struct toc** cur){
 	node->type = AST_WRITE;
 
 	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
-	vp->vars = NULL;
+	vp->vars = makeNewQueue();
 	vp->pars = makeNewQueue();
 			
 	*cur = getToc();
@@ -1976,7 +1976,7 @@ struct astNode* readlnStatement(struct toc** cur){
 	
 	// jeden parametry - ID
 	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
-	vp->vars = NULL;
+	vp->vars = makeNewQueue();
 	vp->pars = makeNewQueue();
 	
 	struct symbolTableNode* var = searchOnTop((*cur)->data.str);
@@ -2015,7 +2015,7 @@ struct astNode* findStatement(struct toc** cur){
 	
 	find->right = makeNewAST();
 	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
-	vp->vars = NULL;
+	vp->vars = makeNewQueue();
 	vp->pars = makeNewQueue();
 			
 	for(int i = 0; i < 2; i++){
@@ -2086,7 +2086,7 @@ struct astNode* sortStatement(struct toc** cur){
 	node->dataType = DT_STR;
 	
 	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
-	vp->vars = NULL;
+	vp->vars = makeNewQueue();
 	vp->pars = makeNewQueue();
 	
 	// nacist jeden string parametr
@@ -2142,7 +2142,7 @@ struct astNode* lengthStatement(struct toc** cur){
 	node->dataType = DT_INT;
 	
 	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
-	vp->vars = NULL;
+	vp->vars = makeNewQueue();
 	vp->pars = makeNewQueue();
 	
 	// nacist jeden string parametr
@@ -2195,7 +2195,7 @@ struct astNode* copyStatement(struct toc** cur){
 	copy->dataType = DT_STR;
 	
 	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
-	vp->vars = NULL;
+	vp->vars = makeNewQueue();
 	vp->pars = makeNewQueue();
 	
 	*cur = getToc();
