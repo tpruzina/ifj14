@@ -1225,14 +1225,13 @@ struct astNode* parseFunction(){
 		// funkce byla definovana - tedy je inicializovana
 		// hack pro podporu rekurze
 		dekl->init = true;
-			
+		// ulozeni do tabulky symbolu
+		dekl->other = node;	
+		
 		// ocekavat telo
 		D("Body expectation");
 		node->left = makeNewAST();
 		node->left = parseBody(&cur, false, T_KW_END);
-		
-		// ulozeni do tabulky symbolu
-		dekl->other = node;
 		
 		// nacist strednik za definici
 		cur = getToc();
