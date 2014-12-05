@@ -763,7 +763,9 @@ struct astNode* parseBody(struct toc** cur, bool empty, int endtype){
 	body->type = AST_CMD;
 		
 	*cur = getToc(); // prvni token tela!!!
+	printTokenType(*cur);
 	if((int)(*cur)->type == endtype){
+		D("Empty body");	
 		if(empty)
 			return body;
 		else {
@@ -2384,6 +2386,8 @@ struct astNode* parseCommand(struct toc** cur){
 		case T_KW_BEGIN:
 			// dalsi blok kodu
 			node = parseBody(cur, true, T_KW_END);
+			// nacist dalsi token
+			*cur = getToc();
 			return node;
 		case T_KW_IF:
 			D("IF command");		
