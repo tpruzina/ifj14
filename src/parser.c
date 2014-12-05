@@ -655,7 +655,7 @@ int checkFunctionDeclarations(struct symbolTableNode* gft){
 	}
 	
 	// telo funkce
-	if(gtf->init == false){
+	if(gft->init == false){
 		E("Function without ast node deklaration");
 		exit(sem_prog);
 	}
@@ -872,7 +872,7 @@ struct queue* parseVars(struct toc** cur){
 				var->type = AST_INT;
 				
 				// vytvorit novy zaznam v tabulce
-				new = insertValue(&top, name, DT_INT);
+				new = insertValue(&top, var->data.str, DT_INT);
 					
 				if(!new)
 					return NULL;
@@ -882,7 +882,7 @@ struct queue* parseVars(struct toc** cur){
 			case T_KW_REAL: 
 				var->type = AST_REAL;
 				
-				new = insertValue(&top, name, DT_REAL);
+				new = insertValue(&top, var->data.str, DT_REAL);
 				if(!new)
 					return NULL;
 					
@@ -891,7 +891,7 @@ struct queue* parseVars(struct toc** cur){
 			case T_KW_BOOLEAN: 
 				var->type = AST_BOOL;
 								
-				new = insertValue(&top, name, DT_BOOL);
+				new = insertValue(&top, var->data.str, DT_BOOL);
 				if(!new)
 					return NULL;
 					
@@ -900,7 +900,7 @@ struct queue* parseVars(struct toc** cur){
 			case T_KW_STRING:
 				var->type = AST_STR;
 											
-				new = insertValue(&top, name, DT_STR);
+				new = insertValue(&top, var->data.str, DT_STR);
 				if(!new)
 					return NULL;
 					
@@ -967,7 +967,7 @@ struct queue* parseVars(struct toc** cur){
 					var->other = dta;		
 												
 					// vlozeni nazev pole do tabulky
-					new = insertValue(&top, name, DT_ARR);
+					new = insertValue(&top, var->data.str, DT_ARR);
 					if(!new)
 						return NULL;
 					
