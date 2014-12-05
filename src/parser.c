@@ -1038,8 +1038,9 @@ struct astNode* getDefPar(struct toc** cur){
 	*cur = getToc();
 	par->dataType = makeDataType(*cur);
 	
+	D("<Printing parametr>");
 	printAst(par);
-	
+	D("</Printing parametr>");
 	return par;
 }
 
@@ -1058,9 +1059,8 @@ struct queue* parseParams(struct symbolTableNode* top){
 	struct astNode* par = getDefPar(&cur);
 	// nacitani dokud jsou parametry
 	while(par != NULL){
-		struct String* name = (struct String*)par->other;
 		// nebyla nalezena pridat do TOP vrstvy
-		insertValue(&top, name, par->dataType);
+		insertValue(&top, par->data.str, par->dataType);
 					
 		// pridani parametru do fronty
 		queuePush(params, par);
@@ -1431,8 +1431,8 @@ void controlDefinitionParams(struct queue* defPars, struct queue* decPars){
 		def = (struct astNode*)defs->value;
 		dec = (struct astNode*)decs->value;
 	
-		defname = (struct String*)def->other;
-		decname = (struct String*)dec->other;
+		defname = def->data.str;
+		decname = dec->data.str;
 				
 		// porovnani nazvu promennych
 		if(compareStrings(defname, decname) != 0){
@@ -1838,8 +1838,7 @@ struct astNode* caseStatement(struct toc** cur){
 	struct symbolTableNode* var = searchOnTop((*cur)->data.str);
 		
 	// vytvoreni jmena promenne
-	struct String* name = makeNewString();
-	copyString((*cur)->data.str, &name);
+	copyString((*cur)->data.str, &(switchNode->data.str));
 	
 	// TODO zkontrolovat toto
 	// vytvoreni uzlu pro promennou
@@ -1862,7 +1861,6 @@ struct astNode* caseStatement(struct toc** cur){
 			switchNode->right->dataType = DT_STR;
 			break;
 	}
-	switchNode->right->other = name;
 	
 	// ocekavani OF
 	*cur = getToc();
@@ -1953,6 +1951,10 @@ struct astNode* writeStatement(struct toc** cur){
 				exit(sem_komp);
 		}
 				
+		D("WRITE PARAMETER");
+		printAst(nd);
+		D("/WRITE PARAMETER");
+				
 		// push do fronty
 		queuePush(vp->pars, nd);						
 				
@@ -2025,11 +2027,8 @@ struct astNode* findStatement(struct toc** cur){
 	struct astNode* find = makeNewAST();
  	find->type = AST_FIND;
 	find->dataType = DT_INT;
-			
-	struct String* name = makeNewString();
-	copyFromArray("find", &name);
-	find->other = name;
-	
+
+	// nacist zacatek parametru	
 	*cur = getToc();
 	expect((*cur), T_LPAR, synt);
 	
