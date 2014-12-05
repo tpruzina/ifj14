@@ -734,6 +734,9 @@ struct symbolTableNode convertAST2STN(struct astNode *ast)
 	{
 		struct symbolTableNode *p = runTree(ast);
 
+		if(!p)
+			exit(intern);
+
 		if(!p->init)
 			exit(run_ninit);
 
@@ -791,11 +794,19 @@ struct symbolTableNode *pushVarsParsIntoTable(
 		ast_dest = currFPItem->value;
 
 		stn_src = convertAST2STN(ast_src);
-		stn_dest = convertAST2STN(ast_dest);
+//		stn_dest = convertAST2STN(ast_dest);
+
+		if(ast_dest->type == AST_ID)
+		{
+			stn_dest.name = ast_dest->data.str;
+			stn_dest.dataType = ast_dest->dataType;
+		}
+		else
+			stn_dest = convertAST2STN(ast_dest);
 
 		if(stn_src.dataType == stn_dest.dataType)
 		{
-			new = insertValue(&table, ast_dest->other, stn_src.dataType);
+			new = insertValue(&table, ast_dest->data.str, stn_src.dataType);
 			if(stn_src.dataType == DT_INT)
 				insertDataInteger(&new, stn_src.data.int_data);
 			else if(stn_src.dataType == DT_BOOL)
