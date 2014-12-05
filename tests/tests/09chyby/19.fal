@@ -2,6 +2,10 @@
 var
 	ret: integer;
 
+function g(x:integer): integer; forward;
+function f(x:integer): integer; forward;
+
+
 function f(x:integer): integer;
 begin
 	f := g(x)

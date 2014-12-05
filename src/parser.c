@@ -685,7 +685,7 @@ struct symbolTableNode* searchOnTop(struct String* name){
 	struct symbolTableNode* nd = (struct symbolTableNode*)search(&stable, name);
 	if(!nd){
 		// nedefinovana promenna
-		E("semantic error - undefined variable");
+		E("searchOnTop: semantic error - undefined variable");
 		exit(sem_prog);
 	}
 
@@ -832,6 +832,97 @@ struct astNode* parseBody(struct toc** cur, bool empty, int endtype){
 	return body;
 }
 
+struct astNode* getArrayDef(struct toc** cur){
+	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+
+	struct astNode* var = makeNewAST();
+	struct dataTypeArray* dta;
+	// odkladiste pro nove promenne do tabulky symbolu				
+	struct symbolTableNode* new = NULL;
+	
+	// typ pole
+	var->type = AST_ID;
+	var->dataType = DT_ARR;
+
+	dta = (struct dataTypeArray*)gcMalloc(sizeof(struct dataTypeArray));
+	if(!dta)
+		return NULL;
+	copyString(var->data.str, &(dta->id));
+	
+	(*cur) = getToc();
+	if(expect((*cur), T_LBRC, synt)) {
+		// leva [ -> ocekavat integer								
+		(*cur) = getToc();
+		expect(*cur, T_INT, synt);
+		dta->low = (*cur)->data.integer;
+		
+		// interval - dve tecky mezi integery
+		(*cur) = getToc();
+		expect(*cur, T_DDOT, synt);
+		
+		// ocekavat druhy integer
+		(*cur) = getToc();
+		expect(*cur, T_INT, synt);
+		dta->high = (*cur)->data.integer;
+		
+		// ocekavam konec intervalu
+		(*cur) = getToc();
+		expect(*cur, T_RBRC, synt);
+		
+		// ocekavat OF
+		(*cur) = getToc();
+		expect(*cur, T_OF, synt);
+		
+		// nacteni typu promenne
+		(*cur) = getToc();
+		dta->type = makeDataType(*cur);
+		
+		// ulozeni odkazu na strukturu dat
+		var->other = dta;		
+									
+		// vlozeni nazev pole do tabulky
+		new = insertValue(&top, var->data.str, DT_ARR);
+		if(!new)
+			return NULL;
+		
+		// nastaveni ze se jedna o pole
+		new->dataType = DT_ARR;					
+		new->other = dta;								
+	}
+	return var;
+}
+
+/*
+ *	Ocekava nacteni ID z definici
+ */
+struct astNode* getVarDef(struct toc** cur){
+	// id	
+	expect(*cur, T_ID, synt);
+	
+	// novy uzel + kopie jmena
+	struct astNode* node = makeNewAST();
+	node->type = AST_ID;
+	copyString((*cur)->data.str, &(node->data.str));
+
+	// ocekavat dvojtecku
+	*cur = getToc();
+	expect(*cur, T_COL, synt);
+	
+	// nacteni datoveho typu
+	*cur = getToc();
+	node->dataType = makeDataType(*cur);
+	if(node->dataType == DT_NONE){
+		E("Syntax error - unexpected token type");
+		exit(synt);
+	}
+	
+	// kazda promenna musi koncit strednikem
+	*cur = getToc();
+	expect(*cur, T_SCOL, synt);
+	
+	return node;
+}
+
 /**
  * Parsuje var sekci funkce/programu
  * ---------------------------------
@@ -843,151 +934,18 @@ struct queue* parseVars(struct toc** cur){
 	struct queue* vars = makeNewQueue();		
 	struct symbolTableNode* top = (struct symbolTableNode*)stackPop(global.symTable);
 	
-	// nacetl VAR
-	
-	struct astNode* var = makeNewAST();
-	
-	// nacte prvni token
-	(*cur) = getToc();
-	
-	// pokud nacetl VAR tak musi nasledovat ID
-	expect(*cur, T_ID, synt);	
+	struct astNode* var = NULL;
+	*cur = getToc();
+	expect(*cur, T_ID, synt);
 	while((*cur)->type == T_ID){
-		// definice promennych
-		// kopie jmena promenne
-		copyString((*cur)->data.str, &(var->data.str));
-	
-		// odkladiste pro nove promenne do tabulky symbolu				
-		struct symbolTableNode* new = NULL;
-		struct dataTypeArray* dta;
-		
-		// nacteni dvojtecky
-		(*cur) = getToc();
-		expect((*cur), T_COL, synt);
-
-		// dostal dvojtecku --> ocekavat typ											
-		(*cur) = getToc();
-		switch((*cur)->type){
-			case T_KW_INT:
-				var->type = AST_INT;
-				
-				// vytvorit novy zaznam v tabulce
-				new = insertValue(&top, var->data.str, DT_INT);
-					
-				if(!new)
-					return NULL;
-				
-				new->dataType = DT_INT;							
-				break;
-			case T_KW_REAL: 
-				var->type = AST_REAL;
-				
-				new = insertValue(&top, var->data.str, DT_REAL);
-				if(!new)
-					return NULL;
-					
-				new->dataType = DT_REAL;
-				break;
-			case T_KW_BOOLEAN: 
-				var->type = AST_BOOL;
-								
-				new = insertValue(&top, var->data.str, DT_BOOL);
-				if(!new)
-					return NULL;
-					
-				new->dataType = DT_BOOL;
-				break;
-			case T_KW_STRING:
-				var->type = AST_STR;
-											
-				new = insertValue(&top, var->data.str, DT_STR);
-				if(!new)
-					return NULL;
-					
-				new->dataType = DT_STR;
-				break;
-			case T_ARR:	// -------------------------------POLE---------------
-				var->type = AST_ARR;
-			
-				dta = (struct dataTypeArray*)gcMalloc(sizeof(struct dataTypeArray));
-				if(!dta)
-					return NULL;
-				if(!(copyString(var->data.str, &(dta->id))))
-					return NULL;
-				
-				(*cur) = getToc();
-				if(expect((*cur), T_LBRC, synt)) {
-					// leva [ -> ocekavat integer								
-					(*cur) = getToc();
-					if((*cur)->type != T_INT){
-						E("vars: Syntax error - expected integer as lower range of array index");
-						//printTokenType(*cur);
-						exit(synt);
-					}
-					dta->low = (*cur)->data.integer;
-					
-					// interval - dve tecky mezi integery
-					(*cur) = getToc();
-					if((*cur)->type != T_DDOT){
-						E("vars: Syntax error - expected two dots");
-						//printTokenType(*cur);
-						exit(synt);
-					}
-					
-					// ocekavat druhy integer
-					(*cur) = getToc();
-					if((*cur)->type != T_INT){
-						E("vars: Syntax error - expected integer as higher range of array index");
-						//printTokenType(*cur);
-						exit(synt);
-					}
-					dta->high = (*cur)->data.integer;
-					
-					// ocekavam konec intervalu
-					(*cur) = getToc();
-					if((*cur)->type != T_RBRC){
-						E("vars: Syntax error - expected right brace");
-						//printTokenType(*cur);
-						exit(synt);
-					}
-					
-					// ocekavat OF
-					(*cur) = getToc();
-					if((*cur)->type != T_OF){
-						E("vars: Syntax error - expected OF for defining type of array");
-						//printTokenType(*cur);
-						exit(synt);
-					}
-					
-					// nacteni typu promenne
-					(*cur) = getToc();
-					dta->type = makeDataType(*cur);
-					
-					// ulozeni odkazu na strukturu dat
-					var->other = dta;		
-												
-					// vlozeni nazev pole do tabulky
-					new = insertValue(&top, var->data.str, DT_ARR);
-					if(!new)
-						return NULL;
-					
-					// nastaveni ze se jedna o pole
-					new->dataType = DT_ARR;					
-					new->other = dta;								
-				}
-											
-				break;
-			default:
-				E("vars: Syntax error - expected type");
-				exit(synt);	
-		}				
-		
-		// nacist strednik
-		(*cur) = getToc();
-		expect((*cur), T_SCOL, synt);
+		// nacteni definice
+		var = getVarDef(cur);					
 						
 		// vlozit prvek
 		queuePush(vars, var);
+		
+		// ulozit do top vrstvy
+		insertValue(&top, var->data.str, var->dataType);
 		
 		// nacist dalsi token
 		*cur = getToc();
@@ -1001,7 +959,6 @@ struct queue* parseVars(struct toc** cur){
 			
 	// vratit seznam promennych
 	return vars;
-
 }
 
 
@@ -1115,7 +1072,7 @@ struct astNode* parseFunction(){
 	cur = getToc();
 	expect(cur, T_LPAR, synt);
 
-	// sparsovat parametry
+	// Ochrana proti kopirovani NULLu
 	struct symbolTableNode* newlayer;
 	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
 	if(top){
@@ -1143,28 +1100,37 @@ struct astNode* parseFunction(){
 	// za datovym typem nasleduje strednik
 	cur = getToc();
 	expect(cur, T_SCOL, synt);
-		
+	
 	// ulozit do tabulky zastupnou promennou za return spolu s parametry
 	insertValue(&top, name, node->dataType);
+		
+	///////////////////////////////////////////
+	//	KONEC HLAVICKY FUNKCE
+	///////////////////////////////////////////
 
-	// prohledani tabulky funkci -- hledani definice nebo deklarace
-	struct symbolTableNode* dekl = (struct symbolTableNode*)search(&(global.funcTable), name);
-	
+	// deklarace funkce
+	struct symbolTableNode* dekl = (struct symbolTableNode*)search(&global.funcTable, name);
+		
 	// -------------------------
 	// DOPREDNA DEKLARACE FUNKCE
 	// -------------------------
 	cur = getToc();
 	if(cur->type == T_KW_FORW){
+		D("FORWARD DEC!");
+		printString(name);
+				
 		cur = getToc();
 		// za FORWARD ocekavat strednik
 		expect(cur, T_SCOL, synt);
 	
+	
 		// dopredna deklarace - pokud ji najde ve funkcich je neco spatne
-	 	if(!dekl)
+	 	if(dekl == NULL) // nenasel je to OK
 		 	dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), name, node->dataType);
 		else {
 			// nalezl deklarovanou/definovanou funkci v tabulce
-			E("function: Syntax error - function redefinition");
+			// neni mozne znovu deklarovat
+			E("function: Semantic error - function redefinition");
 			exit(sem_prog);
 		}
 			
@@ -1267,7 +1233,7 @@ struct queue* parseCallParams(struct toc** cur){
 	(*cur) = getToc();
 	while((*cur)->type != T_RPAR){
 		struct astNode* nd = makeNewAST();
-		
+		printTokenType(*cur);
 		struct symbolTableNode* id;
 		switch((*cur)->type){
 			case T_ID:
@@ -1294,11 +1260,17 @@ struct queue* parseCallParams(struct toc** cur){
 				nd->data.real = (*cur)->data.real;
 				
 				break;
-			case T_BOOL: 
+			case T_KW_TRUE: 
 				// predany parametr typu bool
 				nd->type = AST_BOOL;
 				nd->dataType = DT_BOOL;
-				nd->data.boolean = (*cur)->data.boolean;
+				nd->data.boolean = true;
+				break;
+			case T_KW_FALSE: 
+				// predany parametr typu bool
+				nd->type = AST_BOOL;
+				nd->dataType = DT_BOOL;
+				nd->data.boolean = false;
 				break;
 			case T_STR:
 				// predany parametry typu string
@@ -1308,7 +1280,7 @@ struct queue* parseCallParams(struct toc** cur){
 				break;
 			default:
 				E("callPars: Syntax error - invalid parameter type");
-				//printTokenType((*cur));
+				printTokenType((*cur));
 				exit(synt);
 		}
 		
@@ -1346,13 +1318,18 @@ void controlCallParams(struct queue* callParams, struct queue* funcParams){
 		exit(intern);
 	}
 	
+	if(callParams->length != funcParams->length){
+		E("Semantic error - wrong parameter count");
+		exit(sem_komp);
+	}
+	
 	struct queueItem* qi1,* qi2;
 	qi1 = callParams->start;
 	qi2 = funcParams->start;
 
 	struct astNode* qi1ast;
 	struct astNode* qi2ast;
-	while(qi2 != NULL){
+	while(qi1 && qi2){
 		// dokud sedi parametry podle deklarace
 		qi1ast = (struct astNode*)qi1->value;
 		qi2ast = (struct astNode*)qi2->value;
@@ -2133,6 +2110,7 @@ struct astNode* sortStatement(struct toc** cur){
 	*cur = getToc();
 	
 	node->right = makeNewAST();
+	printVarsPars(vp);
 	node->right->other = vp;
 	
 	return node;
@@ -2540,21 +2518,25 @@ struct astNode* parseExpression(struct toc** cur){
 			case T_KW_LENGTH:
 				W("builtin -- length");
 				node = lengthStatement(cur);
+				stackPush(aststack, node);
 				readNew = false;
 				break;
 			case T_KW_SORT:
 				W("builtin -- sort");
 				node = sortStatement(cur);
+				stackPush(aststack, node);
 				readNew = false;
 				break;
 			case T_KW_FIND:
 				W("builtin -- find");
 				node = findStatement(cur);
+				stackPush(aststack, node);
 				readNew = false;
 				break;
 			case T_KW_COPY:
 				W("builtin -- copy");
 				node = copyStatement(cur);
+				stackPush(aststack, node);
 				readNew = false;
 				break;
 			case T_LPAR: 
@@ -2685,7 +2667,7 @@ struct astNode* parseExpression(struct toc** cur){
 			case T_AND:
 			case T_OR:
 			case T_XOR:
-			case T_NOT: {
+			case T_NOT:
 				W("Operator comes");
 				//printTokenType(*cur);
 				// 3. operator:
@@ -2717,12 +2699,11 @@ struct astNode* parseExpression(struct toc** cur){
 					stackPush(stack, (*cur));
 				}	
 				break;
-			}
 			case T_KW_END:
 			case T_KW_ENDDOT:
 			case T_SCOL:
 			case T_KW_DO:
-			case T_KW_THEN: {
+			case T_KW_THEN:
 				// vyprazdnit vsechny operatory v zasobniku a postavit nad nimi strom
 				D("expr: Making node into");
 				//printTokenType(*cur);
@@ -2731,8 +2712,7 @@ struct astNode* parseExpression(struct toc** cur){
 					D("expr: STACK STATE START =======");
 				
 					now = (struct toc*)stackPop(stack);
-					//printTokenType(now);
-					
+					//printTokenType(now);					
 					
 					makeAstFromToken(now, &aststack);
 						
@@ -2740,21 +2720,17 @@ struct astNode* parseExpression(struct toc** cur){
 					printAstStack(aststack);
 				}				
 			
-				// v pripade, ze je v zasobniku jen jeden prvek, vratit ho, je to vysledek SY algoritmu
-				if(aststack->Length > 1){
-					E("expression: Shunting yard error - stack length is grather then 1");
+				// v pripade, ze je v zasobniku jen jeden prvek
+				// vratit ho, je to vysledek SY algoritmu
+				if(aststack->Length != 1){
+					E("expression: Shunting yard error - wrong expression syntax");
 					printAstStack(aststack);
 					exit(synt);
-				}
-				else if(aststack->Length == 0){
-					E("expression: Shunting yard error - stack is empty");
-					exit(intern);
 				}
 			
 				// vrati vrchol 
 				D("expression: Returning top layer");
 				return stackPop(aststack);
-			}
 			default:
 				E("expression: Syntax error - bad token type");			
 				//printTokenType(*cur);

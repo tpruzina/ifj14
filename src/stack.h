@@ -47,6 +47,7 @@ struct queueItem {
 	struct queueItem* next;
 };
 struct queue {
+	int length;
 	struct queueItem* start;
 	struct queueItem* end;
 };
