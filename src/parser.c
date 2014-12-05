@@ -1225,11 +1225,12 @@ struct astNode* parseFunction(){
 		
 		// ocekavat telo
 		D("Body expectation");
-		node->left = parseBody(&cur, false, T_KW_END);	
+		node->left = parseBody(&cur, false, T_KW_END);
 		
 		// funkce byla definovana - tedy je inicializovana
 		dekl->init = true;
-		
+		dekl->other = node;
+
 		cur = getToc();
 		expect(cur, T_SCOL, synt);
 		

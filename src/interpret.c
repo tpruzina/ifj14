@@ -826,19 +826,21 @@ struct symbolTableNode *pushVarsParsIntoTable(
 	}
 
 	// do docasnej tabulky symbolov narveme vars
-	ASSERT(function_vars && function_vars->start);
-	struct queueItem *varsQueue = function_vars->start;
-	while(varsQueue)
+	if(function_vars)
 	{
-		ast_src = varsQueue->value;
-		
-		ASSERT(ast_src->type == AST_ID);
+		struct queueItem *varsQueue = function_vars->start;
+		while(varsQueue)
+		{
+			ast_src = varsQueue->value;
 
-		new = insertValue(&table, ast_src->data.str, ast_src->dataType);
+			ASSERT(ast_src->type == AST_ID);
 
-		ASSERT(varsQueue != varsQueue->next);
+			new = insertValue(&table, ast_src->data.str, ast_src->dataType);
 
-		varsQueue = varsQueue->next;
+			ASSERT(varsQueue != varsQueue->next);
+
+			varsQueue = varsQueue->next;
+		}
 	}
 	return table;
 }
