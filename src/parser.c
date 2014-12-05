@@ -1018,6 +1018,7 @@ struct astNode* getDefPar(struct toc** cur){
 	
 	// nacteni prvniho tokenu
 	*cur = getToc();
+	printTokenType(*cur);
 	
 	// konec parametru
 	if((*cur)->type == T_RPAR)
@@ -1027,9 +1028,7 @@ struct astNode* getDefPar(struct toc** cur){
 	expect(*cur, T_ID, synt);
 	
 	// ulozeni jmena parametru
-	struct String* name;
-	copyString((*cur)->data.str, &name);
-	par->other = name;
+	copyString((*cur)->data.str, &(par->data.str));
 	
 	// ocekavani dvojtecky
 	*cur = getToc();
@@ -1038,6 +1037,8 @@ struct astNode* getDefPar(struct toc** cur){
 	// nacteni datoveho typu
 	*cur = getToc();
 	par->dataType = makeDataType(*cur);
+	
+	printAst(par);
 	
 	return par;
 }
@@ -1083,6 +1084,7 @@ struct queue* parseParams(struct symbolTableNode* top){
 	
 	W("/parseParams");
 	// pouze v pripade, ze byla zadana prava zavorka vratit seznam
+	
 	return params;		
 }
 
@@ -1907,19 +1909,15 @@ struct astNode* writeStatement(struct toc** cur){
 	while((*cur)->type != T_RPAR){
 		// ocekavat cokoliv
 		struct astNode* nd = makeNewAST();
-		struct String* name = NULL;
 		struct symbolTableNode* var;
 		
 		switch((*cur)->type){
 			case T_ID:
 				var = searchOnTop((*cur)->data.str);
 				// vytvorit novy uzel
-				nd->type = AST_ID;
-				
+				nd->type = AST_ID;				
 				// nazev promenne
-				name = makeNewString();
-				copyString((*cur)->data.str, &name);
-				nd->other = name;
+				copyString((*cur)->data.str, &(nd->data.str));
 				// datovy typ promenne
 				nd->dataType = var->dataType;
 				
@@ -2007,11 +2005,7 @@ struct astNode* readlnStatement(struct toc** cur){
 	struct astNode* nd = makeNewAST();
 	nd->type = AST_ID;
 	nd->dataType = var->dataType;
-	
-	struct String* idname = makeNewString();
-	copyString((*cur)->data.str, &idname);
-	nd->other = idname;
-	
+	copyString((*cur)->data.str, &(nd->data.str));
 	queuePush(vp->pars, nd);
 		
 	node->right = makeNewAST();
@@ -2056,13 +2050,10 @@ struct astNode* findStatement(struct toc** cur){
 				exit(sem_komp);
 			}
 		
-			struct String* name;
-			copyString((*cur)->data.str, &name);
-		
 			struct astNode* first = makeNewAST();
 			first->type = AST_ID;
 			first->dataType = DT_STR;
-			copyString((*cur)->data.str, (struct String **)&(first->other));
+			copyString((*cur)->data.str, &(first->data.str));
 
 			// novy parametr
 			queuePush(vp->pars, first);
@@ -2132,9 +2123,7 @@ struct astNode* sortStatement(struct toc** cur){
 		nd->dataType = DT_STR;
 	
 		// jmeno promenne
-		struct String* name = NULL;
-		copyString(var->name, &name);
-		nd->other = name;
+		copyString(var->name, &(nd->data.str));
 
 		// ulozit do seznamu
 		queuePush(vp->pars, nd);
@@ -2187,12 +2176,9 @@ struct astNode* lengthStatement(struct toc** cur){
 		// uzel pro promennou
 		struct astNode* nd = makeNewAST();
 		nd->type = AST_ID;
-		nd->dataType = DT_STR;
-	
+		nd->dataType = DT_STR;	
 		// jmeno promenne
-		struct String* name = NULL;
-		copyString(var->name, &name);
-		nd->other = name;
+		copyString(var->name, &(nd->data.str));
 	
 		queuePush(vp->pars, nd);
 	}
@@ -2242,12 +2228,9 @@ struct astNode* copyStatement(struct toc** cur){
 		// novy uzel
 		struct astNode* nid = makeNewAST();
 		nid->type = AST_ID;
-		nid->dataType = var->dataType;
-		
+		nid->dataType = var->dataType;		
 		// kopie jmena
-		struct String* name = NULL;
-		copyString((*cur)->data.str, &name);
-		nid->other = name;
+		copyString((*cur)->data.str, &(nid->data.str));
 		
 		// push prvniho parametru
 		queuePush(vp->pars, nid);				
@@ -2286,12 +2269,9 @@ struct astNode* copyStatement(struct toc** cur){
 			// novy uzel
 			struct astNode* nid = makeNewAST();
 			nid->type = AST_ID;
-			nid->dataType = var->dataType;
-			
+			nid->dataType = var->dataType;			
 			// kopie jmena
-			struct String* name = NULL;
-			copyString((*cur)->data.str, &name);
-			nid->other = name;
+			copyString((*cur)->data.str, &(nid->data.str));
 			
 			// push prvniho parametru
 			queuePush(vp->pars, nid);		
@@ -2350,10 +2330,7 @@ struct astNode* arrayIndexStatement(struct toc** cur){
 		struct astNode* nid = makeNewAST();
 		nid->type = AST_ID;
 		nid->dataType = var->dataType;
-
-		struct String* name = NULL;
-		copyString((*cur)->data.str, &name);
-		nid->other = name;
+		copyString((*cur)->data.str, &(nid->data.str));
 
 		// ulozeni doleva
 		arrid->left = nid;
@@ -2503,7 +2480,7 @@ struct astNode* parseExpression(struct toc** cur){
 	struct stack* aststack = makeNewStack();
 
 	bool readNew = true;
-	struct astNode *cmd = NULL;
+	//struct astNode *cmd = NULL;
 	
 
 	// zacatek podminky

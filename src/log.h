@@ -52,20 +52,20 @@
 #define COLOR_LCYN ""
 #endif
 
-//#ifdef _DEBUG
+#ifdef _DEBUG
 #define PRINT 1
 #define DBG 1
 #define WRG 1
 #define PRT 1
-//#endif
-/*
+#endif
+
 #ifndef _DEBUG
 #define PRINT 1
 #define DBG 0
 #define WRG 0
 #define PRT 0
 #endif
-*/
+
 enum LogFrom { MAIN, GC, STRING, STACK, AST, IAL, PARSER , SYMTABLE};
 enum LogType { DEBUG, ERROR, WARNING };
 /*
