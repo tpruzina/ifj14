@@ -51,7 +51,10 @@ getToc()
 
 	while (true)
 	{
-		c = tolower(getChar());
+		if(state != KA_STR_LIT_INISDE)
+			c = tolower(getChar());
+		else
+			c = getChar();
 
 		switch(state)
 		{
