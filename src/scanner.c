@@ -51,7 +51,7 @@ getToc()
 
 	while (true)
 	{
-		if(state != KA_STR_LIT_INISDE)
+		if(state != KA_STR_LIT_INSIDE)
 			c = tolower(getChar());
 		else
 			c = getChar();
@@ -207,13 +207,13 @@ getToc()
 			else if(ascii(c))	//mame znak v tele literalu 31-127 minus {#,'}
 			{
 				addChar(str,c);
-				state = KA_STR_LIT_INISDE;
+				state = KA_STR_LIT_INSIDE;
 			}
 			else
 				state = KA_ERR;
 			break;
 
-		case KA_STR_LIT_INISDE:	//sme vnoreni v str. literale
+		case KA_STR_LIT_INSIDE:	//sme vnoreni v str. literale
 			if('\'' == c)
 				state = KA_STR_LIT_DONE; //mame ukoncenie
 			else if(ascii(c))
@@ -227,13 +227,13 @@ getToc()
 			{	// specialny case ked mame dve ''
 				// musime pridat ' do stringu a vratit sa do inside
 				addChar(str,c);
-				state = KA_STR_LIT_INISDE;
+				state = KA_STR_LIT_INSIDE;
 			}
 			else if('#' == c)
 			{
 				parse_escape_seq(&c);
 				addChar(str,(char)c);
-				state = KA_STR_LIT_INISDE;
+				state = KA_STR_LIT_INSIDE;
 			}
 			else
 			{

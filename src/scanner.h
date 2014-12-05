@@ -74,7 +74,7 @@ enum KA_STATES
 	KA_COM,
 
 	KA_STR_LIT,
-	KA_STR_LIT_INISDE,
+	KA_STR_LIT_INSIDE,
 	KA_STR_LIT_DONE,
 	//here the fun begins
 	KA_SHARP,			// #
