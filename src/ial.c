@@ -103,8 +103,8 @@ void partition (struct String *str, int left, int right, int* i_, int* j_)
 		if (i <= j)
 		{
 			c = str->Value [i];
-			str->Value [i] = str->Value [j];
-			str->Value [j] = c;
+			str->Value[i] = str->Value [j];
+			str->Value[j] = c;
 
 			i++;
 			j--;
@@ -136,7 +136,7 @@ void sortString (struct String *str)
 
 	// provedu pocatecni nastaveni
 	int left = 0;
-	int right = str->Length-1;
+	int right = strlen(str->Value) -1;
 
 	// zavolam vlastni quicksort
 	quicksort (str, left, right);

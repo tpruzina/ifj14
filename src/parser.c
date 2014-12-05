@@ -777,7 +777,7 @@ struct astNode* parseBody(struct toc** cur, bool empty, int endtype){
 	D("Before command while");
 	printTokenType(*cur);
 
-	struct astNode* cmd = parseCommand(cur);
+ 	struct astNode* cmd = parseCommand(cur);
 	if((int)((*cur)->type) == endtype){
 		D("body: gets END");
 		// ukonceni bloku kodu

@@ -237,7 +237,6 @@ getToc()
 			}
 			else
 			{
-				addChar(str,'\0');
 				// inak hotovo
 				toc->type = T_STR;
 				toc->data.str = str;
