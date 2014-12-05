@@ -684,6 +684,8 @@ void readNode(struct symbolTableNode *p)
 	struct String *tmp = makeNewString();
 	int c;
 
+	int ret = 0;
+
 	c = fgetc(stdin);
 	if(c == EOF)
 		exit(6);
@@ -706,7 +708,9 @@ void readNode(struct symbolTableNode *p)
 			if(c != '\t' && c != ' ')
 				addChar(tmp,c);
 		}
-		sscanf(tmp->Value,"%lg", &(p->data.real_data));	//todo chybove vstupy
+		ret = sscanf(tmp->Value,"%lg", &(p->data.real_data));	//todo chybove vstupy
+		if(!ret)
+			exit(6);
 	}
 	else if(p->dataType == DT_INT)
 	{
@@ -715,7 +719,9 @@ void readNode(struct symbolTableNode *p)
 			if(c != '\t' && c != ' ')
 				addChar(tmp,c);
 		}
-		sscanf(tmp->Value,"%d", &(p->data.int_data));	//todo chybove vstupy
+		ret = sscanf(tmp->Value,"%d", &(p->data.int_data));	//todo chybove vstupy
+		if(!ret)
+			exit(6);
 	}
 	else if(p->dataType == DT_BOOL)
 		exit(4);
