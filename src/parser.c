@@ -1113,10 +1113,10 @@ struct astNode* parseFunction(){
 		// nalezl zaznam
 		D("Function is in funcTable");
 		if(dekl->init){
-			D("Function has definition");
+			D("Function has definition -- REDEFINITION");
 		}
 		else {
-			D("Function has declaration");
+			D("Function has declaration -- MAY BE REDEFINITION");
 		}
 		
 		if(dekl->other){
@@ -1186,25 +1186,26 @@ struct astNode* parseFunction(){
 			E("Semantic error - function redefinition");
 			exit(sem_prog);
 		}
+		else {			
+			// v pripade ze mel DEKLARACI nebo vznikla nova polozka
+			struct astNode* telo = (struct astNode*)(dekl->other);	
+			if(telo){		
+				// mel deklaraci - asi
+				struct astNode* vpnode = telo->right;
+				if(!vpnode){
+					E("Right varspars subnode is empty");
+					exit(intern);
+				}
 			
-		// v pripade definovani deklarovane funkce
-		if(dekl->init == false && dekl->other != NULL) {
-			// v pripade se jedna o deklarovanou funkci
-			struct astNode* telo = (struct astNode*)(dekl->other);			
-			struct astNode* vpnode = telo->right;
-			if(!vpnode){
-				E("Right varspars subnode is empty");
-				exit(intern);
-			}
-			
-			// kontrola na spravnost parametru s deklaraci
-			struct varspars* deklpars = (struct varspars*)vpnode->other;
-			controlDefinitionParams(vp->pars, deklpars->pars);
-	 		D("Control def params DONE");
-			if(telo->left != NULL){
-				// telo uz bylo jednou definovane!!
-				E("function: Syntax error - redefinition of function");
-				exit(sem_prog);
+				// kontrola na spravnost parametru s deklaraci
+				struct varspars* deklpars = (struct varspars*)vpnode->other;
+				controlDefinitionParams(vp->pars, deklpars->pars);
+			 	D("Control def params DONE");
+				if(telo->left != NULL){
+					// telo uz bylo jednou definovane!!
+					E("function: Syntax error - redefinition of function");
+					exit(sem_prog);
+				}
 			}
 		}
 	
@@ -1218,18 +1219,17 @@ struct astNode* parseFunction(){
 		node->right = makeNewAST();
 		node->right->other = vp;
 		printVarsPars(vp);
-	
-		if(!dekl->other){
-			dekl->other = node;
-		}
-		
+			
 		// ocekavat telo
 		D("Body expectation");
 		node->left = parseBody(&cur, false, T_KW_END);	
 		
 		// funkce byla definovana - tedy je inicializovana
 		dekl->init = true;
+		// ulozeni do tabulky symbolu
+		dekl->other = node;
 		
+		// nacist strednik za definici
 		cur = getToc();
 		expect(cur, T_SCOL, synt);
 		
