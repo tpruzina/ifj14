@@ -46,6 +46,8 @@ int init(char* srcpath){
 	global.gc->listLength = 0;
 
 	global.src = fopen(srcpath, "r");
+	if(!global.src)
+		exit(intern);
 	global.errno = ok;
 	global.lineCounter = 0;
 	
