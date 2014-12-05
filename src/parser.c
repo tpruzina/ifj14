@@ -220,6 +220,32 @@ int expect(struct toc* cur, int type, int exitcode){
 	return true;
 }
 
+/**
+ * Pomocna funkce, pro hledani promennych v TOP vrstve tabulky symbolu
+ */
+struct symbolTableNode* searchOnTop(struct String* name){
+	struct symbolTableNode* nd = NULL;
+	
+	// nejprve hledat v globalni tabulce
+	// mimo funkci je NULL, takze preskoci
+	if(global.globalTable){
+		nd = search(&global.globalTable, name);
+	}
+	
+	// pokud je stale NULL
+	if(!nd){
+		struct symbolTableNode* stable = (struct symbolTableNode*)stackTop(global.symTable);
+		nd = (struct symbolTableNode*)search(&stable, name);
+		if(!nd){
+			// nedefinovana promenna
+			E("searchOnTop: semantic error - undefined variable");
+			exit(sem_prog);
+		}
+	}
+	
+	return nd;
+}
+
 void printAstStack(struct stack* aststack){
 	if(!PRT) return;
 
@@ -342,12 +368,9 @@ int valid(struct astNode* left, struct astNode* right, int op){
 		}
 	}
 	
-	
-	struct symbolTableNode* symtable = (struct symbolTableNode*)stackTop(global.symTable);
-	
 	// dodatecne typy leve strany
 	if(left->type == AST_ID){
-		struct symbolTableNode* id = search(&symtable, left->data.str);
+		struct symbolTableNode* id = searchOnTop(left->data.str);
 		if(id == NULL){
 			E("valid: ID not found in symtable");
 			exit(intern);
@@ -373,7 +396,7 @@ int valid(struct astNode* left, struct astNode* right, int op){
 	
 	// Dodatecne typy prave strany
 	if(right->type == AST_ID){
-		struct symbolTableNode* id = search(&symtable, right->data.str);
+		struct symbolTableNode* id = searchOnTop(right->data.str);
 		if(id == NULL){
 			E("valid: ID not found in symbol table");
 			exit(intern);
@@ -644,6 +667,8 @@ int parser(){
 	// prohledat celou tabulku funkci a hledat polozku bez tela
 	checkFunctionDeclarations(global.funcTable);
 	
+	global.globalTable = NULL;
+	
 	global.program = prog;
 	return True;
 }
@@ -675,21 +700,6 @@ int checkFunctionDeclarations(struct symbolTableNode* gft){
 		return checkFunctionDeclarations(gft->right);
 		
 	return True;
-}
-
-/**
- * Pomocna funkce, pro hledani promennych v TOP vrstve tabulky symbolu
- */
-struct symbolTableNode* searchOnTop(struct String* name){
-	struct symbolTableNode* stable = (struct symbolTableNode*)stackTop(global.symTable);
-	struct symbolTableNode* nd = (struct symbolTableNode*)search(&stable, name);
-	if(!nd){
-		// nedefinovana promenna
-		E("searchOnTop: semantic error - undefined variable");
-		exit(sem_prog);
-	}
-
-	return nd;
 }
 
 /**
@@ -1007,19 +1017,19 @@ struct astNode* getDefPar(struct toc** cur){
  * Parsuje parametry v definici/deklaraci funkce
  * ---------------------------------------------
  */
-struct queue* parseParams(struct symbolTableNode* top){
+struct queue* parseParams(){
 	W("parseParams");
 	struct toc* cur = NULL;
 	struct queue* params = makeNewQueue();
 	if(!params)
 		return NULL;
-	
+			
 	// nelezl levou zavorku -> nacitat dokud nenarazi na pravou zavorku
 	struct astNode* par = getDefPar(&cur);
 	// nacitani dokud jsou parametry
-	while(par != NULL){
-		// nebyla nalezena pridat do TOP vrstvy
-		insertValue(&top, par->data.str, par->dataType);
+	while(par != NULL){	
+		// nebyla nalezena pridat do vrstvy	pro tabulku
+		insertValue(&global.globalTable, par->data.str, par->dataType);
 					
 		// pridani parametru do fronty
 		queuePush(params, par);
@@ -1040,7 +1050,7 @@ struct queue* parseParams(struct symbolTableNode* top){
 			exit(synt);
 		}
 	}
-	
+		
 	W("/parseParams");
 	// pouze v pripade, ze byla zadana prava zavorka vratit seznam
 	
@@ -1074,22 +1084,11 @@ struct astNode* parseFunction(){
 	cur = getToc();
 	expect(cur, T_LPAR, synt);
 
-	// Ochrana proti kopirovani NULLu
-	struct symbolTableNode* newlayer;
-	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
-	if(top){
-		// osetreni pokud byl top null, aby nekopiroval nic
-		copyTable(top, &newlayer);
-		if(newlayer == NULL){
-			E("function: copy failed");
-			exit(intern);
-		}
-		stackPush(global.symTable, newlayer);
-		top = (struct symbolTableNode*)stackTop(global.symTable);
-	}
+	//struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+	
 	// vyhodnoti parametry a vytvori frontu
 	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
-	vp->pars = parseParams(top);
+	vp->pars = parseParams();
 		
 	// za parametry nasleduje dvojtecka
 	cur = getToc();
@@ -1104,7 +1103,7 @@ struct astNode* parseFunction(){
 	expect(cur, T_SCOL, synt);
 	
 	// ulozit do tabulky zastupnou promennou za return spolu s parametry
-	insertValue(&top, name, node->dataType);
+	insertValue(&global.globalTable, name, node->dataType);
 		
 	///////////////////////////////////////////
 	//	KONEC HLAVICKY FUNKCE
@@ -1153,7 +1152,8 @@ struct astNode* parseFunction(){
 		}
 			
 		// v pripade dopredne deklarace neni nutne pouzivat parametry
-		stackPop(global.symTable);
+		//stackPop(global.symTable);
+		global.globalTable = NULL;
 						
 	 	// nastaveni navratovy typ
 	 	dekl->dataType = node->dataType;
@@ -1238,7 +1238,8 @@ struct astNode* parseFunction(){
 		expect(cur, T_SCOL, synt);
 		
 		// odstranit vrchol s parametry a return promennou
-		stackPop(global.symTable);			
+		//stackPop(global.symTable);			
+		global.globalTable = NULL;
 		return node;
 	}
 	

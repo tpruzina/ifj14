@@ -493,7 +493,6 @@ int copyTable(struct symbolTableNode* src, struct symbolTableNode** dest){
 		copyTable(src->right, &((*dest)->right));	
 	}
 	else {
-		Log("copyTable: src == NULL!!!!", DEBUG, IAL);
 		(*dest) = NULL;	
 	}
 	return True;
