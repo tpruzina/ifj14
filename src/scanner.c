@@ -51,10 +51,10 @@ getToc()
 
 	while (true)
 	{
-		if(state != KA_STR_LIT_INSIDE)
-			c = tolower(getChar());
-		else
+		if(state == KA_STR_LIT_INSIDE || state == KA_STR_LIT)
 			c = getChar();
+		else
+			c = tolower(getChar());
 
 		switch(state)
 		{
