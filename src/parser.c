@@ -1266,7 +1266,7 @@ struct queue* parseCallParams(struct toc** cur){
 	
 	(*cur) = getToc();
 	while((*cur)->type != T_RPAR){
-		struct astNode* nd;
+		struct astNode* nd = makeNewAST();
 		
 		struct symbolTableNode* id;
 		switch((*cur)->type){
