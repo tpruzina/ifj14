@@ -831,9 +831,13 @@ struct symbolTableNode *pushVarsParsIntoTable(
 	while(varsQueue)
 	{
 		ast_src = varsQueue->value;
-		stn_src = convertAST2STN(ast_src);
 		
-		new = insertValue(&table, ast_src->other, stn_src.dataType);
+		ASSERT(ast_src->type == AST_ID);
+
+		new = insertValue(&table, ast_src->data.str, ast_src->dataType);
+
+		ASSERT(varsQueue != varsQueue->next);
+
 		varsQueue = varsQueue->next;
 	}
 	return table;
