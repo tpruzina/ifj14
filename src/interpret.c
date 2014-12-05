@@ -779,7 +779,9 @@ struct symbolTableNode *pushVarsParsIntoTable(
 	struct symbolTableNode *table = makeNewSymbolTable();
 	struct symbolTableNode *new = NULL;
 
+	ASSERT(call_params);
 	struct queueItem *currCPItem = call_params->start;
+	ASSERT(function_params);
 	struct queueItem *currFPItem = function_params->start;
 
 	struct astNode *ast_src, *ast_dest;
@@ -824,6 +826,7 @@ struct symbolTableNode *pushVarsParsIntoTable(
 	}
 
 	// do docasnej tabulky symbolov narveme vars
+	ASSERT(function_vars && function_vars->start);
 	struct queueItem *varsQueue = function_vars->start;
 	while(varsQueue)
 	{
