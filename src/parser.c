@@ -1107,9 +1107,25 @@ struct astNode* parseFunction(){
 	///////////////////////////////////////////
 	//	KONEC HLAVICKY FUNKCE
 	///////////////////////////////////////////
-
 	// deklarace funkce
 	struct symbolTableNode* dekl = (struct symbolTableNode*)search(&global.funcTable, name);
+	if(dekl){
+		// nalezl zaznam
+		D("Function is in funcTable");
+		if(dekl->init){
+			D("Function has definition");
+		}
+		else {
+			D("Function has declaration");
+		}
+		
+		if(dekl->other){
+			D("Function has body node");
+		}
+		else {
+			D("Function has not body node");
+		}
+	}
 		
 	// -------------------------
 	// DOPREDNA DEKLARACE FUNKCE
@@ -1164,6 +1180,11 @@ struct astNode* parseFunction(){
 		if(!dekl) {
 			// nebyla nalezena - vlozit novy uzel
 			dekl = (struct symbolTableNode*)insertValue(&(global.funcTable), name, node->dataType);
+		}
+		
+		if(dekl->init == true){
+			E("Semantic error - function redefinition");
+			exit(sem_prog);
 		}
 			
 		// v pripade definovani deklarovane funkce
