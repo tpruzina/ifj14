@@ -79,7 +79,7 @@ struct String* copy(struct String *str, int i, int n){
  * str: predany text
  */
 int length(struct String* str){
-	return str->Length;
+	return strlen(str->Value);
 }
 
 void partition (struct String *str, int left, int right, int* i_, int* j_)
