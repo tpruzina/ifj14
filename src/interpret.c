@@ -364,7 +364,7 @@ void *runTree(struct astNode *curr)
 		tmp_vp = curr->right->other;			// vyrvem si varspars
 		tmp_asp = tmp_vp->pars->start->value;	// vyrvem z toho ast node
 		// a z vyjebaneho ast_node->other vyjebem dojebany string ktory este vyhladam v tabulke
-		tmp = searchST(&top, tmp_asp->other);
+		tmp = searchST(&top, tmp_asp->data.str);
 		// a po tomto celom bullshite este zavolam funkciu ktora zapise do premennej
 		readNode(tmp);
 		break;

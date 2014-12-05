@@ -1,8 +1,9 @@
 
 var
-	x: integer;
-	
+    a: integer;
+
 begin
-	x:= 2;
-	write(x)
+    readln(a);
+    write(a)
+
 end.
