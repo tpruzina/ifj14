@@ -1221,13 +1221,16 @@ struct astNode* parseFunction(){
 		node->right = makeNewAST();
 		node->right->other = vp;
 		printVarsPars(vp);
+		
+		// funkce byla definovana - tedy je inicializovana
+		// hack pro podporu rekurze
+		dekl->init = true;
 			
 		// ocekavat telo
 		D("Body expectation");
+		node->left = makeNewAST();
 		node->left = parseBody(&cur, false, T_KW_END);
 		
-		// funkce byla definovana - tedy je inicializovana
-		dekl->init = true;
 		// ulozeni do tabulky symbolu
 		dekl->other = node;
 		
@@ -1461,7 +1464,7 @@ struct astNode* parseFuncCall(struct toc** id){
 	// v cyklu nasel T_ID a nasledne T_LPAR --> pravdepodobne volani funkce
 	
 	struct astNode* node = makeNewAST();	
-	node->type = AST_CALL;		
+	node->type = AST_CALL;
 	
 	// skopirovani jmena promenne
 	struct String* name = makeNewString();
