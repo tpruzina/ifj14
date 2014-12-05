@@ -314,8 +314,6 @@ void *runTree(struct astNode *curr)
 		// mame identifikator, hladame v tabulke symbolov
 		if(curr->data.str)
 			return searchST(&top,curr->data.str);
-		else if(curr->other)
-			return searchST(&top, curr->other);
 		else
 			exit(intern);
 
@@ -634,7 +632,7 @@ void writeNode(struct astNode *p)
 	if(AST_ID == p->type)
 	{
 		struct symbolTableNode *top = stackTop(global.symTable);
-		id = searchST(&top,p->other);
+		id = searchST(&top,p->data.str);
 		// nedefinovana premenna???
 		if(!id || !id->init)
 			exit(run_ninit);

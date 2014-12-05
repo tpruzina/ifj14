@@ -1,9 +1,8 @@
-program;
+
 var
-	i : integer;
+	x: integer;
+	
 begin
-	for i :=10 downto 1 do
-	begin
-		i := i - 1
-	end
+	x:= 2;
+	write(x)
 end.
