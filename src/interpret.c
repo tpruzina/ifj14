@@ -703,6 +703,26 @@ void readNode(struct symbolTableNode *p)
 	}
 	else if(p->dataType == DT_REAL)
 	{
+		// skip whitespace
+		c = fgetc(stdin);
+		while(isspace(c))
+			c = fgetc(stdin);
+		// check EOF
+
+		if(c == '-')
+		{
+			addChar(tmp, c);
+			c = fgetc(stdin);
+		}
+
+		if(c  == EOF || !isdigit(c))
+			exit(6);
+		do
+		{
+			addChar(tmp, c);
+			c = fgetc(stdin);
+		}	// while podmienka je fugly ale teoreticky spravne
+		while(isdigit(c) || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E');
 
 		ret = sscanf(tmp->Value,"%lg", &(p->data.real_data));	//todo chybove vstupy
 		if(!ret)
