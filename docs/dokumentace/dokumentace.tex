@@ -99,6 +99,14 @@ Jazyk IFJ14 je staticky typovaný jazyk, tedy typové kontroly probíhají běhe
 překladu, v našem případě právě při průchodu syntaktickým analyzátorem. 
 
 \subsubsection{Shunting-yard algoritmus} \label{sya}
+Algoritmus zpracování výrazů je založen na prioritě operátorů, které buď vkládá
+nebo odebírá ze zásobníku a vkládá do výstupní sekvence. Tento algoritmus primárně
+slouží k převodu infixového zápisu výrazů do postfixového, tedy lépe zpracovatelného
+a převeditelného do AST. Tento algoritmus byl pro potřeby projektu upraven, aby
+přímo generoval AST místo výstupního postfixového zápisu a zároveň u tvorby
+jednotlivých uzlů zastupujících operace kontroloval, zda-li datový typ vrcholových
+uzlů synovských uzlů odpovídá sémantickým pravidlům zpracovávání výrazů.
+
 \subsection{Interpret} \label{interpret}
 
 Interpret je závěrečnou částí projektu. Rekurzivně zpracovává AST reprezentovaný
