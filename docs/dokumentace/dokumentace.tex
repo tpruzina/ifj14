@@ -52,15 +52,16 @@
 \section{Úvod} \label{uvod}
 %=============================================================================
 Implementace překladače imperativního jazyka je netriviální úloha, proto je
-vhodné ji rozdělit na podúlohy (\ref{moduly_interpretu}), které jsou vhodně rozdělené mezi
-členy týmu, který je vedené a kontrolován týmovým vedoucím.
+vhodné ji rozdělit na podúlohy (\ref{moduly_interpretu}), které jsou vhodně
+rozdělené mezi členy týmu, který je vedené a kontrolován týmovým vedoucím.
 
 Tento dokument sa skládá z N částí, které popisují jednotlivé moduly
 interpretu imperativního jazyka IFJ14, a to jsou lexikální analyzátor
 (\ref{lexikalni_analyzator}), syntaktický analyzátor (\ref{syntakticky_analyzator})
 využívající rekurzivní sestup (), který je pro potřeby syntaktické
-analýzy výrazů rozšířený o Shunting-Yard (ref) algoritmus.
-Yadi yadi yada...
+analýzy výrazů rozšířený o Shunting-Yard (\ref{sya}) algoritmus.
+Kontrola syntaxe a sémantiky probíhá z velké části při jednom průchodu, následné
+kontroly sémantiky probíhají až za běhu.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Moduly interpretu jazyka} \label{moduly_interpretu}
@@ -68,33 +69,40 @@ Yadi yadi yada...
 \subsection{Lexikální analyzátor} \label{lexikalni_analyzator}
 
 Syntaktický analyzátor potřebuje ke své činnosti lexikální analyzátor. Ten
-předává na žádost SA tzv. tokeny, které získává postupným čtením vstupního
-souboru, který obsahuje zdrojový kód napsaný v jazyce IFJ14.
+předává na žádost syntaktického analyzátoru tzv. tokeny, které získává postupným
+čtením vstupního souboru, který obsahuje zdrojový kód napsaný v jazyce IFJ14.
 Samotný výsledný token je reprezentací lexému (identifikátor, klíčové slovo,
 příkaz přiřazení atp.).
 
 Pro úspěšné rozlišení typu lexému se v naší implementaci používá konečný
 automat, jehož struktura je znázorněna na obrázku (\ref{lex_ka}).
 
-Jestliže se konečný automat v době zpracovávání řetězce zdrojového souboru dostane do
-chybového stavu \verb|lexerrref|, řetězec je nepřijatý a jedná se o lexikální
-chybu. Samotná implementace lexikálního analyzátoru patří k jednodušším
-částem projektu, avšak jeho návrh a testování zabralo nemálo času.
+Jestliže se konečný automat v době zpracovávání řetězce zdrojového souboru
+document do chybového stavu \verb|lexerrref|, řetězec je nepřijatý a jedná se
+o lexikální chybu. Samotná implementace lexikálního analyzátoru patří k
+jednodušším částem projektu, avšak jeho návrh a testování zabralo nemálo času.
 
 %<insert KA diagram here>
-\begin{figure}
+\begin{figure}\label{lex_ka}
 	\centering
-		\includesvg{img/KA-scanner.svg}
-	\caption{Konečný automat lexilálního analyzátoru}
+		%\includesvg{img/KA-scanner.svg}
+	\caption{Konečný automat lexikálního analyzátoru}
 \end{figure}
 
 \subsection{Syntaktický analyzátor} \label{syntakticky_analyzator}
-\subsubsection{Precedenční syntaktický analyzátor} \label{precedencni_syntakticky_analyzator}
+Jak již bylo zmíněno, syntaktický analyzátor žádá lexikální analyzátor o tokeny
+a na základě sekvence po sobě jdoucích tokenů sestavuje abstraktní syntaktický
+strom (dále jen AST). Tato sekvence musí odpovídat pravidlům syntaxe jazyka IFJ14,
+v opačném případě se jedná o syntaktickou chybu.
+
+Jazyk IFJ14 je staticky typovaný jazyk, tedy typové kontroly probíhají během 
+překladu, v našem případě právě při průchodu syntaktickým analyzátorem. 
+
+\subsubsection{Shunting-yard algoritmus} \label{sya}
 \subsection{Interpret} \label{interpret}
 
-Interpret je závěrečnou částí projektu. Rekurzivně zpracovává abstraktní
-syntaktický strom reprezentovaný binárním stromem a postupně vykonává operace
-nad ním definované.
+Interpret je závěrečnou částí projektu. Rekurzivně zpracovává AST reprezentovaný
+binárním stromem a postupně vykonává operace nad ním definované.
 
 Kořenem tohoto AST je vždy typ převedené operace, přičemž obsahuje předem
 definované nepovinné parametry (příkladem je podstrom volání funkce, který
