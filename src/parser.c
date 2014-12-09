@@ -35,7 +35,7 @@
  */
 int getPriority(struct toc* t){
 	if(t == NULL){
-		return 0;
+		return -1;
 	}
 
 	switch(t->type){
@@ -58,7 +58,7 @@ int getPriority(struct toc* t){
 		case T_NOT:
 			return 4;
 		default:
-			return 0;	
+			return -1;	
 	}
 }
 
