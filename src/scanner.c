@@ -469,9 +469,12 @@ void skipWSandComments()
 	{
 		if(c == '{')
 		{
-			while(c != '}' && c != EOF )
+			while(c != '}')
+			{	
 				c = getChar();
-//			return;
+				if(c == EOF)	// neukonceny komentar
+					exit(lex);
+			}
 		}
 		else if(!isspace(c))
 			break;
@@ -490,32 +493,24 @@ int ascii(unsigned char c)
 // funkcie na parsovanie escape sekvencii '#10'
 void parse_escape_seq(int *c)
 {
-	if(*c != '#')
-		return;
-	else
+	unsigned short num = 0;
+	unsigned char tmp_c = fgetc(global.src);
+
+	if(!isdigit(tmp_c))
+		exit(lex);
+
+	while(isdigit((char)tmp_c))
 	{
-		unsigned short num = 0;
-		unsigned char tmp_c = fgetc(global.src);
-
-		if(!isdigit(tmp_c))
+		num *= 10;
+		num += tmp_c - '0';
+		if(num > 255)
 			exit(lex);
-
-		while(isdigit((char)tmp_c))
-		{
-			num *= 10;
-			num += tmp_c - '0';
-			if(num > 255)
-				exit(lex);
-			tmp_c = fgetc(global.src);
-		}
-
-		if(num == 0)
-			exit(lex);
-
-		if('\'' != tmp_c)
-			exit(lex);
-		*c = (char) num;
+		tmp_c = fgetc(global.src);
 	}
+
+	if(num == 0 || tmp_c == EOF || '\'' != tmp_c)
+		exit(lex);
+	*c = (char) num;
 }
 
 // pomocna globalna premenna, funkcia returnTypeAssStr vrati
