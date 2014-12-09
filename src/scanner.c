@@ -494,7 +494,7 @@ int ascii(unsigned char c)
 void parse_escape_seq(int *c)
 {
 	unsigned short num = 0;
-	unsigned char tmp_c = fgetc(global.src);
+	int tmp_c = fgetc(global.src);
 
 	if(!isdigit(tmp_c))
 		exit(lex);

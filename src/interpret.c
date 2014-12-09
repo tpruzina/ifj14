@@ -703,22 +703,35 @@ void readNode(struct symbolTableNode *p)
 	}
 	else if(p->dataType == DT_REAL)
 	{
-		while((c = fgetc(stdin)) != EOF && c != '\n')
-		{
-			if(c != '\t' && c != ' ')
-				addChar(tmp,c);
-		}
+
 		ret = sscanf(tmp->Value,"%lg", &(p->data.real_data));	//todo chybove vstupy
 		if(!ret)
 			exit(6);
 	}
 	else if(p->dataType == DT_INT)
 	{
-		while((c = fgetc(stdin)) != EOF && c != '\n')
+		// skip whitespace
+		c = fgetc(stdin);
+		while(isspace(c))
+			c = fgetc(stdin);
+		// check EOF
+
+		if(c == '-')
 		{
-			if(c != '\t' && c != ' ')
-				addChar(tmp,c);
+			addChar(tmp, c);
+			c = fgetc(stdin);
 		}
+
+		if(c  == EOF || !isdigit(c))
+			exit(6);
+		do
+		{
+			addChar(tmp, c);
+			c = fgetc(stdin);
+		}
+		while(isdigit(c));
+
+
 		ret = sscanf(tmp->Value,"%d", &(p->data.int_data));	//todo chybove vstupy
 		if(!ret)
 			exit(6);
