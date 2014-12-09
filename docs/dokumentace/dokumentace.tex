@@ -17,6 +17,7 @@
 \usepackage{url}
 % obrazky
 \usepackage[dvipdf]{graphicx}
+\usepackage{svg}	
 % velikost stranky
 \usepackage[top=3.5cm, left=2.5cm, text={17cm, 24cm}, ignorefoot]{geometry}
 \begin{document}
@@ -50,15 +51,15 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Úvod} \label{uvod}
 %=============================================================================
-Implementacia prekladace imperativneho jazyka je netrivialna uloha, preto je
-vhodne ju rozdelit na podulohy (kapitola 2), ktore su vhodne rozdelene medzi
-cleny timu, vedeneho a kontrolovaneho timovym veducim.
+Implementace překladače imperativního jazyka je netriviální úloha, proto je
+vhodné ji rozdělit na podúlohy (\ref{moduly_interpretu}), které jsou vhodně rozdělené mezi
+členy týmu, který je vedené a kontrolován týmovým vedoucím.
 
-Tento dokument sa sklada z N casti, ktore popisuju jednotlive moduly
-interpretu imperativneho jazyka IFJ14, jakozto lexikalny analyzator (ref),
-syntakticky analyzator (ref) vyuzivajuceho rekurzivny sestup (ref), ktory je
-pre potreby syntaxtickej analyzy vyrazov rozsireny o Shunting Yard (ref)
-algoritmus.
+Tento dokument sa skládá z N částí, které popisují jednotlivé moduly
+interpretu imperativního jazyka IFJ14, a to jsou lexikální analyzátor
+(\ref{lexikalni_analyzator}), syntaktický analyzátor (\ref{syntakticky_analyzator})
+využívající rekurzivní sestup (), který je pro potřeby syntaktické
+analýzy výrazů rozšířený o Shunting-Yard (ref) algoritmus.
 Yadi yadi yada...
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -66,72 +67,74 @@ Yadi yadi yada...
 %=============================================================================
 \subsection{Lexikální analyzátor} \label{lexikalni_analyzator}
 
-Syntakticky analyzator potrebuje ke sve cinnosti lexikalny analyzator. Ten
-predava na ziadost SA tzv. takeny, ktore ziskava postupnym citanim vstupneho
-suboru, ktory obsahuje zdrojovy kod napisany v jazyku IFJ14.
-Samotny vysledny token je reprezentaciou lexemu (identifikator, klicove slovo,
-prikaz priradenia atp.).
+Syntaktický analyzátor potřebuje ke své činnosti lexikální analyzátor. Ten
+předává na žádost SA tzv. tokeny, které získává postupným čtením vstupního
+souboru, který obsahuje zdrojový kód napsaný v jazyce IFJ14.
+Samotný výsledný token je reprezentací lexému (identifikátor, klíčové slovo,
+příkaz přiřazení atp.).
 
-Pre uspesne rozlisenie typu lexemu sa v nasej implementacii pouziva konecny
-automat, ktoreho struktura je znazornena obrazkom (ref).
+Pro úspěšné rozlišení typu lexému se v naší implementaci používá konečný
+automat, jehož struktura je znázorněna na obrázku (\ref{lex_ka}).
 
-Ak sa konecny automat pocas spracovavania retazca zdrojoveho suboru dostane do
-chyboveho stavu lexerrref, retazec je neprijaty a jedna sa o lexikalnu
-chybu. Samotna implementacia lexikalneho analyzatoru patri k jednoduchsim
-castiam projektu, avsak jeho navrh a testovanie zabral nemalo casu (liez).
+Jestliže se konečný automat v době zpracovávání řetězce zdrojového souboru dostane do
+chybového stavu \verb|lexerrref|, řetězec je nepřijatý a jedná se o lexikální
+chybu. Samotná implementace lexikálního analyzátoru patří k jednodušším
+částem projektu, avšak jeho návrh a testování zabralo nemálo času.
 
-<insert KA diagram here>
-
+%<insert KA diagram here>
+\begin{figure}
+	\centering
+		\includesvg{img/KA-scanner.svg}
+	\caption{Konečný automat lexilálního analyzátoru}
+\end{figure}
 
 \subsection{Syntaktický analyzátor} \label{syntakticky_analyzator}
 \subsubsection{Precedenční syntaktický analyzátor} \label{precedencni_syntakticky_analyzator}
 \subsection{Interpret} \label{interpret}
 
-Interpret je zaverecnou castou projektu. Rekurzivne spracovava abstraktny
-syntakticky strom reprezentovanym binarnym strom a postupne vykonava operacie
-na nom definovane.
+Interpret je závěrečnou částí projektu. Rekurzivně zpracovává abstraktní
+syntaktický strom reprezentovaný binárním stromem a postupně vykonává operace
+nad ním definované.
 
-Korenom tohto AST je vzdy typ prevadanej operace, pricom obsahuje predom
-definovane nepovinne parametre (prikladom je podstrom volania funkcie, ktory
-obsahuje predavane premenne). Teda kazdy uzol AST predstavuje jednu atomicku
-operaciu, ktorou je riadeny samotny beh programu.
+Kořenem tohoto AST je vždy typ převedené operace, přičemž obsahuje předem
+definované nepovinné parametry (příkladem je podstrom volání funkce, který
+obsahuje předávání proměnné). Tedy každý uzel AST představuje jednu atomickou
+operaci, kterou je řízený samotný běh programu.
 
-Interpret samozrejme nepracuje len so samotnym syntaktickym stromom, ale
-taktiez s tabulkou symbolou, ktora obsahuje data potrebne na to, aby interpret
-mohol vykonavat nejaku uzitocnu praca definovanu v tele programu.
+Interpret samozřejmě nepracuje jen se samotným syntaktickým stromem, ale
+taktéž s tabulkou symbolů, která obsahuje data potřebná na to, aby interpret
+mohl vykonávat nějakou užitočnou práci definovanou v těle programu.
 
-Interpret teda spravuje tabulky symbolov, dynamicky ich za behu
-vykonavaneho programu vytvara a (podla potreby) rusi.
+Interpret tedy spravuje tabulky symbolů, dynamicky je za běhu
+vykonávaného programu vytváří a (podla potřeby) ruší.
 
-V neposlednej rade interpret vykonava semanticku kotrolu pri operaciach, ktore
-nie je syntakticky analyzator v dobe spracovanaia vstupneho programu a generacie
-abstraktneho syntaktickeho stromu riesit.
+V neposlední řadě interpret vykonává sémantickou kontrolu u operacích, které
+syntaktický analyzátor v době zpracování vstupního programu a generování
+abstraktního syntaktického stromu neřešil.
 
-Prikladom takejto kontroly je pouzivanie (citanie) premennej pred jej riadnou
-definicou (priradenim hodnoty) alebo delenie nulou v aritmetickom vyraze.
+Příkladem takovéto kontroly je používání (čtení) proměnné před její řádnou
+definicí (přiřazením hodnoty) anebo dělení nulou v aritmetickém výrazu.
 
-Taketo behove chyby su v interprete riesene ukoncenim interpretacia a navratom
-chyboveho kodu podla zadania imperativneho jazyka IFJ14.
+Takovéto běhové chyby jsou v interpretě řešené ukončením interpretace a navrácením
+chybového kódu podle zadání imperativního jazyka IFJ14.
 
 \subsubsection{Tabulka symbolů} \label{tabulka_symbolu}
 
-Tabulka symbolov je implementovana pomocou binarnecho vyhladavacieho stromu,
-pricom sa rozlisuje niekolko urovni tabulky symbolov.
+Tabulka symbolů je implementována pomocí binárního vyhladávacího stromu,
+přičemž se rozlišuje několik úrovní tabulky symbolů.
 
-Kazdy program obsahuje globalnu tabulku symbolov (v ktorej su ulozene ukazatele
-na funkcie) a lokalnu tabulku symbolov, ktora obsahuje behove premenne
-vykonavaneho programu.
+Každý program obsahuje globální tabulku symbolů (ve které jsou uložené ukazatele
+na funkce) a lokální tabulku symbolů, která obsahuje běhové proměnné
+vykonávaného programu.
 
-Interpret spravuje tabulk
+Z implemetačního hlediska jsou lokální tabulky symbolů (stromy) ukládané na
+zásobník, přičemž platí, že při volání funkce se vytvoří nová (lokální)
+tabulka symbolů, do které se skopírují příslušné parametry volané funkce z
+nižší vrstvy lokální tabulky (popř. z globální tabulky symbolů).
 
-Z implentacneho hladiska su lokalne tabulky symbolov (stromy) ukladane na
-zasobnik, pricom plati, ze pri volani funkcie sa vytvori nova (lokalna)
-tabulka symbolov, do ktorej sa skopiruju prislusne parametre volanej funkcie z
-nizsej vrstvy lokalnej tabulky (popr. z globalnej tabulky symbolov).
-
-Takato lokalna tabulky taktiez obsahuje navratovu hodnotu vykonavanej funkcie,
-co umoznuje rekurzivne volanie funkcii a samozrejme umoznuje vykonavat telo
-funkcie bez nutnosti akokolvek zasahovat do abstraktneho syntaktickeho stromu.
+Taková lokální tabulka taktéž obsahuje návratovu hodnotu vykonávané funkce,
+která umožňuje rekurzivní volání funkcí a samozřejmě umožňuje vykonávat tělo
+funkce bez nutnosti jakkoliv zasahovat do abstraktního syntaktického stromu.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -163,4 +166,3 @@ MEDUNA A., LUKÁŠ R., \emph{Podklady k přednáškám}. Elektronický text. FIT
 \appendix
 
 \end{document}
-
