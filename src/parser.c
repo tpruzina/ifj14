@@ -957,7 +957,12 @@ struct queue* parseVars(struct toc** cur){
 		queuePush(vars, var);
 		
 		// ulozit do top vrstvy
-		insertValue(&top, var->data.str, var->dataType);
+		if(search(&global.globalTable, var->data.str)){
+			E("Promenna nalezena v globalni tabulce");
+			exit(sem_prog);
+		}
+		else
+			insertValue(&top, var->data.str, var->dataType);
 		
 		// nacist dalsi token
 		*cur = getToc();
@@ -1028,7 +1033,7 @@ struct queue* parseParams(){
 	struct astNode* par = getDefPar(&cur);
 	// nacitani dokud jsou parametry
 	while(par != NULL){	
-		// nebyla nalezena pridat do vrstvy	pro tabulku
+		// nebyla nalezena pridat do vrstvy	pro funkce!!
 		insertValue(&global.globalTable, par->data.str, par->dataType);
 					
 		// pridani parametru do fronty
@@ -1104,7 +1109,9 @@ struct astNode* parseFunction(){
 	
 	// ulozit do tabulky zastupnou promennou za return spolu s parametry
 	insertValue(&global.globalTable, name, node->dataType);
-		
+	D("Before deklaration");
+	printSymbolTable(global.globalTable, 0);
+	
 	///////////////////////////////////////////
 	//	KONEC HLAVICKY FUNKCE
 	///////////////////////////////////////////
@@ -1153,7 +1160,7 @@ struct astNode* parseFunction(){
 			
 		// v pripade dopredne deklarace neni nutne pouzivat parametry
 		//stackPop(global.symTable);
-		global.globalTable = NULL;
+		deleteTable(&global.globalTable);
 						
 	 	// nastaveni navratovy typ
 	 	dekl->dataType = node->dataType;
@@ -1239,7 +1246,7 @@ struct astNode* parseFunction(){
 		
 		// odstranit vrchol s parametry a return promennou
 		//stackPop(global.symTable);			
-		global.globalTable = NULL;
+		deleteTable(&global.globalTable);
 		return node;
 	}
 	
@@ -2451,6 +2458,10 @@ struct astNode* parseCommand(struct toc** cur){
 			}
 			printTokenType(*cur);
 			return node;
+		default:
+			E("Syntax error - unexpected token type");
+			printTokenType(*cur);
+			exit(synt);
 	}
 	return NULL;
 }
