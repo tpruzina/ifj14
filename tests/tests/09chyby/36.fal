@@ -2,6 +2,6 @@
 var
 	out: string;
 begin
-	out:= sort('beadcf');
+	out := sort('beadcf');
 	write(out)
 end.

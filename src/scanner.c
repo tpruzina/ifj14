@@ -51,7 +51,10 @@ getToc()
 
 	while (true)
 	{
-		c = tolower(getChar());
+		if(state == KA_STR_LIT_INSIDE || state == KA_STR_LIT)
+			c = getChar();
+		else
+			c = tolower(getChar());
 
 		switch(state)
 		{
@@ -204,13 +207,13 @@ getToc()
 			else if(ascii(c))	//mame znak v tele literalu 31-127 minus {#,'}
 			{
 				addChar(str,c);
-				state = KA_STR_LIT_INISDE;
+				state = KA_STR_LIT_INSIDE;
 			}
 			else
 				state = KA_ERR;
 			break;
 
-		case KA_STR_LIT_INISDE:	//sme vnoreni v str. literale
+		case KA_STR_LIT_INSIDE:	//sme vnoreni v str. literale
 			if('\'' == c)
 				state = KA_STR_LIT_DONE; //mame ukoncenie
 			else if(ascii(c))
@@ -224,17 +227,16 @@ getToc()
 			{	// specialny case ked mame dve ''
 				// musime pridat ' do stringu a vratit sa do inside
 				addChar(str,c);
-				state = KA_STR_LIT_INISDE;
+				state = KA_STR_LIT_INSIDE;
 			}
 			else if('#' == c)
 			{
 				parse_escape_seq(&c);
 				addChar(str,(char)c);
-				state = KA_STR_LIT_INISDE;
+				state = KA_STR_LIT_INSIDE;
 			}
 			else
 			{
-				addChar(str,'\0');
 				// inak hotovo
 				toc->type = T_STR;
 				toc->data.str = str;
@@ -467,9 +469,12 @@ void skipWSandComments()
 	{
 		if(c == '{')
 		{
-			while(c != '}' && c != EOF )
+			while(c != '}')
+			{	
 				c = getChar();
-//			return;
+				if(c == EOF)	// neukonceny komentar
+					exit(lex);
+			}
 		}
 		else if(!isspace(c))
 			break;
@@ -488,29 +493,24 @@ int ascii(unsigned char c)
 // funkcie na parsovanie escape sekvencii '#10'
 void parse_escape_seq(int *c)
 {
-	if(*c != '#')
-		return;
-	else
+	unsigned short num = 0;
+	int tmp_c = fgetc(global.src);
+
+	if(!isdigit(tmp_c))
+		exit(lex);
+
+	while(isdigit((char)tmp_c))
 	{
-		unsigned short num = 0;
-		unsigned char tmp_c = fgetc(global.src);
-
-		if(!isdigit(tmp_c))
+		num *= 10;
+		num += tmp_c - '0';
+		if(num > 255)
 			exit(lex);
-
-		while(isdigit((char)tmp_c))
-		{
-			num *= 10;
-			num += tmp_c - '0';
-			if(num > 255)
-				exit(lex);
-			tmp_c = fgetc(global.src);
-		}
-
-		if('\'' != tmp_c)
-			exit(lex);
-		*c = (char) num;
+		tmp_c = fgetc(global.src);
 	}
+
+	if(num == 0 || tmp_c == EOF || '\'' != tmp_c)
+		exit(lex);
+	*c = (char) num;
 }
 
 // pomocna globalna premenna, funkcia returnTypeAssStr vrati

@@ -36,6 +36,10 @@ struct mainAll global;
  */
 int init(char* srcpath){
 
+	global.src = fopen(srcpath, "r");
+	if(!global.src)
+		exit(intern);
+	
 	global.gc = malloc(sizeof(struct gc));
 	if(global.gc == NULL){
 		global.errno = intern;
@@ -45,7 +49,6 @@ int init(char* srcpath){
 	global.gc->list = NULL;
 	global.gc->listLength = 0;
 
-	global.src = fopen(srcpath, "r");
 	global.errno = ok;
 	global.lineCounter = 0;
 	

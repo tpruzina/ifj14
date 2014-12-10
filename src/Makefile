@@ -5,10 +5,13 @@ ALL: all
 all: interpret
 
 interpret: $(SOURCES) interpret.c main_interpret.c *.h
-	$(CC) $(CFLAGS) -U_DEBUG gc.c ial.c log.c string.c stack.c ast.c scanner.c parser.c interpret.c main_interpret.c -o ifj14
+	$(CC) $(CFLAGS) -U_DEBUG -U_COLOR gc.c ial.c log.c string.c stack.c ast.c scanner.c parser.c interpret.c main_interpret.c -o ifj14
 
 main: $(SOURCES) main.c
 	$(CC) $(CFLAGS) -D_DEBUG -D_COLOR ial.c gc.c log.c string.c stack.c ast.c scanner.c parser.c main.c -o main
+
+debug:	$(SOURCES) interpret.c main_interpret.c *.h
+	$(CC) $(CFLAGS) -D_DEBUG -D_COLOR gc.c ial.c log.c string.c stack.c ast.c scanner.c parser.c interpret.c main_interpret.c -o ifj14
 
 test: clang cppcheck
 

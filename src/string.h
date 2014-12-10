@@ -36,7 +36,7 @@ struct String {
 struct String* makeNewString();
 int addChar(struct String*, char);
 int emptyString(struct String*);
-int printString(struct String*);
+void printString(struct String*);
 int freeString(struct String*);
 int toLower(struct String*);
 int getCharArrayLength(char*);

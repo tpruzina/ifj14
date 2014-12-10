@@ -132,6 +132,7 @@ struct queue* makeNewQueue(){
 
 	que->start = NULL;
 	que->end = NULL;
+	que->length = 0;
 	return que;
 }
 /**
@@ -157,7 +158,7 @@ int queuePush(struct queue* que, void* value){
 	else 
 		que->end->next = item;
 	que->end = item;
-	
+	que->length += 1;
 	return True;
 }
 /**
@@ -176,6 +177,8 @@ void* queuePop(struct queue* que){
 	que->start = que->start->next;
 	void* ptr = item->value;
 	gcFree(item);
+	
+	que->length -= 1;
 	return ptr;
 }
 /**
@@ -198,7 +201,7 @@ int queueEmpty(struct queue* que){
 	if(que == NULL)
 		return -1;
 	
-	if(que->start == que->end && que->start == NULL)
+	if(que->start == que->end && que->start == NULL && que->length == 0)
 		return True;
 	else 
 		return False;

@@ -102,16 +102,17 @@ int emptyString(struct String* str){
 /**
  * Tiskne obsah struktury Stringu
  */
-int printString(struct String* s){
+void printString(struct String* s){
 	if(s == NULL){
-		return False;
+		return;
 	}
-	printf("String:\n");
-	printf("   Value:    \t\"%s\"\n", s->Value);
-	printf("   Length:   \t%d\n", s->Length);
-	printf("   Allocated:\t%d\n", s->Allocated);
 	
-	return False;
+#ifdef _DEBUG
+	fprintf(stderr, "String:\n");
+	fprintf(stderr, "   Value:    \t\"%s\"\n", s->Value);
+	fprintf(stderr, "   Length:   \t%d\n", s->Length);
+	fprintf(stderr, "   Allocated:\t%d\n", s->Allocated);
+#endif
 }
 
 /**

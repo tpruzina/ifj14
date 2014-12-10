@@ -314,8 +314,6 @@ void *runTree(struct astNode *curr)
 		// mame identifikator, hladame v tabulke symbolov
 		if(curr->data.str)
 			return searchST(&top,curr->data.str);
-		else if(curr->other)
-			return searchST(&top, curr->other);
 		else
 			exit(intern);
 
@@ -366,7 +364,7 @@ void *runTree(struct astNode *curr)
 		tmp_vp = curr->right->other;			// vyrvem si varspars
 		tmp_asp = tmp_vp->pars->start->value;	// vyrvem z toho ast node
 		// a z vyjebaneho ast_node->other vyjebem dojebany string ktory este vyhladam v tabulke
-		tmp = searchST(&top, tmp_asp->other);
+		tmp = searchST(&top, tmp_asp->data.str);
 		// a po tomto celom bullshite este zavolam funkciu ktora zapise do premennej
 		readNode(tmp);
 		break;
@@ -634,7 +632,7 @@ void writeNode(struct astNode *p)
 	if(AST_ID == p->type)
 	{
 		struct symbolTableNode *top = stackTop(global.symTable);
-		id = searchST(&top,p->other);
+		id = searchST(&top,p->data.str);
 		// nedefinovana premenna???
 		if(!id || !id->init)
 			exit(run_ninit);
@@ -686,6 +684,8 @@ void readNode(struct symbolTableNode *p)
 	struct String *tmp = makeNewString();
 	int c;
 
+	int ret = 0;
+
 	c = fgetc(stdin);
 	if(c == EOF)
 		exit(6);
@@ -703,21 +703,58 @@ void readNode(struct symbolTableNode *p)
 	}
 	else if(p->dataType == DT_REAL)
 	{
-		while((c = fgetc(stdin)) != EOF && c != '\n')
+		// skip whitespace
+		c = fgetc(stdin);
+		while(isspace(c))
+			c = fgetc(stdin);
+		// check EOF
+
+		if(c == '-')
 		{
-			if(c != '\t' && c != ' ')
-				addChar(tmp,c);
+			addChar(tmp, c);
+			c = fgetc(stdin);
 		}
-		sscanf(tmp->Value,"%lg", &(p->data.real_data));	//todo chybove vstupy
+
+		if(c  == EOF || !isdigit(c))
+			exit(6);
+		do
+		{
+			addChar(tmp, c);
+			c = fgetc(stdin);
+		}	// while podmienka je fugly ale teoreticky spravne
+		while(isdigit(c) || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E');
+
+		ret = sscanf(tmp->Value,"%lg", &(p->data.real_data));	//todo chybove vstupy
+		if(!ret)
+			exit(6);
 	}
 	else if(p->dataType == DT_INT)
 	{
-		while((c = fgetc(stdin)) != EOF && c != '\n')
+		// skip whitespace
+		c = fgetc(stdin);
+		while(isspace(c))
+			c = fgetc(stdin);
+		// check EOF
+
+		if(c == '-')
 		{
-			if(c != '\t' && c != ' ')
-				addChar(tmp,c);
+			addChar(tmp, c);
+			c = fgetc(stdin);
 		}
-		sscanf(tmp->Value,"%d", &(p->data.int_data));	//todo chybove vstupy
+
+		if(c  == EOF || !isdigit(c))
+			exit(6);
+		do
+		{
+			addChar(tmp, c);
+			c = fgetc(stdin);
+		}
+		while(isdigit(c));
+
+
+		ret = sscanf(tmp->Value,"%d", &(p->data.int_data));	//todo chybove vstupy
+		if(!ret)
+			exit(6);
 	}
 	else if(p->dataType == DT_BOOL)
 		exit(4);
@@ -735,6 +772,9 @@ struct symbolTableNode convertAST2STN(struct astNode *ast)
 	if(ast->type == AST_ID)
 	{
 		struct symbolTableNode *p = runTree(ast);
+
+		if(!p)
+			exit(intern);
 
 		if(!p->init)
 			exit(run_ninit);
@@ -775,13 +815,15 @@ struct symbolTableNode *pushVarsParsIntoTable(
 		struct queue *function_params,
 		struct queue *function_vars)
 {
+	ASSERT(call_params && function_params);
+
 	struct symbolTableNode *table = makeNewSymbolTable();
 	struct symbolTableNode *new = NULL;
+	struct astNode *ast_src, *ast_dest;
 
 	struct queueItem *currCPItem = call_params->start;
+	ASSERT(function_params);
 	struct queueItem *currFPItem = function_params->start;
-
-	struct astNode *ast_src, *ast_dest;
 
 	static struct symbolTableNode stn_src;
 	static struct symbolTableNode stn_dest;
@@ -793,11 +835,19 @@ struct symbolTableNode *pushVarsParsIntoTable(
 		ast_dest = currFPItem->value;
 
 		stn_src = convertAST2STN(ast_src);
-		stn_dest = convertAST2STN(ast_dest);
+		//		stn_dest = convertAST2STN(ast_dest);
+
+		if(ast_dest->type == AST_ID)
+		{
+			stn_dest.name = ast_dest->data.str;
+			stn_dest.dataType = ast_dest->dataType;
+		}
+		else
+			stn_dest = convertAST2STN(ast_dest);
 
 		if(stn_src.dataType == stn_dest.dataType)
 		{
-			new = insertValue(&table, ast_dest->other, stn_src.dataType);
+			new = insertValue(&table, ast_dest->data.str, stn_src.dataType);
 			if(stn_src.dataType == DT_INT)
 				insertDataInteger(&new, stn_src.data.int_data);
 			else if(stn_src.dataType == DT_BOOL)
@@ -815,14 +865,21 @@ struct symbolTableNode *pushVarsParsIntoTable(
 	}
 
 	// do docasnej tabulky symbolov narveme vars
-	struct queueItem *varsQueue = function_vars->start;
-	while(varsQueue)
+	if(function_vars)
 	{
-		ast_src = varsQueue->value;
-		stn_src = convertAST2STN(ast_src);
-		
-		new = insertValue(&table, ast_src->other, stn_src.dataType);
-		varsQueue = varsQueue->next;
+		struct queueItem *varsQueue = function_vars->start;
+		while(varsQueue)
+		{
+			ast_src = varsQueue->value;
+
+			ASSERT(ast_src->type == AST_ID);
+
+			new = insertValue(&table, ast_src->data.str, ast_src->dataType);
+
+			ASSERT(varsQueue != varsQueue->next);
+
+			varsQueue = varsQueue->next;
+		}
 	}
 	return table;
 }
