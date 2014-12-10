@@ -97,16 +97,49 @@ strom (dále jen AST). Tato sekvence musí odpovídat pravidlům syntaxe jazyka 
 v opačném případě se jedná o syntaktickou chybu.
 
 Jazyk IFJ14 je staticky typovaný jazyk, tedy typové kontroly probíhají během 
-překladu, v našem případě právě při průchodu syntaktickým analyzátorem. 
+překladu, v našem případě právě při průchodu syntaktickým analyzátorem. Je tedy
+nutné zachytávat chybové vstupy a přímo ukončovat průchod a tím i celou aplikaci.
+
+Jako vnitřní kód programu jsme si zvolili AST, tedy binární strom a rozšířili jsme
+jeho strukturu o potřebné položky pro práci interpretu. Jak již bylo zmíněno výše,
+jedná se o binární strom, má tedy dva synovské uzly. Avšak pro určité typy uzlů
+je mít nemusí. Například uzel pro operaci \verb|NOT| má pouze levý synovský podstrom.
+
+Pro převod příkazů obsahujících tělo na AST uzly byla v týmu domluvena konvence,
+že primárním uzlem pro tělo bude levý podstrom. Tedy například cyklus \verb|while|
+má svoje tělo uložené v levém podstromu. Zde je potřeba zmínit, že příkaz \verb|if|
+má v podstatě dvě sekvence příkazů a to pravdivou a nepravdivou. Je tedy potřeba
+zajistit, aby se obě uchovaly v jednom uzlu AST.
+
+Řešení je jednoduché a více než samozřejmé, uložení pravdivé sekce do levého
+poduzlu stromu a nepravdivou sekci do uzlu pravého. U příkazů s podmíněným
+chováním (if, while, repeat-until, atp.) bylo nutné uchovat podmínku, tedy výraz,
+který určuje, jestli je příkaz proveditelný či není. Primárně pro tento účel
+slouží dodatečná položka uzlů AST, která svým typem \verb|void*| umožňuje
+mnohostranné využití. 
+
+Zvláštní případ použití dodatečné položky je například u definice či volání funkce.
+V tomto případě obsahuje strukturu \verb|String| se jménem funkce. Levý podstrom
+opět obsahuje tělo funkce a v pravém podstromu je uložen uzel se strukturou \verb|varspars|,
+která se složená z dvou front, jedné pro lokální proměnné funkce a druhá pro
+parametry funkce. Tyto fronty jsou naplněny při definici funkce, při deklaraci
+(použití \verb|forward| deklarace) je naplněna pouze fronta parametrů. Více o funkcích
+v \ref{func}.
 
 \subsubsection{Shunting-yard algoritmus} \label{sya}
 Algoritmus zpracování výrazů je založen na prioritě operátorů, které buď vkládá
 nebo odebírá ze zásobníku a vkládá do výstupní sekvence. Tento algoritmus primárně
 slouží k převodu infixového zápisu výrazů do postfixového, tedy lépe zpracovatelného
-a převeditelného do AST. Tento algoritmus byl pro potřeby projektu upraven, aby
+a převeditelného do AST.
+
+Tento algoritmus byl pro potřeby projektu upraven, aby
 přímo generoval AST místo výstupního postfixového zápisu a zároveň u tvorby
 jednotlivých uzlů zastupujících operace kontroloval, zda-li datový typ vrcholových
 uzlů synovských uzlů odpovídá sémantickým pravidlům zpracovávání výrazů.
+
+Při tvorbě výrazů je nutné kontrolovat spoustů aspektů validního výrazu. To jsou
+nejen datové typy jednotlivých operandů, ale i v případě proměnných jejich inicializovanost.
+Tedy pokud proměnná nebyla inicializovaná, není možné ji použít.
 
 \subsection{Interpret} \label{interpret}
 
