@@ -360,11 +360,10 @@ int valid(struct astNode* left, struct astNode* right, int op){
 		}
 	}
 	else {
-		// binarni operace
-		
+		// binarni operace		
 		if(left == NULL || right == NULL){
 			E("valid: NULL operands");
-			exit(sem_prog);
+			exit(synt);
 		}
 	}
 	
@@ -467,8 +466,7 @@ int valid(struct astNode* left, struct astNode* right, int op){
 			
 			// stejne typy na obou stranach
 			if(left->dataType == DT_INT || left->dataType == DT_REAL || left->dataType == DT_BOOL || left->dataType == DT_STR){
-				// vsechny moznosti
-				
+				// vsechny moznosti				
 				if(op == AST_EQV || op == AST_NEQV){
 					// pro vsechny
 					return DT_BOOL;
@@ -738,8 +736,7 @@ struct astNode* parseProgram(){
 		// muze nacitat 
 		cur = getToc();		
 	}
-	
-	
+		
 	expect(cur, T_KW_BEGIN, synt);
 	// nasleduje telo programu
 	struct astNode* body = parseBody(&cur, true, T_KW_END);		
@@ -768,7 +765,7 @@ struct astNode* parseBody(struct toc** cur, bool empty, int endtype){
 	W("parseBody");
 	
 	// zacatek tela -> spustit prikazy
-	// ukladat je doleva za sebe do typu AST_CMD
+	// ukladat je doleva za sebe do typu AST_CMDparseBody
 	struct astNode* body = makeNewAST();
 	body->type = AST_CMD;
 		
@@ -1650,45 +1647,35 @@ struct astNode* forStatement(struct toc** cur){
 	struct astNode* forCond = makeNewAST();
 	
 	*cur = getToc();
-	if((*cur)->type == T_ID){
-		// je tam ID
-				
-		struct symbolTableNode* var = searchOnTop((*cur)->data.str);
+	expect(*cur, T_ID, synt);			
+	struct symbolTableNode* var = searchOnTop((*cur)->data.str);
 
-		// spatny datovy typ
-		if(var->dataType != DT_INT){
-			E("for: Semantic error - for variable has not INT data type");
-			exit(sem_komp);
-		}
-		
-		// ulozeni idcka doleva
-		forCond->left = makeNewAST();
-		forCond->left->type = AST_ID;		
-		copyString((*cur)->data.str, &(forCond->left->data.str));
-		forCond->left->dataType = var->dataType;
+	// spatny datovy typ
+	if(var->dataType != DT_INT){
+		E("for: Semantic error - for variable has not INT data type");
+		exit(sem_komp);
 	}
+	
+	// ulozeni idcka doleva
+	forCond->left = makeNewAST();
+	forCond->left->type = AST_ID;		
+	copyString((*cur)->data.str, &(forCond->left->data.str));
+	forCond->left->dataType = var->dataType;
 	
 	// dalsi token je prirazeni
 	*cur = getToc();
-	if((*cur)->type == T_ASGN){
-		// nasledovalo prirazeni
-		forCond->type = AST_ASGN;		
-	}
+	expect(*cur, T_ASGN, synt);
+	forCond->type = AST_ASGN;
 	
 	// ocekavat pravou stranu prirazeni
 	*cur = getToc();
-	struct astNode* lit = makeNewAST();
-	D("lit twice alloced");
-	if((*cur)->type == T_INT){
-		lit->type = AST_INT;
-		lit->dataType = DT_INT;
-		lit->data.integer = (*cur)->data.integer;
-	}	
-	else {
-		E("Syntax error - expected int literal in right side of assign part of for");
-		exit(synt);
-	}
-	forCond->right = lit;
+	expect(*cur, T_INT, synt);
+
+	forCond->right = makeNewAST();
+	// nastaveni prave casti foru
+	forCond->right->type = AST_INT;
+	forCond->right->dataType = DT_INT;
+	forCond->right->data.integer = (*cur)->data.integer;
 	
 	// ocekavat TO/DOWNTO
 	*cur = getToc();
@@ -1712,33 +1699,32 @@ struct astNode* forStatement(struct toc** cur){
 	
 	// nacitat literal
 	*cur = getToc();
-	lit = makeNewAST();
+	forNode->right->right = makeNewAST();
+	// koncovy clen
 	if((*cur)->type == T_INT){
-			lit->type = AST_INT;
-			lit->dataType = DT_INT;
-			lit->data.integer = (*cur)->data.integer;
+			forNode->right->right->type = AST_INT;
+			forNode->right->right->dataType = DT_INT;
+			forNode->right->right->data.integer = (*cur)->data.integer;
 	}
 	else {
 		E("Syntax error - expected int literal after TO/DOWNTO keyword");
 		exit(synt);
 	}
-	// ulozeni koncove hodnoty do praveho uzlu 
-	forNode->right->right = lit;
 	
 	// nacteni DO za definici
 	*cur = getToc();
-	if((*cur)->type != T_KW_DO){
-		E("Syntax error - expected DO keyword afted definition of FOR cycle");
-		exit(synt);
-	}
+	expect(*cur, T_KW_DO, synt);
 	
 	*cur = getToc();
 	expect(*cur, T_KW_BEGIN, synt);
-	
 	// ocekavani tela
 	forNode->left = parseBody(cur, true, T_KW_END);
+	D("TELO FOR");
+	printAst(forNode->left);
+	expect(*cur, T_KW_END, synt);
 
 #ifdef _DEBUG
+	D(".................");
 	printAst(forNode);
 #endif
 	return forNode;
@@ -2108,6 +2094,11 @@ struct astNode* sortStatement(struct toc** cur){
 	*cur = getToc();
 	if((*cur)->type == T_ID){
 		struct symbolTableNode* var = searchOnTop((*cur)->data.str);
+
+		if(var->dataType != DT_STR){
+			E("Semantic error - expected string as parameter data type");
+			exit(sem_komp);
+		}
 		
 		// uzel pro promennou
 		struct astNode* nd = makeNewAST();
@@ -2165,6 +2156,11 @@ struct astNode* lengthStatement(struct toc** cur){
 	*cur = getToc();
 	if((*cur)->type == T_ID){
 		struct symbolTableNode* var = searchOnTop((*cur)->data.str);
+
+		if(var->dataType != DT_STR){
+			E("Semantic error - expected string as parameter data type");
+			exit(sem_komp);
+		}
 		
 		// uzel pro promennou
 		struct astNode* nd = makeNewAST();
@@ -2553,7 +2549,6 @@ struct astNode* parseExpression(struct toc** cur){
 		struct astNode* node;
 		
 		switch((*cur)->type){
-			// leva zavorka
 			case T_KW_LENGTH:
 				W("builtin -- length");
 				node = lengthStatement(cur);
@@ -2578,6 +2573,7 @@ struct astNode* parseExpression(struct toc** cur){
 				stackPush(aststack, node);
 				readNew = false;
 				break;
+			// leva zavorka
 			case T_LPAR: 
 				W("T_LPAR comes");
 			
@@ -2617,8 +2613,9 @@ struct astNode* parseExpression(struct toc** cur){
 				node = makeNewAST();
 				
 				if((*cur)->type == T_ID){
-					struct toc* new = getToc();
-					if(new->type == T_LPAR){
+					// nacteni dalsiho tokenu
+					now = getToc();
+					if(now->type == T_LPAR){
 						// volani funkce
 						node = parseFuncCall(cur);	
 					}
@@ -2635,12 +2632,12 @@ struct astNode* parseExpression(struct toc** cur){
 					
 						node->dataType = nd->dataType;					
 						D("expr: making ID");
-						*cur = new;
+						*cur = now;
 					}
 					// nahrat nacteny token
 					
 					D("READ NEW - cur type");
-					//printTokenType(*cur);
+					//printTokenType(*cur);now
 					readNew = false;
 				}
 				else if((*cur)->type == T_INT){
@@ -2721,7 +2718,13 @@ struct astNode* parseExpression(struct toc** cur){
 				}
 				else {	
 					top = (struct toc*)stackTop(stack);
-				
+					/*
+					if(top->type == T_LPAR){
+						E("Syntax error - wrong expression syntax");
+						exit(synt);
+					}
+					*/
+					
 					// neni to prvni zapis, nutno zkontrolovat priority
 					while(!stackEmpty(stack) && (getPriority(top) >= getPriority(*cur))){
 						// odebrat vrchol ze zasobniku
