@@ -349,7 +349,16 @@ getToc()
 				else if (!compareString(str,"else"))
 					toc->type = T_KW_ELSE;
 				else if (!compareString(str,"end"))
-					toc->type = T_KW_END;
+				{
+					if(c == '.')
+					{
+						toc->type = T_KW_ENDDOT;
+						return toc;
+					}
+					else
+						toc->type = T_KW_END;
+				
+				}
 				else if (!compareString(str,"false"))
 					toc->type = T_KW_FALSE;
 				else if (!compareString(str,"find"))
