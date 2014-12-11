@@ -49,12 +49,18 @@ void for_to_downto(struct astNode *curr)
 	if(cond->type == AST_FOR_TO)
 	{
 		while(*iterator <= boundary)
+		{
 			runTree(body);
+			(*iterator)++;
+		}
 	}
 	else if(cond->type == AST_FOR_DOWNTO)
 	{
 		while(*iterator >= boundary)
+		{
 			runTree(body);
+			(*iterator)--;
+		}
 	}
 	else
 		exit(intern);
