@@ -57,7 +57,7 @@ enum tokenType {
 	T_KW_CASE,
 	// neni v zadani ako klucove slovo - ??? 
 	T_KW_RPT,	// repeat
-	T_UNTIL,	// until
+	T_KW_UNTIL,	// until
 	T_ID,	// cokoliv odpovidajici identifikatoru
 	T_TEXT,	// cokoliv odpovidajici stringu
 	T_NMB,	// cokoliv odpovidajici cislu

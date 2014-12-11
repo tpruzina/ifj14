@@ -140,7 +140,7 @@ struct tokennames tokennames[] = {
 	{"T_KW_WHILE",T_KW_WHILE},
 	{"T_KW_WRT", T_KW_WRT},
 	{"T_KW_RPT",T_KW_RPT},
-	{"T_UNTIL",T_UNTIL},
+	{"T_KW_UNTIL",T_KW_UNTIL},
 	{"T_ID",T_ID},
 	{"T_TEXT",T_TEXT},
 	{"T_NMB",T_NMB},
@@ -1693,7 +1693,7 @@ struct astNode* repeatStatement(struct toc** cur){
 		return NULL;
 	rpt->type = AST_REPEAT;
 	// telo cyklu
-	rpt->left = parseBody(cur, false, T_UNTIL);
+	rpt->left = parseBody(cur, false, T_KW_UNTIL);
 	if(!rpt->left)
 		return NULL;
 	

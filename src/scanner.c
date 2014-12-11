@@ -376,6 +376,8 @@ getToc()
 					toc->type = T_KW_TRUE;
 				else if (!compareString(str,"var"))
 					toc->type = T_KW_VAR;
+				else if(!compareString(str, "until"))
+					toc->type = T_KW_UNTIL;
 				else if (!compareString(str,"uses"))
 					toc->type = T_KW_USES;
 				else if (!compareString(str,"while"))
