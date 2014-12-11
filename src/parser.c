@@ -1788,6 +1788,7 @@ struct astNode* forStatement(struct toc** cur){
 		printTokenType(*cur);
 		exit(synt);
 	}
+	
 	// ulozeni doleva prirazeni, doprava pujde koncova hodnota
 	forNode->right->left = forCond;
 	
@@ -1808,14 +1809,18 @@ struct astNode* forStatement(struct toc** cur){
 	// nacteni DO za definici
 	*cur = getToc();
 	expect(*cur, T_KW_DO, synt);
-	
+
+	D("@@ BEFORE BODY @@");
 	*cur = getToc();
 	expect(*cur, T_KW_BEGIN, synt);
 	// ocekavani tela
 	forNode->left = parseBody(cur, true, T_KW_END);
-	D("TELO FOR");
+	D("@@ TELO FOR @@");
 	printAst(forNode->left);
 
+	// nacteni posledniho tokenu
+	*cur = getToc();
+	
 #ifdef _DEBUG
 	D(".................");
 	printAst(forNode);
@@ -2477,8 +2482,13 @@ struct astNode* arrayIndexStatement(struct toc** cur){
 	*cur = getToc();
 	return arrid;
 } 
-
-struct astNode* assignStatement(struct toc** cur){
+/**
+ *	Parsuje prikaz prirazeni podle LL tabulky
+ * ASSIGN       ->	id := AFTER_ASSIGN
+ * AFTER_ASSIGN	->	EXPR
+ * AFTER_ASSIGN	->	CALL
+ */
+ struct astNode* assignStatement(struct toc** cur){
 	// levy uzel je T_ID -- z parse command
 	// pravy uzel je expression
 	struct astNode* left = makeNewAST();				
@@ -2595,29 +2605,6 @@ struct astNode* parseCommand(struct toc** cur){
 	return NULL;
 }
 
-
-bool isOperator(int cur){
-	switch(cur){
-		case T_EQV:
-		case T_NEQV:
-		case T_GRT:
-		case T_LSS:
-		case T_GEQV:
-		case T_LEQV:
-		case T_ADD:
-		case T_SUB:
-		case T_MUL:
-		case T_DIV:
-		case T_AND:
-		case T_OR:
-		case T_XOR:
-		case T_NOT:
-			return true;
-	}
-	return false;
-}
-
-
 /**
  * Parsuje vyraz, aritmeticko-logicky
  * ---------------------------------
@@ -2642,7 +2629,7 @@ struct astNode* parseExpression(struct toc** cur){
 	// 2. leva zavorka -> na vrchol zasobniku
 	// 3. operator:
 	// 		pokud je zasobnik prazdny
-	// 		pokud je na vrcholu parseExleva zavorka
+	// 		pokud je na vrcholu leva zavorka
 	// 		pokud je na vrcholu operator s nizsi prioritou
 	// pokud je na vrcholu operator s vyssi prioritou -> 
 	// 		presunout na vystup a opakovat 3. krok

@@ -1,5 +1,9 @@
 var
-	i:integer;
-begin
-	i:=100000000000000000000000000000000000000000000000000000000000000000
-end.
+	i : integer;
+
+BEGIN
+	for i := 0 to 10 do
+	begin
+		write(i)
+	end
+END.
