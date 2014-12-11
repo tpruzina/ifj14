@@ -54,24 +54,28 @@ int addChar(struct String* s, char c){
 	if(s->Value == NULL){
 		// v pripade, ze string sice alokovan byl, ale neobsahoval hodnotu
 		// -> alokovat pole a vlozit znak + \0 nakonec
-		s->Value = (char*)gcMalloc(sizeof(char)*2);
+		s->Value = (char*)gcMalloc(sizeof(char)*8);
 
 		s->Value[0] = c;
 		s->Value[1] = '\0';
 		
-		s->Allocated = 2;
-		s->Length = 1;
+		s->Allocated = 8;
+		s->Length = 7;
 
 		//Log("String: addChar: pridani znaku (alokace)", DEBUG, STRING);
 		return True;
 	}
 	else {
 		// v pripade, ze se pouze pridava znak do pole
-		s->Value = (char*)gcRealloc(s->Value, s->Allocated + 1);
-		s->Value[s->Length] = c;
-		s->Value[s->Length+1] = '\0';
+		if(s->Length+1 == s->Allocated)
+		{
+			s->Value = (char*)gcRealloc(s->Value, s->Allocated + 8);
+			s->Allocated += 8;
+		}
 		
-		s->Allocated += 1;
+		s->Value[s->Length] = c;
+		//s->Value[s->Length+1] = '\0';
+		
 		s->Length += 1;
 
 		//Log("String: addChar: pridani znaku (realokace)", DEBUG, STRING);
