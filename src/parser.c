@@ -527,6 +527,77 @@ int valid(struct astNode* left, struct astNode* right, int op){
 	exit(sem_komp);
 }
 
+struct astNode* makeNodeFromToken(struct toc* toc){
+	struct astNode* node = makeNewAST();
+
+	struct symbolTableNode* var;
+
+	switch(toc->type){
+		case T_EQV:
+			node->type = AST_EQV;
+			return node;
+		case T_NEQV:
+			node->type = AST_NEQV;
+			return node;
+		case T_GRT:
+			node->type = AST_GRT;
+			return node;
+		case T_LSS:
+			node->type = AST_LSS;
+			return node;
+		case T_GEQV:
+			node->type = AST_GEQV;
+			return node;
+		case T_LEQV:
+			node->type = AST_LEQV;
+			return node;
+		case T_ADD:
+			node->type = AST_ADD;
+			return node;
+		case T_SUB:
+			node->type = AST_SUB;
+			return node;
+		case T_OR:
+			node->type = AST_OR;
+			return node;
+		case T_XOR:
+			node->type = AST_XOR;
+			return node;
+		case T_MUL:
+			node->type = AST_MUL;
+			return node;
+		case T_DIV:
+			node->type = AST_DIV;
+			return node;
+		case T_AND:
+			node->type = AST_AND;
+			return node;
+		case T_NOT:
+			node->type = AST_NOT;
+			return node;
+		case T_INT:
+			node->type = AST_INT;
+			return node;
+		case T_REAL:
+			node->type = AST_REAL;
+			return node;
+		case T_BOOL:
+			node->type = AST_BOOL;
+			return node;
+		case T_STR:
+			node->type = AST_STR;
+			return node;
+		case T_ID:
+			var = searchOnTop(toc->data.str);
+			node->type = AST_ID;
+			node->dataType = var->dataType;
+			copyString(var->name, &(node->data.str));
+
+			return node;	
+	}
+
+	return NULL;
+}
 /**
  * Vytvari novy uzel do stromu podle operatoru.
  * --------------------
@@ -2462,6 +2533,29 @@ struct astNode* parseCommand(struct toc** cur){
 	return NULL;
 }
 
+
+bool isOperator(struct toc* cur){
+	switch(cur->type){
+		case T_EQV:
+		case T_NEQV:
+		case T_GRT:
+		case T_LSS:
+		case T_GEQV:
+		case T_LEQV:
+		case T_ADD:
+		case T_SUB:
+		case T_MUL:
+		case T_DIV:
+		case T_AND:
+		case T_OR:
+		case T_XOR:
+		case T_NOT:
+			return true;
+	}
+	return false;
+}
+
+
 /**
  * Parsuje vyraz, aritmeticko-logicky
  * ---------------------------------
@@ -2712,56 +2806,48 @@ struct astNode* parseExpression(struct toc** cur){
 				// 		pokud je na vrcholu operator s nizsi prioritou
 				// pokud je na vrcholu operator s vyssi prioritou -> 
 				// 		presunout na vystup a opakovat 3. krok
-				if(stackEmpty(stack)){
-					// v pripade, ze je to prvni zaznam do stacku, tak ho tam proste vrazit
-					stackPush(stack, (*cur));
-				}
-				else {	
+				if(!stackEmpty(stack)){	
 					top = (struct toc*)stackTop(stack);
-					/*
-					if(top->type == T_LPAR){
-						E("Syntax error - wrong expression syntax");
-						exit(synt);
-					}
-					*/
 					
 					// neni to prvni zapis, nutno zkontrolovat priority
-					while(!stackEmpty(stack) && (getPriority(top) >= getPriority(*cur))){
-						// odebrat vrchol ze zasobniku
-						top = (struct toc*)stackPop(stack);
-						
-						// vytvori ASTnode z tokenu
-						makeAstFromToken(top, &aststack);
-						
+					while(top != NULL){
+						// v pripade ze prijde zavorka koncim hledani
+						if(top->type == T_LPAR || top->type == T_RPAR)
+							break;
+						// jinak porovnavam priority
+						if(getPriority(top) >= getPriority(*cur)){
+							top = (struct toc*)stackPop(stack);
+							// vytvori ASTnode z tokenu
+							makeAstFromToken(top, &aststack);
+						}
 						// na promennou za vrchol ulozi top prvek
 						top = (struct toc*)stackTop(stack);
 					}		
-					
-					// ulozit aktualni prvek na vrchol zasobniku
-					stackPush(stack, (*cur));
 				}	
+				// ulozit aktualni prvek na vrchol zasobniku
+				stackPush(stack, (*cur));	
 				break;
-			case T_KW_END:
-			case T_KW_ENDDOT:
-			case T_SCOL:
-			case T_KW_DO:
-			case T_KW_THEN:
-				// vyprazdnit vsechny operatory v zasobniku a postavit nad nimi strom
-				D("expr: Making node into");
-				//printTokenType(*cur);
-				
-				while(!stackEmpty(stack)){
-					D("expr: STACK STATE START =======");
-				
+			default:
+				// Konec vyrazu - token ktery nespada do zadne kategorie
+				if(!stackEmpty(stack)){
+					// v pripade, ze ve stacku jsou data
 					now = (struct toc*)stackPop(stack);
-					//printTokenType(now);					
+
+					// prebytek zavorek
+					if(now->type == T_LPAR || now->type == T_RPAR){
+						E("Syntax error - too many parentheses");
+						exit(synt);
+					}					
 					
-					makeAstFromToken(now, &aststack);
-						
-					D("expr: STACK STATE END =========");
-					printAstStack(aststack);
-				}				
-			
+					while(now){
+						// popnuto uz bylo, takze zpracovat
+						makeAstFromToken(now, &aststack);						
+						printAstStack(aststack);
+
+						// popnout vrchol
+						now = (struct toc*)stackPop(stack);
+					}				
+				}
 				// v pripade, ze je v zasobniku jen jeden prvek
 				// vratit ho, je to vysledek SY algoritmu
 				if(aststack->Length != 1){
@@ -2772,11 +2858,7 @@ struct astNode* parseExpression(struct toc** cur){
 			
 				// vrati vrchol 
 				D("expression: Returning top layer");
-				return stackPop(aststack);
-			default:
-				E("expression: Syntax error - bad token type");			
-				//printTokenType(*cur);
-				exit(synt);
+				return (struct astNode*)stackPop(aststack);
 		}
 		
 		// get next token
@@ -2790,7 +2872,7 @@ struct astNode* parseExpression(struct toc** cur){
 			D("dont read new token");
 		}
 	}
+	
 	E("expression: Syntax error");
 	exit(synt);
 }
-
