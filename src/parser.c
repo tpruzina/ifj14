@@ -1817,10 +1817,10 @@ struct astNode* forStatement(struct toc** cur){
 	forNode->left = parseBody(cur, true, T_KW_END);
 	D("@@ TELO FOR @@");
 	printAst(forNode->left);
-
-	// nacteni posledniho tokenu
-	*cur = getToc();
 	
+	// posledni token -> za prikazem
+	*cur = getToc();
+
 #ifdef _DEBUG
 	D(".................");
 	printAst(forNode);
@@ -2046,6 +2046,14 @@ struct astNode* writeStatement(struct toc** cur){
 				E("Syntax error - after comma cannot be right parenthesis in params list");
 				exit(synt);
 			}
+		}
+		else if((*cur)->type == T_RPAR){
+			break;
+		}
+		else {
+			// spatna struktura parametru - pravdepodobne pokus o vyraz
+			E("Semantic error - wrong param structure");
+			exit(sem_komp);
 		}
 	}
 
