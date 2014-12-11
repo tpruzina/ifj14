@@ -239,6 +239,7 @@ struct symbolTableNode* searchOnTop(struct String* name){
 		if(!nd){
 			// nedefinovana promenna
 			E("searchOnTop: semantic error - undefined variable");
+			printString(name);
 			exit(sem_prog);
 		}
 	}
@@ -707,6 +708,8 @@ int makeDataType(struct toc* cur){
 			return DT_BOOL;
 		case T_KW_STRING:
 			return DT_STR;
+		case T_ARR:
+			return DT_ARR;
 		default:
 			E("Syntax error - expected supported data type");
 			exit(synt);
@@ -956,6 +959,10 @@ struct astNode* getArrayDef(struct toc** cur){
 		// nacteni typu promenne
 		(*cur) = getToc();
 		dta->type = makeDataType(*cur);
+		if(dta->type == DT_ARR){
+			E("Syntax error - unsupported array as type of array item");
+			exit(synt);
+		}
 		
 		// ulozeni odkazu na strukturu dat
 		var->other = dta;		
@@ -994,6 +1001,11 @@ struct astNode* getVarDef(struct toc** cur){
 	if(node->dataType == DT_NONE){
 		E("Syntax error - unexpected token type");
 		exit(synt);
+	}
+	else if(node->dataType == DT_ARR){
+		// nacitani pole
+		
+
 	}
 	
 	// kazda promenna musi koncit strednikem
@@ -1045,8 +1057,6 @@ struct queue* parseVars(struct toc** cur){
 	// vratit seznam promennych
 	return vars;
 }
-
-
 
 /**
  *	Pasruje parametry definice funkce, podle tabulky.
@@ -1152,6 +1162,19 @@ struct astNode* parseFunction(){
 	struct String* name = makeNewString();
 	copyString(cur->data.str, &name);
 	node->other = name;
+
+	// funkce
+	if(global.globalTable != NULL){
+		if(search(&global.globalTable, name)){
+			E("Semantic error - function name found as variable");
+			exit(sem_prog);
+		}			
+	}
+	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+	if(search(&top, name)){
+		E("Semantic error - function name found as variable");
+		exit(sem_prog);
+	}
 
 	// nacteni leve zavorky na zacatek parametru
 	cur = getToc();
@@ -1498,14 +1521,14 @@ void controlDefinitionParams(struct queue* defPars, struct queue* decPars){
 		// porovnani nazvu promennych
 		if(compareStrings(defname, decname) != 0){
 			E("Semantic error - expected same parameter name");
-			exit(sem_komp);
+			exit(sem_prog);
 		}
 	
 		// porovnani datovych typu
 		if(def->dataType != dec->dataType){
 			// nesedi datove typy
 			E("Semantic error - expected same parameter type");
-			exit(sem_komp);
+			exit(sem_prog);
 		}
 	
 		defs = defs->next;
@@ -1514,7 +1537,7 @@ void controlDefinitionParams(struct queue* defPars, struct queue* decPars){
 			if(defs == NULL){
 				// malo parametru predanych
 				E("Semantic error - few parameters");
-				exit(sem_komp);
+				exit(sem_prog);
 			}
 			else {
 				continue;
@@ -1523,7 +1546,7 @@ void controlDefinitionParams(struct queue* defPars, struct queue* decPars){
 		else {
 			if(defs != NULL){
 				E("Semantic error - too many parameters");
-				exit(sem_komp);
+				exit(sem_prog);
 			}
 		}
 	}	
@@ -1792,7 +1815,6 @@ struct astNode* forStatement(struct toc** cur){
 	forNode->left = parseBody(cur, true, T_KW_END);
 	D("TELO FOR");
 	printAst(forNode->left);
-	expect(*cur, T_KW_END, synt);
 
 #ifdef _DEBUG
 	D(".................");
@@ -1996,9 +2018,9 @@ struct astNode* writeStatement(struct toc** cur){
 				nd->data.boolean = (*cur)->data.boolean;
 				break;		
 			default:
-				E("Semantic error - unsupported type of parameter");
+				E("Syntax error - unsupported type of parameter");
 				//printTokenType(*cur);
-				exit(sem_komp);
+				exit(synt);
 		}
 				
 		D("WRITE PARAMETER");
@@ -2041,7 +2063,24 @@ struct astNode* readlnStatement(struct toc** cur){
 
 	// pokud nenasleduje ID -> chyba
 	*cur = getToc();
-	expect((*cur), T_ID, synt);
+	switch((*cur)->type){
+		case T_INT:
+		case T_REAL:
+		case T_BOOL:
+		case T_STR:
+			E("Semantic error - expected ID as parameter");
+			exit(sem_komp);
+		case T_ID:
+			// v poradku
+			break;
+		case T_RPAR:
+			// bez parametru
+			E("Semantic error - expected one ID parameter");
+			exit(sem_komp);
+		default:
+			E("Syntax error - expected only ID token");
+			exit(synt);
+	}
 	
 	// jeden parametry - ID
 	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
@@ -2118,6 +2157,10 @@ struct astNode* findStatement(struct toc** cur){
 			// novy parametr
 			queuePush(vp->pars, first);
 		}
+		else if((*cur)->type == T_RPAR){
+			E("Semantic error - expexted 2 parameters");
+			exit(sem_komp);
+		}
 		else {
 			// vypis kde co ocekaval
 			if(i == 0){
@@ -2127,7 +2170,7 @@ struct astNode* findStatement(struct toc** cur){
 				E("Syntax error - INLINE find expected string as second parameter data type");
 			}
 			//printTokenType(*cur);
-			exit(synt);
+			exit(sem_komp);
 		}
 			
 		// oddelovac nebo prava zavorka
@@ -2138,6 +2181,10 @@ struct astNode* findStatement(struct toc** cur){
 		}
 		else {
 			// ocekavam pravou zavorku
+			if((*cur)->type == T_COM){
+				E("Semantic error - expected at least 2 parameters");
+				exit(sem_komp);
+			}
 			expect((*cur), T_RPAR, synt);
 		}
 	}
@@ -2192,9 +2239,13 @@ struct astNode* sortStatement(struct toc** cur){
 		// pushnuti do fronty
 		queuePush(vp->pars, nd);
 	}
-	else {
+	else if((*cur)->type == T_RPAR) {
 		E("Semantic error - expected string as parameter data type");
 		exit(sem_komp);
+	}
+	else {
+		E("Syntax error - expected at least one parameter");
+		exit(synt);
 	}
 
 	// konec parametru
@@ -2305,6 +2356,11 @@ struct astNode* copyStatement(struct toc** cur){
 		// push
 		queuePush(vp->pars, nstr);				
 	}
+	else if((*cur)->type == T_RPAR){
+		// bez parametru
+		E("Semantic error - expected 3 parameters, gets 1");
+		exit(sem_komp);		
+	}
 	else {
 		E("Semantic error - expected STRING data type of parameter");
 		exit(sem_komp);
@@ -2355,8 +2411,13 @@ struct astNode* copyStatement(struct toc** cur){
 		*cur = getToc();
 		if(i == 0)
 			expect((*cur), T_COM, synt);
-		else
+		else{
+			if((*cur)->type == T_COM){
+				E("Semantic error - expected at least 2 parameters");
+				exit(sem_komp);
+			}
 			expect((*cur), T_RPAR, synt);
+		}
 	}
 	
 	expect((*cur), T_RPAR, synt);
@@ -2372,6 +2433,7 @@ struct astNode* copyStatement(struct toc** cur){
 struct astNode* arrayIndexStatement(struct toc** cur){
 	struct astNode* arrid = makeNewAST();
 	arrid->type = AST_ARR;
+	
 	struct String* name = NULL;
 	copyString((*cur)->data.str, &name);
 	arrid->other = name;
@@ -2534,8 +2596,8 @@ struct astNode* parseCommand(struct toc** cur){
 }
 
 
-bool isOperator(struct toc* cur){
-	switch(cur->type){
+bool isOperator(int cur){
+	switch(cur){
 		case T_EQV:
 		case T_NEQV:
 		case T_GRT:
@@ -2575,50 +2637,7 @@ struct astNode* parseExpression(struct toc** cur){
 	// zacatek podminky
 	(*cur) = getToc();
 
-	// <id>(
-	// <id> <operator> (
-	if((*cur)->type == T_ID){
-		D("expr: TOKEN ID on the left side");
 	
-		// odklad na ID token
-		struct toc* id = (*cur);
-		
-		(*cur) = getToc();
-		if((*cur)->type == T_LPAR){
-			// volani funkce -> za ID pokracovala leva zavorka	
-			*cur = id;
-			// <id>(.....	
-			D("expr: FUNC CALL");
-			struct astNode* nd = parseFuncCall(cur);
-			if(!nd) return NULL;
-
-			// ulozit na zasobnik funkci
-			stackPush(aststack, nd);
-		}
-		else if((*cur)->type == T_LBRC){
-			// indexing...
-		
-		}		
-		else {
-			D("expr: VARIABLE");
-			// v pripade, ze po ID nebyla zavorka
-			// pushnout na stack, jako promennou
-			struct astNode* node = makeNewAST();
-			node->type = AST_ID;
-			// kopie jmena
-			copyString(id->data.str, &(node->data.str));
-				
-			struct symbolTableNode* nd = searchOnTop(node->data.str);
-						
-			node->dataType = nd->dataType;				
-			node->left = NULL;
-			node->right = NULL;
-			
-			//datatypes(nd->dataType, node->dataType);
-			stackPush(aststack, node);
-		}	
-	}
-
 	// 1. operand -> outqueue
 	// 2. leva zavorka -> na vrchol zasobniku
 	// 3. operator:
@@ -2631,17 +2650,17 @@ struct astNode* parseExpression(struct toc** cur){
 	// 		dokud nenarazi na levou zavorku
 	// 5. v pripade jineho tokenu -> vyprazdnovat zasobnik na vystup
 	// 		tokeny ;, THEN, DO by mely vesmes ukoncovat vyrazy	
+
+	struct toc* t;
+	struct toc* top;
+	struct toc* now;
+	struct astNode* node;
 	while((*cur) != NULL){
 		D("expr: new token");
 #ifdef _DEBUG
 		fprintf(stderr, "readNew type = %d \n", readNew);
 		printTokenType(*cur);
 #endif		
-		struct toc* t;
-		struct toc* top;
-		struct toc* now;
-		struct astNode* node;
-		
 		switch((*cur)->type){
 			case T_KW_LENGTH:
 				W("builtin -- length");
@@ -2670,7 +2689,7 @@ struct astNode* parseExpression(struct toc** cur){
 			// leva zavorka
 			case T_LPAR: 
 				W("T_LPAR comes");
-			
+
 				stackPush(stack, (*cur));
 				break;
 			// prava zavorka
@@ -2685,7 +2704,7 @@ struct astNode* parseExpression(struct toc** cur){
 				}
 				
 				while(!stackEmpty(stack) && (t->type != T_LPAR)){
-					//printTokenType(t);
+					// printTokenType(t);
 					// vybira operatory ze zasobniku a hrne je do zasobniku operandu
 					makeAstFromToken(t, &aststack);
 					
@@ -2695,6 +2714,35 @@ struct astNode* parseExpression(struct toc** cur){
 				break;
 			// operandy
 			case T_ID:
+				node = makeNewAST();
+				// muze se objevit ID nebo FUNC call
+
+				// nacist dalsi token
+				t = getToc();
+				if(t->type == T_LPAR){
+					// pokud nenajde funkci jedna se o syntax error
+					if(!search(&global.funcTable, (*cur)->data.str)){
+						E("Semantic error - undefined function");
+						exit(sem_prog);
+					}
+					// funkci nasel, spustit parsing
+					node = parseFuncCall(cur);
+					// parseFuncCall uz nacetl posledni znak
+					readNew = false;					
+					// funkci ulozit do vystupu
+					stackPush(aststack, node);
+					break;
+				}
+
+				// v pripade ze dalsi token nebyla zavorka
+				// z ID udelat promennou
+				node = makeNodeFromToken(*cur);
+				stackPush(aststack, node);
+				// jelikoz mame nacteny dalsi token
+				readNew = false;
+				// nahrat token co cur
+				*cur = t;
+				break;
 			case T_INT:
 			case T_REAL:
 			case T_STR:
@@ -2706,35 +2754,7 @@ struct astNode* parseExpression(struct toc** cur){
 				
 				node = makeNewAST();
 				
-				if((*cur)->type == T_ID){
-					// nacteni dalsiho tokenu
-					now = getToc();
-					if(now->type == T_LPAR){
-						// volani funkce
-						node = parseFuncCall(cur);	
-					}
-					else {
-						// promenna			
-						node->type = AST_ID;
-						// kopie jmena
-						copyString((*cur)->data.str, &(node->data.str));
-					
-						// ziskani tabulky symbolu
-						struct symbolTableNode* nd = searchOnTop(node->data.str);
-						D("expr: comparison between symtable node and ast node");
-						datatypes(nd->dataType, node->dataType);
-					
-						node->dataType = nd->dataType;					
-						D("expr: making ID");
-						*cur = now;
-					}
-					// nahrat nacteny token
-					
-					D("READ NEW - cur type");
-					//printTokenType(*cur);now
-					readNew = false;
-				}
-				else if((*cur)->type == T_INT){
+				if((*cur)->type == T_INT){
 					node->type = AST_INT;
 					node->dataType = DT_INT;
 					node->data.integer = (*cur)->data.integer;	
@@ -2756,24 +2776,21 @@ struct astNode* parseExpression(struct toc** cur){
 					D("expr: making BOOL");
 				}
 				else if((*cur)->type == T_STR){
-					node->type = AST_STR;
+					node->type = AST_STR;						
+					node->dataType = DT_STR;					
 					node->data.str = (*cur)->data.str;
-						
-					node->dataType = DT_STR;
 					D("expr: making STR");
 				}
 				else if((*cur)->type == T_KW_TRUE){
 					node->type = AST_BOOL;
 					node->dataType = DT_BOOL;
-					node->data.boolean = True;
-					
+					node->data.boolean = true;					
 					D("expr: making TRUE");
 				}
 				else if((*cur)->type == T_KW_FALSE){
 					node->type = AST_BOOL;
 					node->dataType = DT_BOOL;
-					node->data.boolean = False;
-					
+					node->data.boolean = false;					
 					D("expr: making FALSE");
 				}
 				else {
@@ -2799,35 +2816,36 @@ struct astNode* parseExpression(struct toc** cur){
 			case T_XOR:
 			case T_NOT:
 				W("Operator comes");
-				//printTokenType(*cur);
-				// 3. operator:
-				// 		pokud je zasobnik prazdny
-				// 		pokud je na vrcholu leva zavorka
-				// 		pokud je na vrcholu operator s nizsi prioritou
-				// pokud je na vrcholu operator s vyssi prioritou -> 
-				// 		presunout na vystup a opakovat 3. krok
-				if(!stackEmpty(stack)){	
-					top = (struct toc*)stackTop(stack);
+				printTokenType(*cur);
+				// 3. operator -> vlozit
+				top = (struct toc*)stackTop(stack);
+				// 	pokud je zasobnik prazdny -- vubec neprojde whilem
+				while(!stackEmpty(stack)){
+					// 	pokud je na vrcholu leva zavorka
+					// 	pokud je na vrcholu operator s nizsi prioritou
+					if(top == NULL || top->type == T_LPAR || getPriority(top) < getPriority(*cur)){
+						// push do zasobniku je na konci case
+						break;
+					}
+				
+					// pokud je na vrcholu operator s vyssi prioritou -> 
+					// 		presunout na vystup a opakovat 3. krok
+					if(getPriority(top) >= getPriority(*cur)){
+						// odstranit z vrcholu
+						top = (struct toc*)stackPop(stack);
+						// vytvori ASTnode z tokenu
+						makeAstFromToken(top, &aststack);
+					}
 					
-					// neni to prvni zapis, nutno zkontrolovat priority
-					while(top != NULL){
-						// v pripade ze prijde zavorka koncim hledani
-						if(top->type == T_LPAR || top->type == T_RPAR)
-							break;
-						// jinak porovnavam priority
-						if(getPriority(top) >= getPriority(*cur)){
-							top = (struct toc*)stackPop(stack);
-							// vytvori ASTnode z tokenu
-							makeAstFromToken(top, &aststack);
-						}
-						// na promennou za vrchol ulozi top prvek
-						top = (struct toc*)stackTop(stack);
-					}		
+					// na promennou za vrchol ulozi top prvek
+					top = (struct toc*)stackTop(stack);		
 				}	
 				// ulozit aktualni prvek na vrchol zasobniku
 				stackPush(stack, (*cur));	
 				break;
 			default:
+				D("End of expression");
+				printTokenType(*cur);
 				// Konec vyrazu - token ktery nespada do zadne kategorie
 				if(!stackEmpty(stack)){
 					// v pripade, ze ve stacku jsou data
