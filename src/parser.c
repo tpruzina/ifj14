@@ -2,12 +2,12 @@
 ****                                                                      ****
 ****    PROJEKT DO PREDMETU IFJ                                           ****
 ****                                                                      ****
-****    Nazev:     Implementace interpretu imperativnÃ­ho jazyka IFJ14     ****
+****    Nazev:     Implementace interpretu imperativnÃƒÂ­ho jazyka IFJ14     ****
 ****    Datum:                                                            ****
-****    Autori:    Marko Antoní­n    <xmarko07@stud.fit.vutbr.cz>          ****
-****               Pružina Tomáš    <xpruzi01@stud.fit.vutbr.cz>          ****
-****               Kubíček Martin   <xkubic34@stud.fit.vutbr.cz           ****
-****               Juřík Martin     <xjurik08@stud.fit.vutbr.cz           ****
+****    Autori:    Marko AntonÃ­Â­n    <xmarko07@stud.fit.vutbr.cz>          ****
+****               PruÅ¾ina TomÃ¡Å¡    <xpruzi01@stud.fit.vutbr.cz>          ****
+****               KubÃ­Äek Martin   <xkubic34@stud.fit.vutbr.cz           ****
+****               JuÅ™Ã­k Martin     <xjurik08@stud.fit.vutbr.cz           ****
 ****               David Petr       <xdavid15@stud.fit.vutbr.cz>          ****
 ****                                                                      ****
 *****************************************************************************/
@@ -966,6 +966,85 @@ struct astNode* getArrayDef(struct toc** cur){
 	return var;
 }
 
+/*
+ *	Ocekava nacteni ID z definici
+ */
+struct astNode* getVarDef(struct toc** cur){
+	// id	
+	expect(*cur, T_ID, synt);
+	
+	// novy uzel + kopie jmena
+	struct astNode* node = makeNewAST();
+	node->type = AST_ID;
+	copyString((*cur)->data.str, &(node->data.str));
+
+	// ocekavat dvojtecku
+	*cur = getToc();
+	expect(*cur, T_COL, synt);
+	
+	// nacteni datoveho typu
+	*cur = getToc();
+	node->dataType = makeDataType(*cur);
+	if(node->dataType == DT_NONE){
+		E("Syntax error - unexpected token type");
+		exit(synt);
+	}
+	else if(node->dataType == DT_ARR){
+		// nacitani pole
+		
+
+	}
+	
+	// kazda promenna musi koncit strednikem
+	*cur = getToc();
+	expect(*cur, T_SCOL, synt);
+	
+	return node;
+}
+
+/**
+ * Parsuje var sekci funkce/programu
+ * ---------------------------------
+ */
+struct queue* parseVars(struct toc** cur){
+	W("parseVars");
+
+	// zacinat parsovat promenne
+	struct queue* vars = makeNewQueue();		
+	struct symbolTableNode* top = (struct symbolTableNode*)stackPop(global.symTable);
+	
+	struct astNode* var = NULL;
+	*cur = getToc();
+	expect(*cur, T_ID, synt);
+	while((*cur)->type == T_ID){
+		// nacteni definice
+		var = getVarDef(cur);					
+						
+		// vlozit prvek
+		queuePush(vars, var);
+		
+		// ulozit do top vrstvy
+		if(search(&global.globalTable, var->data.str)){
+			E("Promenna nalezena v globalni tabulce");
+			exit(sem_prog);
+		}
+		else
+			insertValue(&top, var->data.str, var->dataType);
+		
+		// nacist dalsi token
+		*cur = getToc();
+	}
+		
+#ifdef _DEBUG	
+	printSymbolTable(top, 0);		
+#endif
+
+	stackPush(global.symTable, top);
+			
+	// vratit seznam promennych
+	return vars;
+}
+
 /**
  *	Pasruje parametry definice funkce, podle tabulky.
  */
@@ -1049,75 +1128,6 @@ struct queue* parseParams(){
 }
 
 /**
- *	Ocekava nacteni ID z definici
- */
-struct astNode* getVarDef(struct toc** cur){
-	// id	
-	expect(*cur, T_ID, synt);
-	
-	// novy uzel + kopie jmena
-	struct astNode* node = makeNewAST();
-	node->type = AST_ID;
-	copyString((*cur)->data.str, &(node->data.str));
-
-	// ocekavat dvojtecku
-	*cur = getToc();
-	expect(*cur, T_COL, synt);
-	
-	// nacteni datoveho typu
-	*cur = getToc();
-	node->dataType = makeDataType(*cur);
-	if(node->dataType == DT_NONE){
-		E("Syntax error - unexpected token type");
-		exit(synt);
-	}
-	else if(node->dataType == DT_ARR){
-		// nacitani pole
-		
-
-	}
-	
-	// kazda promenna musi koncit strednikem
-	*cur = getToc();
-	expect(*cur, T_SCOL, synt);
-	
-	return node;
-}
-
-/**
- * Parsuje var sekci funkce/programu.
- * Pridava promenne do globalni tabulky, pouze pro praci lokalne
- * ---------------------------------
- */
-struct queue* parseVars(struct toc** cur){
-	W("parseVars");
-
-	// zacinat parsovat promenne
-	struct queue* vars = makeNewQueue();		
-	//struct symbolTableNode* top = (struct symbolTableNode*)stackPop(global.symTable);
-	
-	struct astNode* var = NULL;
-	*cur = getToc();
-	expect(*cur, T_ID, synt);
-	while((*cur)->type == T_ID){
-		// nacteni definice
-		var = getVarDef(cur);					
-		// vlozit prvek
-		queuePush(vars, var);		
-		// ulozit do top vrstvy
-		insertValue(&global.globalTable, var->data.str, var->dataType);
-		
-		// nacist dalsi token
-		*cur = getToc();
-	}
-
-	//stackPush(global.symTable, top);
-			
-	// vratit seznam promennych
-	return vars;
-}
-
-/**
  * Parsuje dopredne deklarace / definice funkci
  * --------------------------------------------
  */
@@ -1125,7 +1135,8 @@ struct astNode* parseFunction(){
 	W("parseFunction");
 	// definice funkce / dopredna definice --- FUNCTION je uz nactene
 	// FUNCTION <id> <params>: <type>; <var_def> <body>     
-	// FUNCTION <id> <params>: <type>; FORWARD;	
+	// FUNCTION <id> <params>: <type>; FORWARD;
+	
 	struct astNode* node = makeNewAST();
 	node->type = AST_FUNC;
 	
@@ -1146,7 +1157,6 @@ struct astNode* parseFunction(){
 			exit(sem_prog);
 		}			
 	}
-	// prohledani tabulky symbolu, jestli neobsahuje stejne pojmenovanou promennou
 	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
 	if(search(&top, name)){
 		E("Semantic error - function name found as variable");
@@ -1336,11 +1346,10 @@ struct queue* parseCallParams(struct toc** cur){
 		struct astNode* nd = makeNewAST();
 		printTokenType(*cur);
 		struct symbolTableNode* id;
-
-		
 		switch((*cur)->type){
 			case T_ID:
 				// predana promenna
+				
 				id = searchOnTop((*cur)->data.str);
 				nd->type = AST_ID;
 				copyString((*cur)->data.str, &(nd->data.str));
@@ -1386,7 +1395,8 @@ struct queue* parseCallParams(struct toc** cur){
 				exit(synt);
 		}
 		
-		*cur = getToc();	
+		// nacteni oddelovace
+		(*cur) = getToc();
 		if((*cur)->type == T_COM){
 			// nacetl carku - v poradku pokud nenasleduje T_RPAR
 			(*cur) = getToc();
@@ -1879,9 +1889,9 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 struct astNode* caseStatement(struct toc** cur){
 	// konstrukci bude uvozovat AST_SWITCH, 
 	// kde v levem podstromu bude fronta case polozek, 
-	// kde v levem poduzlu bude literal, oznacuji­ci­ ke 
+	// kde v levem poduzlu bude literal, oznacujiÂ­ciÂ­ ke 
 	// ktere hodnote je tento prvek prirazen, a v pravem poduzlu bude 
-	// telo polozky. V pravem poduzlu hlavn­iho uzlu je AST_ID urcujici­, 
+	// telo polozky. V pravem poduzlu hlavnÂ­iho uzlu je AST_ID urcujiciÂ­, 
 	// podle ceho se porovnavaji. 
 	struct astNode* switchNode = makeNewAST();
 	switchNode->type = AST_SWITCH;
