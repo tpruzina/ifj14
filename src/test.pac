@@ -1,34 +1,21 @@
-{Boolean test - hlavne precedencni analyza...}
+{ spravny }
 
-var 
-  a : boolean;
-  b : boolean;
-  c : boolean;
+var
+   a : integer;
+   r : real;
+
+function w(i :integer; c : real) : real;
+var
+	a : integer;
+begin
+	a := i * 50;
+	w := 5.0 * a
+end;
 
 begin
-  a := true;
-  b := false;
-
-  write('a - true: ', a, ''#10'');
-  write('b - false: ', b, ''#10'');
-
-  c := a < b;
-  write('a < b:  ', c, ''#10'');
-  c := a > b;
-  write('a > b:  ', c, ''#10'');
-  c := a <= b;
-  write('a <= b: ', c, ''#10'');
-  c := a >= b;
-  write('a >= b: ', c, ''#10'');
-  c := a = b;
-  write('a = b:  ', c, ''#10'');
-  c := a <> b;
-  write('a <> b: ', c, ''#10'');
-  c := a > b;
-  write('a > b:  ', c, ''#10'');
-
-  if true then begin
-    write('Bool v ifu...'#10'')
-  end else begin
-  end
+	a := 20;
+	r := w(a, 5.0);
+	write (r)
 end.
+
+

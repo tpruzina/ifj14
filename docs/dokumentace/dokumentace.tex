@@ -190,6 +190,33 @@ funkce bez nutnosti jakkoliv zasahovat do abstraktního syntaktického stromu.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Postup při implementaci řešení} \label{postup_pri_implementaci_reseni}
 %=============================================================================
+\subsection{Funkce \texttt{sort}}
+K implementaci funkce sort jsme podle zadání použili algoritmus quicksort.
+Kromě funkce quicksort jsme potřebovali ještě pomocnou funkci \verb|partition|,
+která rozděluje řazené pole na dvě části. V jedné takto vzniklé části jsou prvky
+s menší hodnotou než je prvek rozdělující tyto části (pseudomedián, dále jen PM)
+a v druhé části prvky s hodnotou větší než PM. Index PM určíme jako $(l+p)/2$, kde
+$i$ je index nejlevějšího prvku řazeného úseku pole a $j$ index nejpravějšího prvku
+tohoto pole. Všechny prvky s hodnotou nižší než je PM poté přesuneme na levou
+stranu od PM a prvky s vyšší hodnotou na pravou stranu. Poté aplikujeme algoritmus
+quicksort na obě poloviny pole.
+
+Konkrétní implementace algoritmu je převzata z přednášek předmětu Algoritmy
+(IAL2014 \cite{honzik2} -- 10. přednáška 33. slide). Pro snazší konverzi do jazyka C a pro
+pochopení algoritmu samotného jsme vytvořili vývojový graf a podle grafu jsme
+sepsali samotný kód v jazyce C.
+
+\paragraph{Modifikace:} Algoritmus popsaný v přednáškách obsahoval prohození prvku se sebou samým, takže
+jsme provedli drobnou úpravu, která tomuto zabránila.
+
+\subsection{Funkce \texttt{find}}
+Pro funkci find jsme dle zadání použili KMP (Knuth-Morris-Prattův algoritmus). Jedná se o algoritmus využívající konečný automat. Tento konečný automat využívá hrany ANO/NE. Nejprve bylo nutné vytvořit si pole \verb|FAIL|, do kterého se uloží zjištěné hodnoty posunů. Poté přijde na řadu samotné vyhledávání řetězce. Nejprve zarovnáme podřetězec a řetězec na první index. Pak se jen porovnávají znaky, pokud jsou shodné, zvyšuje se index o 1 v podřetězci, který hledáme (\verb|pattern|) a zároveň i v řetězci, ve kterém vyhledáváme (\verb|text|). Pokud nikoliv, tak se vracím po hraně "N" (NE hrana) neboli FAIL vektor. Je-li pak hodnota indexu v hledaném řetězci rovna délce hledaného podřetězce, tak byl nalezen vzorek na indexu $TInd - PL$, kde $TInd$ je index řetězce a $PL$ je délka hledaného podřetězce, jinak nic nenašel a vrací se 0.
+
+Algoritmus byl převzán a přepsán do jazyka C z přednášek předmětu Algoritmy (IAL2014 \cite{honzik2} -- 11. přednáška 18. slide).
+ 
+\paragraph{Modifikace:} Pro návrat 0 v případě neúspěchu byla provedena modifikace algoritmu z přednášek, kde byl vracen poslední dosažený index, tedy délka řetězce.
+
+
 
 
 \section{LL-tabulka} \label{lltabulka}
@@ -286,6 +313,8 @@ EXPR            -> vyraz
 % jedna citace:
 \bibitem{honzik}
 HONZÍK J. M.: \emph{Studijní opora pro předmět Algoritmy}. Elektronický text. FIT VUT v Brně
+\bibitem{honzik2}
+HONZÍK J. M.: \emph{Přednášky k předmětu Algoritmy}. Soubor elektronických textů. FIT VUT v Brně
 \bibitem{meduna}
 MEDUNA A., LUKÁŠ R., \emph{Podklady k přednáškám}. Elektronický text. FIT VUT v Brně
 
