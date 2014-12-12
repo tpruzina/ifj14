@@ -1,15 +1,75 @@
 var
-	i : integer;
-	j : integer;
-BEGIN
-	i := 10;
-	j := 0;
-	for i:=0 to 10 do
+	i:integer;
+	j:integer;
+	res:integer;
+	a:boolean;
+	b:boolean;
+
+{ prevodova funkce z intu do boolu }
+function getBool(x: integer):boolean;
+begin
+	if x = 0 then
 	begin
-		for j:= 0 to 10 do
+		getBool := true
+	end
+	else
+	begin
+		getBool := false
+	end
+end;
+
+function andTest(x:boolean; y:boolean): integer;
+begin
+	if x and y then
+	begin
+		write('AndTest: ', x, ' and ', y, ' == true', ''#13'')
+	end
+	else
+	begin
+		write('AndTest: ', x, ' and ', y, ' == false', ''#13'')
+	end;
+
+	andTest := 0
+end;
+function orTest(x:boolean; y:boolean): integer;
+begin
+	if x or y then
+	begin
+		write('OrTest: ', x, ' or ', y, ' == true', ''#13'')
+	end
+	else
+	begin
+		write('OrTest: ', x, ' or ', y, ' == false', ''#13'')
+	end;
+
+	orTest := 0
+end;
+function xorTest(x:boolean; y:boolean): integer;
+begin
+	if x xor y then
+	begin
+		write('XorTest: ', x, ' xor ', y, ' == true', ''#10'')
+	end
+	else
+	begin
+		write('XorTest: ', x, ' xor ', y, ' == false', ''#10'')
+	end;
+
+	xorTest := 0
+end;
+
+begin
+	for i := 0 to 1 do
+	begin
+		for j := 0 to 1 do
 		begin
-			write('.')
-		end;
-		write(''#10'')
+			a := getBool(i);
+			b := getBool(j);
+
+			{ volani jednotlivych funkci }
+			res := andTest(a, b);
+			res := orTest(a, b);
+			res := xorTest(a, b)
+		end
 	end	
-END.
+end.
