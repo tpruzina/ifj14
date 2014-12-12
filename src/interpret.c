@@ -64,6 +64,7 @@ void for_to_downto(struct astNode *curr)
 	}
 	else
 		exit(intern);
+	*iterator = boundary;
 }
 
 void *runTree(struct astNode *curr)
