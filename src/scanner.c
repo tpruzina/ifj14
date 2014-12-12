@@ -44,9 +44,7 @@ getToc()
 
 	state = KA_START;
 
-	str = makeNewString();
-	ASSERT(str);
-
+	str = NULL;
 	skipWSandComments();
 
 	while (true)
@@ -61,11 +59,13 @@ getToc()
 		case KA_START:
 			if(isalpha(c) || '_' == c) // asi identifikator
 			{
+				str = makeNewString();
 				addChar(str,c);
 				state = KA_IDENT;
 			}
 			else if(isdigit(c))
 			{
+				str = makeNewString();
 				addChar(str,c);
 				state = KA_INTEGER;
 			}
@@ -202,6 +202,7 @@ getToc()
 // STRINGOVE LITERALY + ESCAPE SEQ #
 // vid konecny automat z ktoreho sa tento shit da pochopit
 		case KA_STR_LIT:	//mame '
+			str = makeNewString();
 			if('\'' == c)	//mame prazdny literal - go STR_LIT_DONE
 				state = KA_STR_LIT_DONE;
 			else if(ascii(c))	//mame znak v tele literalu 31-127 minus {#,'}

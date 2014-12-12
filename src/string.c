@@ -46,9 +46,7 @@ struct String* makeNewString(){
  */
 int addChar(struct String* s, char c){
 	if(s == NULL){
-		// v pripade, ze dostane prazdny string -> zalozi novy a prida znak
-		s = makeNewString();
-		Log("String: addChar: novy string", DEBUG, STRING);
+		exit(intern);
 	}
 	
 	if(s->Value == NULL){
