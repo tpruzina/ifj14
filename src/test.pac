@@ -1,75 +1,34 @@
-var
-	i:integer;
-	j:integer;
-	res:integer;
-	a:boolean;
-	b:boolean;
+{Boolean test - hlavne precedencni analyza...}
 
-{ prevodova funkce z intu do boolu }
-function getBool(x: integer):boolean;
-begin
-	if x = 0 then
-	begin
-		getBool := true
-	end
-	else
-	begin
-		getBool := false
-	end
-end;
-
-function andTest(x:boolean; y:boolean): integer;
-begin
-	if x and y then
-	begin
-		write('AndTest: ', x, ' and ', y, ' == true', ''#10'')
-	end
-	else
-	begin
-		write('AndTest: ', x, ' and ', y, ' == false', ''#10'')
-	end;
-
-	andTest := 0
-end;
-function orTest(x:boolean; y:boolean): integer;
-begin
-	if x or y then
-	begin
-		write('OrTest: ', x, ' or ', y, ' == true', ''#10'')
-	end
-	else
-	begin
-		write('OrTest: ', x, ' or ', y, ' == false', ''#10'')
-	end;
-
-	orTest := 0
-end;
-function xorTest(x:boolean; y:boolean): integer;
-begin
-	if x xor y then
-	begin
-		write('XorTest: ', x, ' xor ', y, ' == true', ''#10'')
-	end
-	else
-	begin
-		write('XorTest: ', x, ' xor ', y, ' == false', ''#10'')
-	end;
-
-	xorTest := 0
-end;
+var 
+  a : boolean;
+  b : boolean;
+  c : boolean;
 
 begin
-	for i := 0 to 1 do
-	begin
-		for j := 0 to 1 do
-		begin
-			a := getBool(i);
-			b := getBool(j);
+  a := true;
+  b := false;
 
-			{ volani jednotlivych funkci }
-			res := andTest(a, b);
-			res := orTest(a, b);
-			res := xorTest(a, b)
-		end
-	end	
+  write('a - true: ', a, ''#10'');
+  write('b - false: ', b, ''#10'');
+
+  c := a < b;
+  write('a < b:  ', c, ''#10'');
+  c := a > b;
+  write('a > b:  ', c, ''#10'');
+  c := a <= b;
+  write('a <= b: ', c, ''#10'');
+  c := a >= b;
+  write('a >= b: ', c, ''#10'');
+  c := a = b;
+  write('a = b:  ', c, ''#10'');
+  c := a <> b;
+  write('a <> b: ', c, ''#10'');
+  c := a > b;
+  write('a > b:  ', c, ''#10'');
+
+  if true then begin
+    write('Bool v ifu...'#10'')
+  end else begin
+  end
 end.

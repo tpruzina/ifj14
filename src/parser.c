@@ -468,20 +468,7 @@ int valid(struct astNode* left, struct astNode* right, int op){
 			// stejne typy na obou stranach
 			if(left->dataType == DT_INT || left->dataType == DT_REAL || left->dataType == DT_BOOL || left->dataType == DT_STR){
 				// vsechny moznosti				
-				if(op == AST_EQV || op == AST_NEQV){
-					// pro vsechny
-					return DT_BOOL;
-				}
-				else {
-					// ostatni operace - MATH operands < > <= >= 
-					if(left->dataType == DT_BOOL || left->dataType == DT_STR){
-						E("valid: Semantic error - invalid operands");
-						datatypes(left->dataType, right->dataType);
-						exit(sem_komp);
-					}
-					
-					return DT_BOOL;
-				}			
+				return DT_BOOL;
 			}
 			else {
 				// v pripade nepodporovanych datovych typu
@@ -2627,7 +2614,7 @@ struct astNode* parseExpression(struct toc** cur){
 
 	bool readNew = true;
 	//struct astNode *cmd = NULL;
-	
+	int last = -1;
 
 	// zacatek podminky
 	(*cur) = getToc();
@@ -2812,6 +2799,13 @@ struct astNode* parseExpression(struct toc** cur){
 			case T_NOT:
 				W("Operator comes");
 				printTokenType(*cur);
+
+				if(last == T_LPAR){
+					// pred operatorem byla leva zavorka
+					E("Syntax error - wrong syntax, left parenthesis before operator");
+					exit(synt);
+				}
+				
 				// 3. operator -> vlozit
 				top = (struct toc*)stackTop(stack);
 				// 	pokud je zasobnik prazdny -- vubec neprojde whilem
@@ -2873,6 +2867,8 @@ struct astNode* parseExpression(struct toc** cur){
 				D("expression: Returning top layer");
 				return (struct astNode*)stackPop(aststack);
 		}
+
+		last = (*cur)->type;
 		
 		// get next token
 		if(readNew){
