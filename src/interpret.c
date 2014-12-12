@@ -212,6 +212,8 @@ void *runTree(struct astNode *curr)
 			tmp = runTree(curr->other);	// evaluujeme podmienku
 			if(!tmp->data.bool_data)
 				break;
+			else
+				deleteTable(&tmp);
 			runTree(curr->left);	// ak true, tak bezime telo
 		}
 		break;
@@ -220,6 +222,8 @@ void *runTree(struct astNode *curr)
 		ASSERT(curr->left && curr->other);
 		do
 		{
+			if(tmp)
+				deleteTable(&tmp);
 			runTree(curr->left);	// telo
 			tmp = runTree(curr->other);	//podmienka
 		} while(!tmp->data.bool_data);
