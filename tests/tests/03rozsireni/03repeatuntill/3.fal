@@ -3,7 +3,7 @@ var
 BEGIN
 	i := 0;
 	repeat
-		write(i, #10);
+		write(i, ''#13'');
 	
 		i := i + 1
 	until i = 10;
