@@ -64,6 +64,7 @@ void for_to_downto(struct astNode *curr)
 	}
 	else
 		exit(intern);
+	*iterator = boundary;
 }
 
 void *runTree(struct astNode *curr)
@@ -221,7 +222,7 @@ void *runTree(struct astNode *curr)
 		{
 			runTree(curr->left);	// telo
 			tmp = runTree(curr->other);	//podmienka
-		} while(tmp->data.bool_data);
+		} while(!tmp->data.bool_data);
 		break;
 
 	case AST_FOR:
