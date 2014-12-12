@@ -2,12 +2,12 @@
 ****                                                                      ****
 ****    PROJEKT DO PREDMETU IFJ                                           ****
 ****                                                                      ****
-****    Nazev:     Implementace interpretu imperativnÃ­ho jazyka IFJ14     ****
+****    Nazev:     Implementace interpretu imperativnÃƒÂ­ho jazyka IFJ14     ****
 ****    Datum:                                                            ****
-****    Autori:    Marko Antoní­n    <xmarko07@stud.fit.vutbr.cz>          ****
-****               Pružina Tomáš    <xpruzi01@stud.fit.vutbr.cz>          ****
-****               Kubíček Martin   <xkubic34@stud.fit.vutbr.cz           ****
-****               Juřík Martin     <xjurik08@stud.fit.vutbr.cz           ****
+****    Autori:    Marko AntonÃ­Â­n    <xmarko07@stud.fit.vutbr.cz>          ****
+****               PruÅ¾ina TomÃ¡Å¡    <xpruzi01@stud.fit.vutbr.cz>          ****
+****               KubÃ­Äek Martin   <xkubic34@stud.fit.vutbr.cz           ****
+****               JuÅ™Ã­k Martin     <xjurik08@stud.fit.vutbr.cz           ****
 ****               David Petr       <xdavid15@stud.fit.vutbr.cz>          ****
 ****                                                                      ****
 *****************************************************************************/
@@ -1889,9 +1889,9 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 struct astNode* caseStatement(struct toc** cur){
 	// konstrukci bude uvozovat AST_SWITCH, 
 	// kde v levem podstromu bude fronta case polozek, 
-	// kde v levem poduzlu bude literal, oznacuji­ci­ ke 
+	// kde v levem poduzlu bude literal, oznacujiÂ­ciÂ­ ke 
 	// ktere hodnote je tento prvek prirazen, a v pravem poduzlu bude 
-	// telo polozky. V pravem poduzlu hlavn­iho uzlu je AST_ID urcujici­, 
+	// telo polozky. V pravem poduzlu hlavnÂ­iho uzlu je AST_ID urcujiciÂ­, 
 	// podle ceho se porovnavaji. 
 	struct astNode* switchNode = makeNewAST();
 	switchNode->type = AST_SWITCH;
