@@ -60,9 +60,10 @@ Tento dokument sa skládá z N částí, které popisují jednotlivé moduly
 interpretu imperativního jazyka IFJ14, a to jsou lexikální analyzátor
 (\ref{lexikalni_analyzator}), syntaktický analyzátor (\ref{syntakticky_analyzator})
 využívající rekurzivní sestup (), který je pro potřeby syntaktické
-analýzy výrazů rozšířený o Shunting-Yard (\ref{sya}) algoritmus.
-Kontrola syntaxe a sémantiky probíhá z velké části při jednom průchodu, následné
-kontroly sémantiky probíhají až za běhu.
+analýzy výrazů rozšířený o Shunting-Yard (\ref{sya}) algoritmus\footnote{Byla nám
+dovolena výjimka, implementovat a náležitě zdokumentovat tento algoritmus oproti předepsané
+precedenční analýze}. Kontrola syntaxe a sémantiky probíhá z velké části při jednom
+průchodu, následné kontroly sémantiky probíhají až za běhu.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Moduly interpretu jazyka} \label{moduly_interpretu}
@@ -126,20 +127,20 @@ parametry funkce. Tyto fronty jsou naplněny při definici funkce, při deklarac
 (použití \verb|forward| deklarace) je naplněna pouze fronta parametrů. Více o funkcích
 v \ref{func}.
 
-\subsubsection{Shunting-yard algoritmus} \label{sya}
+\subsubsection{Shunting-yard algoritmus}
+\label{sya}
 Algoritmus zpracování výrazů je založen na prioritě operátorů, které buď vkládá
 nebo odebírá ze zásobníku a vkládá do výstupní sekvence. Tento algoritmus primárně
 slouží k převodu infixového zápisu výrazů do postfixového, tedy lépe zpracovatelného
 a převeditelného do AST.
 
-Tento algoritmus byl pro potřeby projektu upraven, aby
-přímo generoval AST místo výstupního postfixového zápisu a zároveň u tvorby
-jednotlivých uzlů zastupujících operace kontroloval, zda-li datový typ vrcholových
-uzlů synovských uzlů odpovídá sémantickým pravidlům zpracovávání výrazů.
+Tento algoritmus byl pro potřeby projektu upraven, aby přímo generoval AST místo
+výstupního postfixového zápisu a zároveň u tvorby jednotlivých uzlů zastupujících
+operace kontroloval, zda-li datový typ vrcholových uzlů synovských uzlů odpovídá
+sémantickým pravidlům zpracovávání výrazů. 
 
 Při tvorbě výrazů je nutné kontrolovat spoustů aspektů validního výrazu. To jsou
-nejen datové typy jednotlivých operandů, ale i v případě proměnných jejich inicializovanost.
-Tedy pokud proměnná nebyla inicializovaná, není možné ji použít.
+například datové typy jednotlivých operandů v případě binárních operací.
 
 \subsection{Interpret} \label{interpret}
 
@@ -202,19 +203,31 @@ stranu od PM a prvky s vyšší hodnotou na pravou stranu. Poté aplikujeme algo
 quicksort na obě poloviny pole.
 
 Konkrétní implementace algoritmu je převzata z přednášek předmětu Algoritmy
-(IAL2014 \cite{honzik2} -- 10. přednáška 33. slide). Pro snazší konverzi do jazyka C a pro
-pochopení algoritmu samotného jsme vytvořili vývojový graf a podle grafu jsme
-sepsali samotný kód v jazyce C.
+(IAL2014 \cite{honzik2} -- 10. přednáška 33. slide). Pro snazší konverzi do jazyka
+C a pro pochopení algoritmu samotného jsme vytvořili vývojový graf a podle grafu
+jsme sepsali samotný kód v jazyce C.
 
-\paragraph{Modifikace:} Algoritmus popsaný v přednáškách obsahoval prohození prvku se sebou samým, takže
-jsme provedli drobnou úpravu, která tomuto zabránila.
+\paragraph{Modifikace:} Algoritmus popsaný v přednáškách obsahoval prohození
+prvku se sebou samým, takže jsme provedli drobnou úpravu, která tomuto zabránila.
 
 \subsection{Funkce \texttt{find}}
-Pro funkci find jsme dle zadání použili KMP (Knuth-Morris-Prattův algoritmus). Jedná se o algoritmus využívající konečný automat. Tento konečný automat využívá hrany ANO/NE. Nejprve bylo nutné vytvořit si pole \verb|FAIL|, do kterého se uloží zjištěné hodnoty posunů. Poté přijde na řadu samotné vyhledávání řetězce. Nejprve zarovnáme podřetězec a řetězec na první index. Pak se jen porovnávají znaky, pokud jsou shodné, zvyšuje se index o 1 v podřetězci, který hledáme (\verb|pattern|) a zároveň i v řetězci, ve kterém vyhledáváme (\verb|text|). Pokud nikoliv, tak se vracím po hraně "N" (NE hrana) neboli FAIL vektor. Je-li pak hodnota indexu v hledaném řetězci rovna délce hledaného podřetězce, tak byl nalezen vzorek na indexu $TInd - PL$, kde $TInd$ je index řetězce a $PL$ je délka hledaného podřetězce, jinak nic nenašel a vrací se 0.
+Pro funkci find jsme dle zadání použili KMP (Knuth-Morris-Prattův algoritmus).
+Jedná se o algoritmus využívající konečný automat. Tento konečný automat využívá
+hrany ANO/NE. Nejprve bylo nutné vytvořit si pole \verb|FAIL|, do kterého se
+uloží zjištěné hodnoty posunů. Poté přijde na řadu samotné vyhledávání řetězce.
+Nejprve zarovnáme podřetězec a řetězec na první index. Pak se jen porovnávají znaky,
+pokud jsou shodné, zvyšuje se index o 1 v podřetězci, který hledáme (\verb|pattern|)
+a zároveň i v řetězci, ve kterém vyhledáváme (\verb|text|). Pokud nikoliv, tak se
+vracím po hraně "N" (NE hrana) neboli \verb|FAIL| vektor. Je-li pak hodnota indexu
+v hledaném řetězci rovna délce hledaného podřetězce, tak byl nalezen vzorek na
+indexu $TInd - PL$, kde $TInd$ je index řetězce a $PL$ je délka hledaného podřetězce,
+jinak nic nenašel a vrací se 0.
 
-Algoritmus byl převzán a přepsán do jazyka C z přednášek předmětu Algoritmy (IAL2014 \cite{honzik2} -- 11. přednáška 18. slide).
+Algoritmus byl převzán a přepsán do jazyka C z přednášek předmětu Algoritmy (IAL2014
+\cite{honzik2} -- 11. přednáška 18. slide).
  
-\paragraph{Modifikace:} Pro návrat 0 v případě neúspěchu byla provedena modifikace algoritmu z přednášek, kde byl vracen poslední dosažený index, tedy délka řetězce.
+\paragraph{Modifikace:} Pro návrat 0 v případě neúspěchu byla provedena modifikace
+algoritmu z přednášek, kde byl vracen poslední dosažený index, tedy délka řetězce.
 
 
 
