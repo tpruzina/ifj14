@@ -144,64 +144,6 @@ void sortString (struct String *str)
 	return;
 }
 
-///**
-// * Doprovodna funkce pro pocitani QuickSortu
-// * --------------------
-// * *A: pole hodnot
-// * left: 	leva mez
-// * right:	prava mez
-// * *i: 		posuvne indexy
-// * *j:		posuvne indexy
-// */
-//void partition(int *A, int left, int right, int *i, int *j){
-//	int PM;
-//	*i = left;
-//	*j = right;
-//
-//	PM = A[(*i + *j)/2]; // pseudomedián
-//
-//	while(1){
-//		while(A[*i] < PM){	// nic co je menší než PM mě nezajímá
-//			*i+=1;
-//		}
-//		while(A[*j] > PM){	// tady mě nezajímá nic většího než PM
-//			*j-=1;
-//		}
-//
-//		// pokud se indexy nepřekřížili, prohodím prvky, na které ukazují
-//		if(*i<*j){
-//			// v přednáškách je i<=j, ale nemá cenu přehazovat prvek
-//			// se sebou samým
-//			int tmp = A[*i];
-//			A[*i] = A[*j];
-//			A[*j] = tmp;
-//			*i+=1;
-//			*j-=1;
-//		}else{				// jinak skončím cyklus (repeat ... until(i>j)) v přednáškách until(i>=j),
-//			break;			// ale nemá cenu přehazovat prvek se sebou samým
-//		}
-//	}
-//}
-//
-///**
-// * Funkce QuickSort
-// * --------------------
-// * *A: 		Pole na serazeni
-// * left:	Leva mez
-// * right:	Prava mez
-// */
-//void quickSort(int *A, int left, int right){
-//	int i,j;
-//	partition(A,left,right,&i,&j);	// rozdělím na dvě části
-//
-//	if(left<j){
-//		quickSort(A,left,j);		// sortnu levou část
-//	}
-//
-//	if(right>i){
-//		quickSort(A,i,right);		// sortnu pravou část
-//	}
-//}
 /**
  * INLINE funkce pro razeni retezcu
  * --------------------
@@ -228,56 +170,63 @@ struct String* sort(struct String* src){
  * text: 		podkladovy text pro vyhledavani
  * pattern: 	sablona textu, ktery se ma vyhledat
  */
-int find(struct String* text, struct String* pattern){
+int find(struct String* text, struct String* pattern)
+{
 	int result; // pozice, prvniho nalezu
-      	
-	int len_pattern = strlen(pattern->Value);
-	int len_text = strlen(text->Value);
-	
-	// vektor fail
-    int* fail = (int*)gcMalloc(sizeof(int) * len_pattern);
-    // index hledaneho podretezce, index v retezci, dalsi pozice
-    int pattern_inx, text_inx, next; 
+
+	int len_pattern = strlen(pattern->Value);   //delka hledaneho podretezce
+	int len_text = strlen(text->Value);         //delka retezce ve kterem hledame
 
 
-	fail[0] = -1;
+	int* fail = (int*)gcMalloc(sizeof(int) * len_pattern);  // vektor fail
+	int pattern_ind, text_ind, r;  // index v hledanem podretezci, index v retezci, dalsi pozice
 
+	fail[1] = 0;
 
-	//prochazim slovo - KMP graf
-	for(int k = 1; k < len_pattern; k++){
-		next = fail[k-1];
+	//*****FAIL vektor, zjistovani hodnot posunu*******
+	for(int k=2; k < len_pattern; k++)
+	{
+		r = fail[k-1];
 
-		while(next > -1 && (pattern->Value[next] != pattern->Value[k-1])){
-			next = fail[next];
+		while( (r > 0) && (pattern->Value[r] != pattern->Value[k-1]) )
+		{
+			r = fail[r];
 		}
-		fail[k] = next+1;
-    }
+		fail[k] = r+1;
+	}
 
-	//hledani podretezce
-	text_inx = 0;
-	pattern_inx = 0;
+	// *****Hledani podretezce*****
 
-	while((text_inx < len_text) && (pattern_inx < len_pattern)){
-		if(pattern_inx == -1 || (text->Value[text_inx] == pattern->Value[pattern_inx])){
-			text_inx++;
-			pattern_inx++;
+	//zarovnani indexu
+	text_ind = 1;     
+	pattern_ind = 1;  
+
+	while( (text_ind < len_text) && (pattern_ind < len_pattern) )
+	{
+		if( (pattern_ind == 0) || (text->Value[text_ind] == pattern->Value[pattern_ind]) )
+		{
+			//nasel shodu tak inkrementuju oba indexy
+			text_ind++;         
+			pattern_ind++;
 		}
-		else{
-			//pujde podle pole fail
-			pattern_inx=fail[pattern_inx];   
+		else
+		{
+			//nenasel tak pujde podle pole Fail
+			pattern_ind = fail[pattern_ind];   
 		}
 	}
 
-	if(pattern_inx == len_pattern){
-		result = text_inx - len_pattern + 1;
+	if(pattern_ind == len_pattern)       //hodnota indexu podretezce se rovna delce podretezce
+	{
+		result = text_ind - len_pattern + 1;   //chci prvni prvek, nikoliv nulty
 	}
-	else{
-		result = text_inx;
+	else
+	{
+		result = 0; //nic jsem nenasel tak vracim 0
 	}
 
 	return result;
 }
-
 
 //// SYMBOL TABLE
 
