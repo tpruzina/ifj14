@@ -221,7 +221,7 @@ void *runTree(struct astNode *curr)
 		{
 			runTree(curr->left);	// telo
 			tmp = runTree(curr->other);	//podmienka
-		} while(tmp->data.bool_data);
+		} while(!tmp->data.bool_data);
 		break;
 
 	case AST_FOR:
