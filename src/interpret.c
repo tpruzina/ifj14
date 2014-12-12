@@ -23,6 +23,9 @@ void interpret()
 	// tabulka symbolov z parsru pouzita ako globalna tabulka - zalohovat pointer
 	global.globalTable = stackTop(global.symTable);
 
+	if(!global.globalTable)
+		stackPush(global.symTable, makeNewSymbolTable());
+
 	// v roote by mal byt AST_START
 	if(curr->type == AST_START)
 		runTree(curr);
@@ -79,7 +82,9 @@ void *runTree(struct astNode *curr)
 	struct varspars *tmp_vp = NULL;
 	struct astNode	*tmp_asp = NULL;
 
-	struct symbolTableNode* top = stackTop(global.symTable);
+//	struct symbolTableNode* top = stackTop(global.symTable);
+	struct symbolTableNode* top = global.symTable->Top->Value;
+//#define TOP (global.symTable->Top->Value
 
 	switch(curr->type)
 	{
