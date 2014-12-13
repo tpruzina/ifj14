@@ -783,6 +783,7 @@ struct astNode* parseProgram(){
 		vp->vars = parseVars(&cur);
 		// lokalni promenne
 		program->other = vp;
+		D("Printing vars");
 		printVarsPars(vp);
 	}
 	
@@ -914,6 +915,7 @@ struct astNode* getArrayDef(struct toc** cur, struct String* name){
 	if(!dta)
 		return NULL;
 	dta->id = name;
+	var->data.str = name;
 	
 	(*cur) = getToc();
 	expect((*cur), T_LBRC, synt);
@@ -964,7 +966,7 @@ struct astNode* getVarDef(struct toc** cur){
 	struct astNode* node = makeNewAST();
 	node->type = AST_ID;
 	copyString((*cur)->data.str, &(node->data.str));
-
+		
 	// ocekavat dvojtecku
 	*cur = getToc();
 	expect(*cur, T_COL, synt);
@@ -1000,22 +1002,30 @@ struct queue* parseVars(struct toc** cur){
 	struct symbolTableNode* top = (struct symbolTableNode*)stackPop(global.symTable);
 	
 	struct astNode* var = NULL;
+	struct dataTypeArray* dta = NULL;
 	*cur = getToc();
 	expect(*cur, T_ID, synt);
 	while((*cur)->type == T_ID){
 		// nacteni definice
-		var = getVarDef(cur);					
-						
-		// vlozit prvek
-		queuePush(vars, var);
+		var = getVarDef(cur);
+		if(var->dataType == DT_ARR){
+			dta = (struct dataTypeArray*)var->other;
+		}	
 		
 		// ulozit do top vrstvy
 		if(search(&global.globalTable, var->data.str)){
 			E("Promenna nalezena v globalni tabulce");
 			exit(sem_prog);
 		}
-		else
-			insertValue(&top, var->data.str, var->dataType);
+		else {
+			struct symbolTableNode* inserted = insertValue(&top, var->data.str, var->dataType);
+			if(var->dataType == DT_ARR && dta != NULL){
+				inserted->other = dta;	
+			}
+		}
+
+		// vlozit prvek
+		queuePush(vars, var);
 		
 		// nacist dalsi token
 		*cur = getToc();
@@ -1859,7 +1869,7 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 			}
 			nd->right->type = AST_STR;
 			nd->right->dataType = dt;			
-			nd->right->data.str = (*cur)->data.str;
+			copyString(nd->right->data.str, &((*cur)->data.str));
 			break;
 		case T_KW_ELSE:
 			nd->right->type = AST_NONE;
@@ -2004,7 +2014,7 @@ struct astNode* writeStatement(struct toc** cur){
 				// novy uzel
 				nd->type = AST_STR;
 				nd->dataType = DT_STR;
-				nd->data.str = (*cur)->data.str;
+				copyString(nd->data.str, &((*cur)->data.str));
 				
 				break;
 			case T_BOOL: 						
@@ -2155,7 +2165,6 @@ struct astNode* findStatement(struct toc** cur){
 			struct astNode* first = makeNewAST();
 			first->type = AST_STR;
 			first->dataType = DT_STR;
-			first->data.str = makeNewString();
 			copyString((*cur)->data.str, &(first->data.str));
 
 			// novy parametr
@@ -2787,8 +2796,8 @@ struct astNode* parseExpression(struct toc** cur){
 				}
 				else if((*cur)->type == T_STR){
 					node->type = AST_STR;						
-					node->dataType = DT_STR;					
-					node->data.str = (*cur)->data.str;
+					node->dataType = DT_STR;
+					copyString(node->data.str, &((*cur)->data.str));
 					D("expr: making STR");
 				}
 				else if((*cur)->type == T_KW_TRUE){

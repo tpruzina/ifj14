@@ -1,6 +1,0 @@
-
-	var
-		i: integer;
-begin
-	i := 1 + 2.0 + true + 'ahoj'
-end.

@@ -1,6 +1,0 @@
-
-var
-		i: real;
-begin
-	i := 0.0ea9
-end.
