@@ -42,8 +42,8 @@ int addNewPtr(struct gc* gc, void* ptr){
 }
 
 void* gcMalloc(size_t size){
-	//void* ptr = malloc(size);
-	void *ptr = calloc(sizeof(char), size);
+	void* ptr = malloc(size);
+	//void *ptr = calloc(sizeof(char), size);
 	
 	if(!addNewPtr(global.gc, ptr)){
 		return NULL;	
