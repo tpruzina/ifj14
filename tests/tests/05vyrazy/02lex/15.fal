@@ -1,0 +1,8 @@
+
+var
+  bubble : real;
+
+begin
+  bubble := 569.e-7
+end.
+

@@ -1,0 +1,12 @@
+var
+  Zwei : integer;
+  peanuts : integer;
+  are : integer;
+  walking : integer;
+  down : integer;
+  the : integer;
+  Strasse : integer;
+  _ : integer
+begin
+
+end.

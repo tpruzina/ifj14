@@ -1,0 +1,10 @@
+var
+  the : integer;
+begin
+  the := 007;
+  if the then
+    if the then
+      if the then
+        if the then
+          if the then
+end.

@@ -1,0 +1,8 @@
+
+var
+  value : string;
+
+begin
+  readln(value)
+end.
+

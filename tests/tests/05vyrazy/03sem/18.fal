@@ -1,0 +1,8 @@
+
+var
+  BADjoke  : string;
+
+begin
+  BADjoke  := 'What a bad joke!';
+  write('Almost the same joke --->' * BADjoke)
+end.

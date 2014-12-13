@@ -781,6 +781,7 @@ struct astNode* parseProgram(){
 	if(cur->type == T_KW_VAR){
 		struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
 		vp->vars = parseVars(&cur);
+		vp->pars = makeNewQueue();
 		// lokalni promenne
 		program->other = vp;
 		D("Printing vars");
@@ -2485,6 +2486,7 @@ struct astNode* arrayIndex(struct toc** cur, struct String* name){
 	struct astNode* node = NULL;
 	// LBRC ma nactene
 	// kontrola, jestli je promenna pole
+
 	struct symbolTableNode* var = searchOnTop(name);
 	if(var->dataType != DT_ARR){
 		E("Semantic error - L-value is not ARRAY");
@@ -2500,12 +2502,16 @@ struct astNode* arrayIndex(struct toc** cur, struct String* name){
 	// do leveho nodu ulozit arr index
 	node->left = makeNewAST();
 	node->left->type = AST_ARR;
+	node->left->dataType = dta->type;
 	// kopie jmena
-	copyString((*cur)->data.str, &(node->left->data.str));
+	node->left->data.str = name;
+//	printString(node->left->data.str);
 	
 	// ocekavat INT jako index (nebo ID!!)
 	*cur = getToc();
 	if((*cur)->type == T_ID){
+		// index byla promenna - ziskat typ
+		// a nastavit odkaz do other
 		struct astNode* nd = makeNodeFromToken(*cur);
 		if(nd->dataType != DT_INT){
 			E("Semantic error - index must be integer");
@@ -2514,6 +2520,7 @@ struct astNode* arrayIndex(struct toc** cur, struct String* name){
 		node->left->other = nd;
 	}
 	else if((*cur)->type == T_INT){
+		// v pripade ze index byl literal
 		if(dta->low <= (*cur)->data.integer && (*cur)->data.integer <= dta->high)					
 			node->left->data.integer = (*cur)->data.integer;
 		else{
@@ -2540,6 +2547,8 @@ struct astNode* arrayIndex(struct toc** cur, struct String* name){
 		exit(sem_komp);
 	}
 
+	node->left->data.str = name;
+	printString(node->left->data.str);
 	return node;
 }
 

@@ -1,0 +1,7 @@
+
+var
+  where : integer;
+
+begin
+  where := find('ab5', 5)
+end.

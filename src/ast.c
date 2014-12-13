@@ -63,6 +63,8 @@ void prtAst(struct astNode* nd, int lvl, char** str){
 			fprintf(stderr, "%s%s\t[ \"%s\" ]%s\n", COLOR_LYEL, str[nd->type], (nd->data.str == NULL)?"<NULL>":nd->data.str->Value, COLOR_NRM);
 			break;
 		case AST_ARR:
+			fprintf(stderr, "%s%s\t[ %s ]%s\n", COLOR_LYEL, str[nd->type], nd->data.str->Value, COLOR_NRM);
+			break;
 		case AST_ID:
 			fprintf(stderr, "%s%s\t[ %s ]%s\n", COLOR_LYEL, str[nd->type], nd->data.str->Value, COLOR_NRM);
 			break;

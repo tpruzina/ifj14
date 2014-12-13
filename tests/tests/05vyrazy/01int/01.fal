@@ -1,0 +1,8 @@
+
+var
+  value : integer;
+
+begin
+  value := 17 div 0
+end.
+

@@ -1,0 +1,8 @@
+
+var
+  _string : string;
+
+begin
+  _string := 'So bad...'#0''
+end.
+

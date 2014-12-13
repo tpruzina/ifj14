@@ -1,0 +1,10 @@
+
+var
+  BADjoke  : integer;
+  GOODjoke : string;
+
+begin
+  BADjoke  := 1;
+  GOODjoke := 'one';
+  write(BADjoke - GOODjoke)
+end.

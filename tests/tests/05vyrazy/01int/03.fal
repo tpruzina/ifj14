@@ -1,0 +1,14 @@
+
+var
+  magic : integer;
+  value : integer;
+
+begin
+  readln(magic, value);
+  while(value) do
+    begin
+      value := value div magic;
+      magic := magic - 1
+    end
+end.
+

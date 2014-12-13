@@ -1,0 +1,7 @@
+var
+  the : integer;
+begin
+  the := 007;
+  if the
+    sort('moo')
+end.

@@ -1,0 +1,7 @@
+var
+  BigMole : integer;
+      pea : integer;
+     _nut : integer;
+begin
+  BigMole := pea_nut
+end.
