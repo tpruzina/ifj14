@@ -916,7 +916,7 @@ struct astNode* getArrayDef(struct toc** cur, struct String* name){
 		return NULL;
 	dta->id = name;
 	var->data.str = name;
-	
+
 	(*cur) = getToc();
 	expect((*cur), T_LBRC, synt);
 	// leva [ -> ocekavat integer								
