@@ -397,6 +397,8 @@ getToc()
 					toc->type = T_OF;
 				else if(!compareString(str,"and"))
 					toc->type = T_AND;
+				else if(!compareString(str, "xor"))
+					toc->type = T_XOR;
 				else if(!compareString(str,"not"))
 					toc->type = T_NOT;
 				else if(!compareString(str,"mod"))
@@ -415,6 +417,8 @@ getToc()
 					toc->type = T_KW_COPY;
 				else if(!compareString(str, "length"))
 					toc->type = T_KW_LENGTH;
+				else if(!compareString(str, "array"))
+					toc->type = T_KW_ARRAY;
 				else
 				{
 					toc->type = T_ID;

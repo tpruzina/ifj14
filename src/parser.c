@@ -148,7 +148,7 @@ struct tokennames tokennames[] = {
 	{"T_REAL", T_REAL},
 	{"T_STR", T_STR},
 	{"T_BOOL", T_BOOL},
-	{"T_ARR", T_ARR},
+	{"T_ARR", T_KW_ARRAY},
 	{"T_OF", T_OF},
 	{"T_ASGN", T_ASGN},
 	{"T_EQV", T_EQV},
@@ -695,7 +695,7 @@ int makeDataType(struct toc* cur){
 			return DT_BOOL;
 		case T_KW_STRING:
 			return DT_STR;
-		case T_ARR:
+		case T_KW_ARRAY:
 			return DT_ARR;
 		default:
 			E("Syntax error - expected supported data type");
