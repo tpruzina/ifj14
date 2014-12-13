@@ -902,7 +902,7 @@ struct astNode* parseBody(struct toc** cur, bool empty, int endtype){
 	return body;
 }
 
-struct astNode* getArrayDef(struct toc** cur){
+struct astNode* getArrayDef(struct toc** cur, struct String* name){
 	struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
 
 	struct astNode* var = makeNewAST();
@@ -917,56 +917,52 @@ struct astNode* getArrayDef(struct toc** cur){
 	dta = (struct dataTypeArray*)gcMalloc(sizeof(struct dataTypeArray));
 	if(!dta)
 		return NULL;
-	copyString(var->data.str, &(dta->id));
+	dta->id = name;
 	
 	(*cur) = getToc();
-	if(expect((*cur), T_LBRC, synt)) {
-		// leva [ -> ocekavat integer								
-		(*cur) = getToc();
-		expect(*cur, T_INT, synt);
-		dta->low = (*cur)->data.integer;
-		
-		// interval - dve tecky mezi integery
-		(*cur) = getToc();
-		expect(*cur, T_DDOT, synt);
-		
-		// ocekavat druhy integer
-		(*cur) = getToc();
-		expect(*cur, T_INT, synt);
-		dta->high = (*cur)->data.integer;
-		
-		// ocekavam konec intervalu
-		(*cur) = getToc();
-		expect(*cur, T_RBRC, synt);
-		
-		// ocekavat OF
-		(*cur) = getToc();
-		expect(*cur, T_OF, synt);
-		
-		// nacteni typu promenne
-		(*cur) = getToc();
-		dta->type = makeDataType(*cur);
-		if(dta->type == DT_ARR){
-			E("Syntax error - unsupported array as type of array item");
-			exit(synt);
-		}
-		
-		// ulozeni odkazu na strukturu dat
-		var->other = dta;		
-									
-		// vlozeni nazev pole do tabulky
-		new = insertValue(&top, var->data.str, DT_ARR);
-		if(!new)
-			return NULL;
-		
-		// nastaveni ze se jedna o pole
-		new->dataType = DT_ARR;					
-		new->other = dta;								
+	expect((*cur), T_LBRC, synt);
+	// leva [ -> ocekavat integer								
+	(*cur) = getToc();
+	expect(*cur, T_INT, synt);
+	dta->low = (*cur)->data.integer;
+	
+	// interval - dve tecky mezi integery
+	(*cur) = getToc();
+	expect(*cur, T_DDOT, synt);
+	
+	// ocekavat druhy integer
+	(*cur) = getToc();
+	expect(*cur, T_INT, synt);
+	dta->high = (*cur)->data.integer;
+	
+	// ocekavam konec intervalu
+	(*cur) = getToc();
+	expect(*cur, T_RBRC, synt);
+	
+	// ocekavat OF
+	(*cur) = getToc();
+	expect(*cur, T_OF, synt);
+	
+	// nacteni typu promenne
+	(*cur) = getToc();
+	dta->type = makeDataType(*cur);
+	if(dta->type == DT_ARR){
+		E("Syntax error - unsupported array as type of array item");
+		exit(synt);
 	}
+	
+	// ulozeni odkazu na strukturu dat
+	var->other = dta;		
+								
+	// vlozeni nazev pole do tabulky
+	new = insertValue(&top, var->data.str, DT_ARR);
+	if(!new)
+		return NULL;
+	
 	return var;
 }
 
-/*
+/**
  *	Ocekava nacteni ID z definici
  */
 struct astNode* getVarDef(struct toc** cur){
@@ -991,8 +987,7 @@ struct astNode* getVarDef(struct toc** cur){
 	}
 	else if(node->dataType == DT_ARR){
 		// nacitani pole
-		
-
+		node = getArrayDef(cur, node->data.str);
 	}
 	
 	// kazda promenna musi koncit strednikem
