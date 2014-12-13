@@ -699,6 +699,7 @@ int makeDataType(struct toc* cur){
 			return DT_ARR;
 		default:
 			E("Syntax error - expected supported data type");
+			printTokenType(cur);
 			exit(synt);
 	}
 	
@@ -922,7 +923,7 @@ struct astNode* getArrayDef(struct toc** cur, struct String* name){
 	expect((*cur), T_LBRC, synt);
 	// leva [ -> ocekavat integer								
 	(*cur) = getToc();
-	expect(*cur, T_INT, synt);
+	expect(*cur, T_INT, sem_else);
 	dta->low = (*cur)->data.integer;
 	
 	// interval - dve tecky mezi integery
@@ -931,7 +932,7 @@ struct astNode* getArrayDef(struct toc** cur, struct String* name){
 	
 	// ocekavat druhy integer
 	(*cur) = getToc();
-	expect(*cur, T_INT, synt);
+	expect(*cur, T_INT, sem_else);
 	dta->high = (*cur)->data.integer;
 	
 	// ocekavam konec intervalu
@@ -947,7 +948,7 @@ struct astNode* getArrayDef(struct toc** cur, struct String* name){
 	dta->type = makeDataType(*cur);
 	if(dta->type == DT_ARR){
 		E("Syntax error - unsupported array as type of array item");
-		exit(synt);
+		exit(sem_else);
 	}
 	
 	// ulozeni odkazu na strukturu dat
@@ -2478,15 +2479,12 @@ struct astNode* assignStatement(struct toc** cur){
 	return asgn;
 }
 
-/**
- *
- */
 struct astNode* arrayIndex(struct toc** cur, struct String* name){
 	W("arrayIndex");
-	struct astNode* node = NULL;
+	struct astNode* node = NULL;	
 	// LBRC ma nactene
+	
 	// kontrola, jestli je promenna pole
-
 	struct symbolTableNode* var = searchOnTop(name);
 	if(var->dataType != DT_ARR){
 		E("Semantic error - L-value is not ARRAY");
@@ -2497,15 +2495,10 @@ struct astNode* arrayIndex(struct toc** cur, struct String* name){
 	
 	// POLE INDEX				
 	node = makeNewAST();
-	node->type = AST_ASGN;
-	
-	// do leveho nodu ulozit arr index
-	node->left = makeNewAST();
-	node->left->type = AST_ARR;
-	node->left->dataType = dta->type;
+	node->type = AST_ARR;
+	node->dataType = dta->type;
 	// kopie jmena
-	node->left->data.str = name;
-//	printString(node->left->data.str);
+	node->data.str = name;
 	
 	// ocekavat INT jako index (nebo ID!!)
 	*cur = getToc();
@@ -2522,28 +2515,47 @@ struct astNode* arrayIndex(struct toc** cur, struct String* name){
 	else if((*cur)->type == T_INT){
 		// v pripade ze index byl literal
 		if(dta->low <= (*cur)->data.integer && (*cur)->data.integer <= dta->high)					
-			node->left->data.integer = (*cur)->data.integer;
+			node->data.integer = (*cur)->data.integer;
 		else{
 			E("Semantic error - index out of range");
 			exit(sem_else);		
 		}					
 	}
+	else if((*cur)->type == T_RBRC){
+		// nema index
+		E("Syntax error - expected integer as index, no found");
+		exit(synt);
+	}
 	else // exit
-		expect(*cur, T_INT, synt);			
+		expect(*cur, T_INT, sem_else);			
 
 	// ocekavat konec zavorek
 	*cur = getToc();
 	expect(*cur, T_RBRC, synt);
 
+	return node;
+}
+/**
+ *
+ *
+ */
+struct astNode* arrayAssignStatement(struct toc** cur, struct String* name){
+	struct astNode* node = makeNewAST();
+
+	// ziskani nodu pro ARRID
+	node->left = arrayIndex(cur, name);	
+	
 	// ocekavat :=
 	*cur = getToc();
 	expect(*cur, T_ASGN, synt);
+	node->type = AST_ASGN;
 
+	// expression napravo
 	node->right = parseExpression(cur);		
 	
 	if(node->left->dataType != node->right->dataType){
 		datatypes(node->left->dataType, node->right->dataType);
-		E("cmd: Semantic error - L-value has not same value as R-value");
+		E("assignStatement: Semantic error - L-value has not same value as R-value");
 		exit(sem_komp);
 	}
 
@@ -2627,8 +2639,7 @@ struct astNode* parseCommand(struct toc** cur){
 			next = getToc();
 			if(next->type == T_LBRC){
 				// nacetl [ ocekava se index pole --> cele prirazeni
-				node = arrayIndex(&next, (*cur)->data.str);
-				*cur = next;
+				node = arrayAssignStatement(cur, (*cur)->data.str);
 			}
 			else {
 				// pokud nebude [ pak ocekavat asgn
@@ -2758,6 +2769,15 @@ struct astNode* parseExpression(struct toc** cur){
 					// parseFuncCall uz nacetl posledni znak
 					readNew = false;					
 					// funkci ulozit do vystupu
+					stackPush(aststack, node);
+					break;
+				}
+				else if(t->type == T_LBRC){
+					// pokus o index do pole...
+					node = arrayIndex(cur, (*cur)->data.str);
+					// nacetl posledni ] takze cist dalsi
+					readNew = true;
+					// ulozit navrchol
 					stackPush(aststack, node);
 					break;
 				}
