@@ -1,11 +1,7 @@
 var
-	x: integer;
-
+	arr : integer;
 begin
-	if true xor false then
-	begin
-		write('true')
-	end
+	arr[0] := 0
 end.
 
 
