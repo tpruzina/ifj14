@@ -67,6 +67,7 @@ enum tokenType {
 	T_STR,		// string
 	T_BOOL,
 	T_KW_ARRAY,		// array
+	T_KW_DDOT,	//..
 	// obecne
 	T_OF,		// of
 	T_KW_SWITCH,
