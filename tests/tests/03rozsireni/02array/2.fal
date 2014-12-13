@@ -1,0 +1,11 @@
+var
+	a1 : array[0..1] of integer;
+	a2 : array[0..1] of real;
+	a3 : array[0..1] of bool;
+	a4 : array[0..1] of string;
+	{ chyba! neni base type }
+	a5 : array[0..1] of array[0..1] od integer;
+
+begin
+	write('nic')
+end.

@@ -1,0 +1,6 @@
+var
+	x : array[0..1] of integer;
+
+begin
+	x['prvni'] := 1
+end.
