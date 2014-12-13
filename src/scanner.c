@@ -42,6 +42,14 @@ getToc()
 	ASSERT(toc);
 	ASSERT(global.src);
 
+	static bool bol_dot_dot = false;
+	if(bol_dot_dot)
+	{
+		bol_dot_dot = false;
+		toc->type = T_DDOT;
+		return toc;
+	}
+
 	state = KA_START;
 
 	str = NULL;
@@ -273,6 +281,14 @@ getToc()
 			{
 				addChar(str,c);
 				state = KA_REAL;
+			}
+			else if(c == '.')	//mame X..
+			{
+				bol_dot_dot = true;
+				toc->type = T_INT;
+				toc->data.integer = atoi(str->Value);
+				freeString(str);
+				return toc;
 			}
 			else
 				state = KA_ERR;
