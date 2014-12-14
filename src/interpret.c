@@ -849,7 +849,7 @@ struct symbolTableNode convertAST2STN(struct astNode *ast)
 
 	tmp.init = true;
 
-	if(ast->type == AST_ID)
+	if(ast->type == AST_ID || ast->type == AST_ARR)
 	{
 		struct symbolTableNode *p = runTree(ast);
 
