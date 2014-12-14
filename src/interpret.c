@@ -757,9 +757,9 @@ void writeNode(struct astNode *p)
 	else if(AST_BOOL)
 	{
 		if(p->data.boolean)
-			printf("TRUE");
+			printf("true");
 		else
-			printf("FALSE");
+			printf("false");
 	}
 	else
 		ASSERT(false);
