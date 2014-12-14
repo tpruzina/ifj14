@@ -1,13 +1,4 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%
-%% Ukázkový příklad dokumentace úkolu do předmětů IZP a IUS, 2010
-%%
-%% Upravená původní dokumentace od Davida Martinka.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \documentclass[12pt,a4paper,titlepage,final]{article}
-
 
 % cestina a fonty
 \usepackage[czech]{babel}
@@ -30,7 +21,7 @@
 % změň následující údaje za své
 \def\author{xxx}
 \def\email{xxx@stud.fit.vutbr.cz}
-\def\projname{Implementace interpretu imperativního jazyka IFJ12}
+\def\projname{Implementace interpretu imperativního jazyka IFJ14}
 % !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 \input{title.tex}
@@ -63,8 +54,28 @@ využívající rekurzivní sestup (), který je pro potřeby syntaktické
 analýzy výrazů rozšířený o Shunting-Yard (\ref{sya}) algoritmus\footnote{Byla nám
 dovolena výjimka, implementovat a náležitě zdokumentovat tento algoritmus oproti předepsané
 precedenční analýze}. Kontrola syntaxe a sémantiky probíhá z velké části při jednom
-průchodu, následné kontroly sémantiky probíhají až za běhu.
+průchodu, následné kontroly sémantiky probíhají až za běhu.\newline
 
+Jelikož je projekt založen na týmové spolupráci, rozhodli jsme se využít možnosti používat verzovacího systému, jmenovitě \verb|bitbucket|. Vzhledem k tomu, že práce byla rozdělena mezi jednotlivé členy a probíhaly kontroly v době schůzek jevil se tento systém jako nejlepší, do jisté míry totiž umožňuje porovnávání verzí a tím se dá kontrolovat zdali daný člen spnil svou část ukolu či nikoliv.
+
+Práce v teamu byla rozdělena následovně: Interpret dostal na starosti \textbf{Tomáš Pružina}. Parser a tedy syntaktickou a sémantickou část projketu vytvářel \textbf{Antonín Marko}.\textbf{Martin Juřík}, měl na starost zpracování lexixálního analyzátoru a jeho funkčí otestování. Celkové testování, zpracování LL gramatiky a dokumentaci měl na starost \textbf{Martin Kubíček}. \textbf{Petr David} uprava knihovních funkcí a vestavěné funkce do předmětu \verb|Algoritmy|.\newline
+
+Za účelem testování a ověření plné funkčnosti projektu byla napsána sada testů, obsahující i vlastní testovací skript, čítající zhruba \textbf{X} odvětví s celkovým počtem \textbf{XXX} testů. Úkolem testování, bylo především schopnost odchytávat všechny možné chyby, které by mohly nastat a vracení správného chybového kódu. Ovšem ne vždy bylo určení správného chybového kódu jednoduché jelikož jsme narazili na pár sporných momentů, které jsme se snažili vyřešit důkladnějším studiem dokumentace k projektu nebo společnou debatou v týmu. Dále jsme testy ověřovaly do jaké míry jsme schopni správně interpretovat validní data.
+
+
+
+\subsection{Rozdělení bodů}
+xmarko07:20\newline
+xpruzi01:20\newline
+xkubic34:20\newline
+xhjurik08:20\newline
+xdavid15:20\newline
+
+\subsection{Rozšíření}
+ARRAY\newline
+REPEAT\newline
+ELSEIF\newline
+\pagebreak
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Moduly interpretu jazyka} \label{moduly_interpretu}
 %=============================================================================
@@ -85,11 +96,11 @@ o lexikální chybu. Samotná implementace lexikálního analyzátoru patří k
 jednodušším částem projektu, avšak jeho návrh a testování zabralo nemálo času.
 
 %<insert KA diagram here>
-%\begin{figure}\label{lex_ka}
-	%\centering
-		%%\includesvg{img/KA-scanner.svg}
-	%\caption{Konečný automat lexikálního analyzátoru}
-%\end{figure}
+\begin{figure}\label{lex_ka}
+	\centering
+		\includegraphics[width=18cm]{../KA-scanner.eps}
+	\caption{Konečný automat lexikálního analyzátoru}
+\end{figure}
 
 \subsection{Syntaktický analyzátor} \label{syntakticky_analyzator}
 Jak již bylo zmíněno, syntaktický analyzátor žádá lexikální analyzátor o tokeny
@@ -129,7 +140,9 @@ v \ref{func}.
 
 \subsubsection{Shunting-yard algoritmus}
 \label{sya}
-Algoritmus zpracování výrazů je založen na prioritě operátorů, které buď vkládá
+Pro zpracování výrazu mělo být původně v projekto užito precedenční analýzy. My jsme ovšem toto zpracování řešili pomocí Shunting-yard algoritmu\footnote{Byla nám
+dovolena výjimka, implementovat a náležitě zdokumentovat tento algoritmus oproti předepsané
+precedenční analýze}. Algoritmus zpracování výrazů je založen na prioritě operátorů, které buď vkládá
 nebo odebírá ze zásobníku a vkládá do výstupní sekvence. Tento algoritmus primárně
 slouží k převodu infixového zápisu výrazů do postfixového, tedy lépe zpracovatelného
 a převeditelného do AST.
@@ -137,9 +150,9 @@ a převeditelného do AST.
 Tento algoritmus byl pro potřeby projektu upraven, aby přímo generoval AST místo
 výstupního postfixového zápisu a zároveň u tvorby jednotlivých uzlů zastupujících
 operace kontroloval, zda-li datový typ vrcholových uzlů synovských uzlů odpovídá
-sémantickým pravidlům zpracovávání výrazů. 
+sémantickým pravidlům zpracovávání výrazů. Což nám poskytuje možnost pouze jediného průchodu, který tak stačí na zpracování.
 
-Při tvorbě výrazů je nutné kontrolovat spoustů aspektů validního výrazu. To jsou
+Toto řešení ovšem není tak přínosné jak se zdálo, jelikož při tvorbě výrazů je nutné kontrolovat spoustů aspektů validního výrazu. To jsou
 například datové typy jednotlivých operandů v případě binárních operací.
 
 \subsection{Interpret} \label{interpret}
@@ -229,8 +242,14 @@ Algoritmus byl převzán a přepsán do jazyka C z přednášek předmětu Algor
 \paragraph{Modifikace:} Pro návrat 0 v případě neúspěchu byla provedena modifikace
 algoritmu z přednášek, kde byl vracen poslední dosažený index, tedy délka řetězce.
 
+\subsection{Funkce \texttt{length}}
+Funkce vrací velikost stringu pro zadanou hodnotu. Více zde není nutno implementovat.
 
+\subsection{Funkce \texttt{copy}}
+Umožňuje kopírovat hodnotu z zadaného stringu, do nového. K vytvoření nového stringu složí funkce \verb|makeNewString|, která je podrobně popsána v knihovně \verb|string.c|, který zajišťuje práci s řetězci. Avšak před samotným uložením se provedou sady kontrol. Jako například zda předávaná hodnota či celá struktura nejsou nulové, jestli počáteční index odpovídá hodnotě 0 tedy standardu C-like a v poslední řadě, zda délka není menší či rovna 0. Po samotné alokaci paměti pro daný string se upraví indexování aby odpovídalo C-like standardu. Jelikož, je použit implementační jazyk C, který neumí pracovat se stringy je zde string interpretován jako poslounost za sebou jdoucích znaků typu char uložených do pole.
 
+\subsection{\texttt{Shunting-yard algoritmus}}
+Jak už bylo výše zmíněho algoritmus funguje na bázi priority, kde v našem případě jsou priority stanoveny takto(bráno od nejvyšší po nejnižší, je zda zahrnuto i rozšíření):[not],[Logický and,násobení,dělení],[sčítání,odčítání,or,xor],[porovnávací operátory] pokud se zde objeví něco jiného je nahlášena chyba. Konkretně je algoritmus imlementován jako funkce \verb|parseExpression| v \verb|parser.c|. Obsahuje jeden nekoečný cyklus, který se ukončí pouze v případě chyby či ukončení výrazu. Zpracování obsluhuje jeden obsáhlý switch, který se snaží pokrýt všechny možné situace, poté provede příslušené úkony dle toho jaká část výrazu právě zpracovává. Největší problémem zde bylo odchytáváním specifickýh chyb. Např.: \verb|(3(+8))|, která je řešena tak, že pokud načteme levou závorku uschováme si ji a pokud za ní následuje operátor je vypsána příslušná chyba.
 
 \section{LL-tabulka} \label{lltabulka}
 \begin{verbatim}
@@ -309,7 +328,7 @@ TERM            -> dt_str
 
 EXPR            -> vyraz
 \end{verbatim}
-
+\pagebreak
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Závěr} \label{zaver}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -330,6 +349,8 @@ HONZÍK J. M.: \emph{Studijní opora pro předmět Algoritmy}. Elektronický tex
 HONZÍK J. M.: \emph{Přednášky k předmětu Algoritmy}. Soubor elektronických textů. FIT VUT v Brně
 \bibitem{meduna}
 MEDUNA A., LUKÁŠ R., \emph{Podklady k přednáškám}. Elektronický text. FIT VUT v Brně
+\bibitem{meduna2}
+MEDUNA A., LUKÁŠ R., \emph{Studijní opora pro předmět Formální jazyky a překladače}. Elektronický text. FIT VUT v Brně
 
 
 \end{thebibliography}
