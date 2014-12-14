@@ -13,7 +13,6 @@ else
 		../src/Makefile		\
 		../src/ast.c		\
 		../src/ast.h		\
-		../src/constants.h	\
 		../src/defines.h	\
 		../src/gc.c		\
 		../src/gc.h		\
@@ -33,7 +32,6 @@ else
 		../src/string.c		\
 		../src/string.h		\
 		../src/structs.h	\
-		../src/symboltable.c	\
 		../docs/dokumentace/dokumentace.pdf \
 	. || exit 1
 	
