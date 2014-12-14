@@ -107,24 +107,6 @@ int emptyString(struct String* str){
 }
 
 /**
- * Tiskne obsah struktury Stringu
- * ------------------------------------------------------------------
- * @param s: odkaz na strukturu stringu
- */
-void printString(struct String* s){
-	if(s == NULL){
-		return;
-	}
-	
-#ifdef _DEBUG
-	fprintf(stderr, "String:\n");
-	fprintf(stderr, "   Value:    \t\"%s\"\n", s->Value);
-	fprintf(stderr, "   Length:   \t%d\n", s->Length);
-	fprintf(stderr, "   Allocated:\t%d\n", s->Allocated);
-#endif
-}
-
-/**
  * Uvolni vytvoreny string, vcetne odepsani z GC.
  * Kontroly na spravne predany string.
  * ------------------------------------------------------------------
@@ -138,15 +120,6 @@ int freeString(struct String* s){
 
 	gcFree(s);
 	return True;
-}
-/**
- * Zastupuje strcmp -- urcen pro pole znaku
- * ------------------------------------------------------------------
- * @param s1: prvni string, ktery chceme porovnat
- * @param s2: druhy string
- */
-int compareCharArrays(char* s1, char* s2){
-	return strcmp(s1, s2);
 }
 /**
  * Porovna string s charovym polem
@@ -165,34 +138,6 @@ int compareString(struct String* s, char* s2){
  */
 int compareStrings(struct String* s1, struct String* s2){
 	return strcmp(s1->Value, s2->Value);
-}
-
-/**
- * Vraci delku pole charu, pro pocitani delky.
- * ------------------------------------------------------------------
- * @param array: pole znaku, ktere projde a pocita dokud nenarazi na \0
- */
-int getCharArrayLength(char* array){
-	int i = 0;
-
-	while(array[i] != '\0')
-		i++;
-
-	return i;
-}
-
-/**
- * Posune vsechny uppercase znaky do lowercase
- * ------------------------------------------------------------------
- * @param str: odkaz na strukturu, ktere prenastavi obsah na lowercase
- */
-int toLower(struct String* str){
-	for(int i = 0; i < str->Length; i++){
-		if(str->Value[i] >= 'A' && str->Value[i] <= 'Z')
-			str->Value[i] += TOLOWER;
-	}
-	
-	return True;
 }
 
 /**
@@ -226,32 +171,3 @@ int copyString(struct String* src, struct String** dest){
 	return True;
 }
 
-/**
- * Skopiruje data z src pole do struktury dest
- * ------------------------------------------------------------------
- * @param src: zdrojove pole znaku
- * @param dest: odkaz na strukturu, kam se data maji skopirovat
- */
-int copyFromArray(char* src, struct String** dest){
-	if(src == NULL){
-		Log("Src string == empty", ERROR, STRING);
-		exit(intern);	
-	}
-	if((*dest) == NULL && ((*dest) = makeNewString()) == NULL)
-		return False;
-	else {
-		if(!emptyString(*dest)){
-			Log("Clearing failed", ERROR, STRING);
-			exit(intern);
-		}
-	}
-		
-	char c = ' ';
-	int i = 0;
-	while((c = src[i++]) != '\0'){
-		if(!addChar((*dest), c))
-			return False;
-	}
-	
-	return True;
-}
