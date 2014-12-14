@@ -77,7 +77,8 @@ void initArray(struct symbolTableNode *arr)
 
 	size_t size = (tmp_arr->high - tmp_arr->low + 1);
 
-	struct symbolTableNode template = {0};
+	struct symbolTableNode template;
+	memset(&template,0,sizeof(struct symbolTableNode));
 	template.dataType = tmp_arr->type;
 	template.init = true;
 
@@ -849,7 +850,7 @@ struct symbolTableNode convertAST2STN(struct astNode *ast)
 
 	tmp.init = true;
 
-	if(ast->type == AST_ID)
+	if(ast->type == AST_ID || ast->type == AST_ARR)
 	{
 		struct symbolTableNode *p = runTree(ast);
 
