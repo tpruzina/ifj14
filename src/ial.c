@@ -232,6 +232,7 @@ int find(struct String* text, struct String* pattern)
 
 /**
  * Vytvori cisty uzel do tabulky. Bez jmena vyplneneho.
+ * ----------------------------------------------------
  */
 struct symbolTableNode* makeNewSymbolTable(){	
 	// alokace tabulky
@@ -257,6 +258,8 @@ struct symbolTableNode* makeNewSymbolTable(){
 }
 /**
  * Vytvori uzel pro zaznam do tabulky uz s definovanym jmenem.
+ * ------------------------------------------------------------
+ * @param name: jmeno pro novy uzel. Urceno pro rychle vytvareni nodu
  */
 struct symbolTableNode* makeNewNamedNode(struct String* name){
 	struct symbolTableNode* stn = makeNewSymbolTable();
@@ -273,7 +276,12 @@ struct symbolTableNode* makeNewNamedNode(struct String* name){
 	
 	return stn;
 }
-
+/**
+ * Vyhledava v predane tabulce symbolu uzel s jmenem name.
+ * ------------------------------------------------------------------
+ * @param table: odkaz na tabulku symbolu
+ * @param name: jmeno uzlu promenne/funkce
+ */
 struct symbolTableNode* search(struct symbolTableNode** table, struct String* name){
 	if(!(*table))
 		return NULL;
