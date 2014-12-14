@@ -24,8 +24,8 @@
 
 % !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 % změň následující údaje za své
-\def\author{xxx}
-\def\email{xxx@stud.fit.vutbr.cz}
+\def\author{Antonín Marko}
+\def\email{xmarko07@stud.fit.vutbr.cz}
 \def\projname{Implementace interpretu imperativního jazyka IFJ14}
 % !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -119,20 +119,18 @@ zajistit, aby se obě uchovaly v jednom uzlu AST. Řešení je jednoduché a ví
 poduzlu stromu a nepravdivou sekci do uzlu pravého. U příkazů s podmíněným
 chováním (if, while, repeat-until, atp.) bylo nutné uchovat podmínku, tedy výraz,
 který určuje, jestli je příkaz proveditelný či není. Primárně pro tento účel
-slouží dodatečná položka uzlů AST, která svým typem \verb|void*| umožňuje
+slouží dodatečná položka (\verb|other|) uzlů AST, která svým typem \verb|void*| umožňuje
 mnohostranné využití. 
 
 Zvláštní případ použití dodatečné položky je například u definice či volání funkce.
 V tomto případě obsahuje strukturu \verb|String| se jménem funkce. Levý podstrom
 opět obsahuje tělo funkce a v pravém podstromu je uložen uzel se strukturou \verb|varspars|,
-která se složená z dvou front, jedné pro lokální proměnné funkce a druhá pro
+která je složená ze dvou front, jedné pro lokální proměnné funkce a druhé pro
 parametry funkce. Tyto fronty jsou naplněny při definici funkce, při deklaraci
-(použití \verb|forward| deklarace) je naplněna pouze fronta parametrů. Více o funkcích
-v \ref{func}.
+(\verb|forward|) je naplněna pouze fronta parametrů. Více o funkcích v \ref{func}.
 
-\subsubsection{Shunting-yard algoritmus}
-\label{sya}
-Pro zpracování výrazu mělo být původně v projektu užito precedenční analýzy. My jsme ovšem toto zpracování řešili pomocí Shunting-yard algoritmu\footnote{Byla nám
+\subsubsection{Shunting-yard algoritmus} \label{sya}
+Pro zpracování výrazů mělo být původně v projektu užito precedenční analýzy. My jsme ovšem toto zpracování řešili pomocí Shunting-yard algoritmu\footnote{Byla nám
 dovolena výjimka, implementovat a náležitě zdokumentovat tento algoritmus oproti předepsané
 precedenční analýze}. Algoritmus zpracování výrazů je založen na prioritě operátorů, které buď vkládá
 nebo odebírá ze zásobníku a vkládá do výstupní sekvence. Tento algoritmus primárně
@@ -141,11 +139,11 @@ a převeditelného do AST.
 
 Tento algoritmus byl pro potřeby projektu upraven, aby přímo generoval AST místo
 výstupního postfixového zápisu a zároveň u tvorby jednotlivých uzlů zastupujících
-operace kontroloval, zdali datový typ vrcholových uzlů synovských uzlů odpovídá
+operace kontroloval, zda-li datový typ vrcholových uzlů synovských uzlů odpovídá
 sémantickým pravidlům zpracovávání výrazů. Což nám poskytuje možnost pouze jediného průchodu, který tak stačí na zpracování.
 
 Toto řešení ovšem není tak přínosné jak se zdálo, jelikož při tvorbě výrazů je nutné kontrolovat spoustu aspektů validního výrazu. To jsou
-například datové typy jednotlivých operandů v případě binárních operací.
+například datové typy jednotlivých operandů v případě binárních operací. Více v  \ref{sya_popis}.
 
 \subsection{Interpret} \label{interpret}
 
@@ -237,7 +235,7 @@ algoritmu z přednášek, kde byl vracen poslední dosažený index, tedy délka
 \subsection{Funkce \texttt{copy}}
 Umožňuje kopírovat hodnotu ze zadaného stringu, do nového. K vytvoření nového stringu složí funkce \verb|makeNewString|, která je podrobně popsána v knihovně \verb|string.c|, který zajišťuje práci s řetězci. Avšak před samotným uložením se provedou sady kontrol. Jako například zda předávaná hodnota či celá struktura nejsou nulové, jestli počáteční index odpovídá hodnotě 0 tedy standardu C-like a v poslední řadě, zda délka není menší či rovna 0. Po samotné alokaci paměti pro daný string se upraví indexování, aby odpovídalo C-like standardu. Jelikož, je použit implementační jazyk C, který neumí pracovat se stringy je zde string interpretován jako posloupnost za sebou jdoucích znaků typu char uložených do pole.
 
-\subsection{\texttt{Shunting-yard algoritmus}}
+\subsection{Shunting-yard algoritmus}\label{sya_popis}
 Jak už bylo výše zmíněno algoritmus funguje na bázi priority, kde v našem případě jsou priority stanoveny takto(bráno od nejvyšší po nejnižší, je zda zahrnuto i rozšíření):[not], [Logický and, násobení, dělení], [sčítání, odčítání, or, xor], [porovnávací operátory] pokud se zde objeví něco jiného je nahlášena chyba. Konkrétně je algoritmus implementován jako funkce \verb|parseExpression| v \verb|parser.c|. Obsahuje jeden nekonečný cyklus, který se ukončí pouze v případě chyby či ukončení výrazu. Zpracování obsluhuje jeden obsáhlý switch, který se snaží pokrýt všechny možné situace, poté provede příslušené úkony dle toho jaká část výrazu právě zpracovává. Největší problémem zde bylo odchytáváním specifických chyb. Např.: \verb|(3(+8))|, která je řešena tak, že pokud načteme levou závorku, uschováme si ji a pokud za ní následuje operátor je vypsána příslušná chyba.
 
 \subsection{Rozšíření}
