@@ -4,7 +4,7 @@ var
 	
 begin
 	x := true;
-	x := NOT x;
+	y := NOT NOT NOT x;
 
 	write(x, y)
 end.

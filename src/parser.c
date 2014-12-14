@@ -3083,7 +3083,7 @@ struct astNode* parseExpression(struct toc** cur){
 				while(!stackEmpty(stack)){
 					// 	pokud je na vrcholu leva zavorka
 					// 	pokud je na vrcholu operator s nizsi prioritou
-					if(top == NULL || top->type == T_LPAR || getPriority(top) < getPriority(*cur)){
+					if(top == NULL || top->type == T_LPAR || top->type == T_NOT || getPriority(top) < getPriority(*cur)){
 						// push do zasobniku je na konci case
 						break;
 					}
@@ -3096,15 +3096,7 @@ struct astNode* parseExpression(struct toc** cur){
 						// vytvori ASTnode z tokenu
 						makeAstFromToken(top, &aststack);
 					}
-					else {
-						if(top->type == T_NOT){
-							// odstranit z vrcholu
-							top = (struct toc*)stackPop(stack);
-							// vytvori ASTnode z tokenu
-							makeAstFromToken(top, &aststack);
-						}
-					}
-					
+										
 					// na promennou za vrchol ulozi top prvek
 					top = (struct toc*)stackTop(stack);		
 				}	
