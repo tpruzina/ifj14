@@ -44,7 +44,14 @@ void for_to_downto(struct astNode *curr)
 	struct symbolTableNode *value = runTree(asgn->right);
 	struct symbolTableNode *literal = runTree(cond->right);
 
-	insertDataInteger(&id,value->data.int_data);
+	if((cond->type == AST_FOR_DOWNTO && value->data.int_data < literal->data.int_data) ||
+			(cond->type == AST_FOR_TO && value->data.int_data > literal->data.int_data))
+	{
+		insertDataInteger(&id, 0);
+		return;
+	}
+	else
+		insertDataInteger(&id,value->data.int_data);
 
 	int boundary = literal->data.int_data;
 	int *iterator = &(id->data.int_data);
