@@ -12,6 +12,7 @@
 % velikost stranky
 \usepackage[top=3.5cm, left=2.5cm, text={17cm, 24cm}, ignorefoot]{geometry}
 \usepackage{indentfirst}
+
 \begin{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -47,46 +48,21 @@ Implementace překladače imperativního jazyka je netriviální úloha, proto j
 vhodné ji rozdělit na podúlohy (\ref{moduly_interpretu}), které jsou vhodně
 rozdělené mezi členy týmu, který je vedené a kontrolován týmovým vedoucím.
 
-Tento dokument sa skládá z N částí, které popisují jednotlivé moduly
+Tento dokument se skládá z N částí, které popisují jednotlivé moduly
 interpretu imperativního jazyka IFJ14, a to jsou lexikální analyzátor
 (\ref{lexikalni_analyzator}), syntaktický analyzátor (\ref{syntakticky_analyzator})
 využívající rekurzivní sestup (), který je pro potřeby syntaktické
 analýzy výrazů rozšířený o Shunting-Yard (\ref{sya}) algoritmus\footnote{Byla nám
 dovolena výjimka, implementovat a náležitě zdokumentovat tento algoritmus oproti předepsané
 precedenční analýze}. Kontrola syntaxe a sémantiky probíhá z velké části při jednom
-průchodu, následné kontroly sémantiky probíhají až za běhu.\newline
+průchodu, následné kontroly sémantiky probíhají až za běhu.
 
-Jelikož je projekt založen na týmové spolupráci, rozhodli jsme se využít možnosti používat verzovacího systému, jmenovitě \verb|bitbucket|. Vzhledem k tomu, že práce byla rozdělena mezi jednotlivé členy a probíhaly kontroly v době schůzek jevil se tento systém jako nejlepší, do jisté míry totiž umožňuje porovnávání verzí a tím se dá kontrolovat zdali daný člen spnil svou část ukolu či nikoliv.
+Jelikož je projekt založen na týmové spolupráci, rozhodli jsme se využít možnosti používat verzovacího systému, jmenovitě \verb|bitbucket|. Vzhledem k tomu, že práce byla rozdělena mezi jednotlivé členy a probíhaly kontroly v době schůzek, jevil se tento systém jako nejlepší, do jisté míry totiž umožňuje porovnávání verzí a tím se dá kontrolovat, zdali daný člen splnil svou část úkolu či nikoliv.
 
-Práce v teamu byla rozdělena následovně: Interpret dostal na starosti \textbf{Tomáš Pružina}. Parser a tedy syntaktickou a sémantickou část projketu vytvářel \textbf{Antonín Marko}.\textbf{Martin Juřík}, měl na starost zpracování lexixálního analyzátoru a jeho funkčí otestování. Celkové testování, zpracování LL gramatiky a dokumentaci měl na starost \textbf{Martin Kubíček}. \textbf{Petr David} uprava knihovních funkcí a vestavěné funkce do předmětu \verb|Algoritmy|.\newline
+Práce v teamu byla rozdělena následovně: Interpret dostal na starosti \textbf{Tomáš Pružina}. Parser a tedy syntaktickou a sémantickou část projektu vytvářel \textbf{Antonín Marko}.\textbf{Martin Juřík}, měl na starost zpracování lexikálního analyzátoru a jeho funkční otestování. Celkové testování, zpracování LL gramatiky a dokumentaci měl na starosti \textbf{Martin Kubíček}. \textbf{Petr David} úprava knihovních funkcí a vestavěné funkce do předmětu \verb|Algoritmy|.
 
-Za účelem testování a ověření plné funkčnosti projektu byla napsána sada testů, obsahující i vlastní testovací skript, čítající zhruba \textbf{X} odvětví s celkovým počtem \textbf{XXX} testů. Úkolem testování, bylo především schopnost odchytávat všechny možné chyby, které by mohly nastat a vracení správného chybového kódu. Ovšem ne vždy bylo určení správného chybového kódu jednoduché jelikož jsme narazili na pár sporných momentů, které jsme se snažili vyřešit důkladnějším studiem dokumentace k projektu nebo společnou debatou v týmu. Dále jsme testy ověřovaly do jaké míry jsme schopni správně interpretovat validní data.
+Za účelem testování a ověření plné funkčnosti projektu byla napsána sada testů, obsahující i vlastní testovací skript, čítající zhruba \textbf{X} odvětví s celkovým počtem \textbf{XXX} testů. Úkolem testování, bylo především schopnost odchytávat všechny možné chyby, které by mohly nastat a vracení správného chybového kódu. Ovšem ne vždy bylo určení správného chybového kódu jednoduché, jelikož jsme narazili na pár sporných momentů, které jsme se snažili vyřešit důkladnějším studiem dokumentace k projektu nebo společnou debatou v týmu. Dále jsme testy ověřovaly do jaké míry, jsme schopni správně interpretovat validní data.
 
-
-
-\subsection{Rozdělení bodů}
-xmarko07:20
-
-xpruzi01:20
-
-xkubic34:20
-
-xhjurik08:20
-
-xdavid15:20
-
-\subsection{Rozšíření}
-ARRAY
-
-REPEAT
-
-ELSEIF
-
-BOOLOP
-
-FOR
-
-\pagebreak
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Moduly interpretu jazyka} \label{moduly_interpretu}
 %=============================================================================
@@ -102,7 +78,7 @@ Pro úspěšné rozlišení typu lexému se v naší implementaci používá kon
 automat, jehož struktura je znázorněna na obrázku (\ref{lex_ka}).
 
 Jestliže se konečný automat v době zpracovávání řetězce zdrojového souboru
-document do chybového stavu \verb|lexerrref|, řetězec je nepřijatý a jedná se
+dokument do chybového stavu \verb|lexerrref|, řetězec je nepřijatý a jedná se
 o lexikální chybu. Samotná implementace lexikálního analyzátoru patří k
 jednodušším částem projektu, avšak jeho návrh a testování zabralo nemálo času.
 
@@ -112,6 +88,7 @@ jednodušším částem projektu, avšak jeho návrh a testování zabralo nemá
 		\includegraphics[width=\textwidth]{img/KA-scanner.eps}
 	\caption{Konečný automat lexikálního analyzátoru}
 \end{figure}
+\pagebreak
 
 \subsection{Syntaktický analyzátor} \label{syntakticky_analyzator}
 Jak již bylo zmíněno, syntaktický analyzátor žádá lexikální analyzátor o tokeny
@@ -151,7 +128,7 @@ v \ref{func}.
 
 \subsubsection{Shunting-yard algoritmus}
 \label{sya}
-Pro zpracování výrazu mělo být původně v projekto užito precedenční analýzy. My jsme ovšem toto zpracování řešili pomocí Shunting-yard algoritmu\footnote{Byla nám
+Pro zpracování výrazu mělo být původně v projektu užito precedenční analýzy. My jsme ovšem toto zpracování řešili pomocí Shunting-yard algoritmu\footnote{Byla nám
 dovolena výjimka, implementovat a náležitě zdokumentovat tento algoritmus oproti předepsané
 precedenční analýze}. Algoritmus zpracování výrazů je založen na prioritě operátorů, které buď vkládá
 nebo odebírá ze zásobníku a vkládá do výstupní sekvence. Tento algoritmus primárně
@@ -160,10 +137,10 @@ a převeditelného do AST.
 
 Tento algoritmus byl pro potřeby projektu upraven, aby přímo generoval AST místo
 výstupního postfixového zápisu a zároveň u tvorby jednotlivých uzlů zastupujících
-operace kontroloval, zda-li datový typ vrcholových uzlů synovských uzlů odpovídá
+operace kontroloval, zdali datový typ vrcholových uzlů synovských uzlů odpovídá
 sémantickým pravidlům zpracovávání výrazů. Což nám poskytuje možnost pouze jediného průchodu, který tak stačí na zpracování.
 
-Toto řešení ovšem není tak přínosné jak se zdálo, jelikož při tvorbě výrazů je nutné kontrolovat spoustů aspektů validního výrazu. To jsou
+Toto řešení ovšem není tak přínosné jak se zdálo, jelikož při tvorbě výrazů je nutné kontrolovat spoustu aspektů validního výrazu. To jsou
 například datové typy jednotlivých operandů v případě binárních operací.
 
 \subsection{Interpret} \label{interpret}
@@ -178,10 +155,10 @@ operaci, kterou je řízený samotný běh programu.
 
 Interpret samozřejmě nepracuje jen se samotným syntaktickým stromem, ale
 taktéž s tabulkou symbolů, která obsahuje data potřebná na to, aby interpret
-mohl vykonávat nějakou užitočnou práci definovanou v těle programu.
+mohl vykonávat nějakou užitečnou práci definovanou v těle programu.
 
 Interpret tedy spravuje tabulky symbolů, dynamicky je za běhu
-vykonávaného programu vytváří a (podla potřeby) ruší.
+vykonávaného programu vytváří a (podle potřeby) ruší.
 
 V neposlední řadě interpret vykonává sémantickou kontrolu u operacích, které
 syntaktický analyzátor v době zpracování vstupního programu a generování
@@ -190,24 +167,24 @@ abstraktního syntaktického stromu neřešil.
 Příkladem takovéto kontroly je používání (čtení) proměnné před její řádnou
 definicí (přiřazením hodnoty) anebo dělení nulou v aritmetickém výrazu.
 
-Takovéto běhové chyby jsou v interpretě řešené ukončením interpretace a navrácením
+Takovéto běhové chyby jsou v interpretu řešené ukončením interpretace a navrácením
 chybového kódu podle zadání imperativního jazyka IFJ14.
 
 \subsubsection{Tabulka symbolů} \label{tabulka_symbolu}
 
-Tabulka symbolů je implementována pomocí binárního vyhladávacího stromu,
+Tabulka symbolů je implementována pomocí binárního vyhledávacího stromu,
 přičemž se rozlišuje několik úrovní tabulky symbolů.
 
 Každý program obsahuje globální tabulku symbolů (ve které jsou uložené ukazatele
 na funkce) a lokální tabulku symbolů, která obsahuje běhové proměnné
 vykonávaného programu.
 
-Z implemetačního hlediska jsou lokální tabulky symbolů (stromy) ukládané na
+Z implementačního hlediska jsou lokální tabulky symbolů (stromy) ukládané na
 zásobník, přičemž platí, že při volání funkce se vytvoří nová (lokální)
-tabulka symbolů, do které se skopírují příslušné parametry volané funkce z
+tabulka symbolů, do které se zkopírují příslušné parametry volané funkce z
 nižší vrstvy lokální tabulky (popř. z globální tabulky symbolů).
 
-Taková lokální tabulka taktéž obsahuje návratovu hodnotu vykonávané funkce,
+Taková lokální tabulka taktéž obsahuje návratovou hodnotu vykonávané funkce,
 která umožňuje rekurzivní volání funkcí a samozřejmě umožňuje vykonávat tělo
 funkce bez nutnosti jakkoliv zasahovat do abstraktního syntaktického stromu.
 
@@ -253,14 +230,11 @@ Algoritmus byl převzán a přepsán do jazyka C z přednášek předmětu Algor
 \paragraph{Modifikace:} Pro návrat 0 v případě neúspěchu byla provedena modifikace
 algoritmu z přednášek, kde byl vracen poslední dosažený index, tedy délka řetězce.
 
-\subsection{Funkce \texttt{length}}
-Funkce vrací velikost stringu pro zadanou hodnotu. Více zde není nutno implementovat.
-
 \subsection{Funkce \texttt{copy}}
-Umožňuje kopírovat hodnotu z zadaného stringu, do nového. K vytvoření nového stringu složí funkce \verb|makeNewString|, která je podrobně popsána v knihovně \verb|string.c|, který zajišťuje práci s řetězci. Avšak před samotným uložením se provedou sady kontrol. Jako například zda předávaná hodnota či celá struktura nejsou nulové, jestli počáteční index odpovídá hodnotě 0 tedy standardu C-like a v poslední řadě, zda délka není menší či rovna 0. Po samotné alokaci paměti pro daný string se upraví indexování aby odpovídalo C-like standardu. Jelikož, je použit implementační jazyk C, který neumí pracovat se stringy je zde string interpretován jako poslounost za sebou jdoucích znaků typu char uložených do pole.
+Umožňuje kopírovat hodnotu ze zadaného stringu, do nového. K vytvoření nového stringu složí funkce \verb|makeNewString|, která je podrobně popsána v knihovně \verb|string.c|, který zajišťuje práci s řetězci. Avšak před samotným uložením se provedou sady kontrol. Jako například zda předávaná hodnota či celá struktura nejsou nulové, jestli počáteční index odpovídá hodnotě 0 tedy standardu C-like a v poslední řadě, zda délka není menší či rovna 0. Po samotné alokaci paměti pro daný string se upraví indexování, aby odpovídalo C-like standardu. Jelikož, je použit implementační jazyk C, který neumí pracovat se stringy je zde string interpretován jako posloupnost za sebou jdoucích znaků typu char uložených do pole.
 
 \subsection{\texttt{Shunting-yard algoritmus}}
-Jak už bylo výše zmíněho algoritmus funguje na bázi priority, kde v našem případě jsou priority stanoveny takto(bráno od nejvyšší po nejnižší, je zda zahrnuto i rozšíření):[not],[Logický and,násobení,dělení],[sčítání,odčítání,or,xor],[porovnávací operátory] pokud se zde objeví něco jiného je nahlášena chyba. Konkretně je algoritmus imlementován jako funkce \verb|parseExpression| v \verb|parser.c|. Obsahuje jeden nekoečný cyklus, který se ukončí pouze v případě chyby či ukončení výrazu. Zpracování obsluhuje jeden obsáhlý switch, který se snaží pokrýt všechny možné situace, poté provede příslušené úkony dle toho jaká část výrazu právě zpracovává. Největší problémem zde bylo odchytáváním specifickýh chyb. Např.: \verb|(3(+8))|, která je řešena tak, že pokud načteme levou závorku uschováme si ji a pokud za ní následuje operátor je vypsána příslušná chyba.
+Jak už bylo výše zmíněno algoritmus funguje na bázi priority, kde v našem případě jsou priority stanoveny takto(bráno od nejvyšší po nejnižší, je zda zahrnuto i rozšíření):[not], [Logický and, násobení, dělení], [sčítání, odčítání, or, xor], [porovnávací operátory] pokud se zde objeví něco jiného je nahlášena chyba. Konkrétně je algoritmus implementován jako funkce \verb|parseExpression| v \verb|parser.c|. Obsahuje jeden nekonečný cyklus, který se ukončí pouze v případě chyby či ukončení výrazu. Zpracování obsluhuje jeden obsáhlý switch, který se snaží pokrýt všechny možné situace, poté provede příslušené úkony dle toho jaká část výrazu právě zpracovává. Největší problémem zde bylo odchytáváním specifických chyb. Např.: \verb|(3(+8))|, která je řešena tak, že pokud načteme levou závorku, uschováme si ji a pokud za ní následuje operátor je vypsána příslušná chyba.
 
 \section{LL-tabulka} \label{lltabulka}
 \begin{verbatim}
@@ -347,6 +321,14 @@ EXPR            -> vyraz
 \appendix
 
 \section{Metriky kódu} \label{metriky}
+Počet všech zdrojových souborů: 
+
+celkový počet řádků: 
+
+Velikost spustitelného programu (bez debugovacích informací, Linux 64bit): bytů
+
+Velikost spustitelného programu (bez debugovacích informací, Windows 64bit): bytů
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % seznam citované literatury: každá položka je definována příkazem
