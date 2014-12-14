@@ -173,22 +173,22 @@ struct String* sort(struct String* src){
 int find(struct String* text, struct String* pattern)
 {
 	int result; // pozice, prvniho nalezu
-
+      
 	int len_pattern = strlen(pattern->Value);   //delka hledaneho podretezce
 	int len_text = strlen(text->Value);         //delka retezce ve kterem hledame
-
-
+	
+  
 	int* fail = (int*)gcMalloc(sizeof(int) * len_pattern);  // vektor fail
 	int pattern_ind, text_ind, r;  // index v hledanem podretezci, index v retezci, dalsi pozice
 
-	fail[1] = 0;
-
+	fail[0] = -1;
+  
 	//*****FAIL vektor, zjistovani hodnot posunu*******
-	for(int k=2; k < len_pattern; k++)
+	for(int k=1; k<len_pattern; k++)
 	{
 		r = fail[k-1];
-
-		while( (r > 0) && (pattern->Value[r] != pattern->Value[k-1]) )
+    
+		while( (r > -1) && (pattern->Value[r] != pattern->Value[k-1]) )
 		{
 			r = fail[r];
 		}
@@ -196,14 +196,14 @@ int find(struct String* text, struct String* pattern)
 	}
 
 	// *****Hledani podretezce*****
-
+  
 	//zarovnani indexu
-	text_ind = 1;     
-	pattern_ind = 1;  
+	text_ind = 0;     
+	pattern_ind = 0;  
 
 	while( (text_ind < len_text) && (pattern_ind < len_pattern) )
 	{
-		if( (pattern_ind == 0) || (text->Value[text_ind] == pattern->Value[pattern_ind]) )
+		if( (pattern_ind == -1) || (text->Value[text_ind] == pattern->Value[pattern_ind]) )
 		{
 			//nasel shodu tak inkrementuju oba indexy
 			text_ind++;         
@@ -226,8 +226,8 @@ int find(struct String* text, struct String* pattern)
 	}
 
 	return result;
+  
 }
-
 //// SYMBOL TABLE
 
 /**

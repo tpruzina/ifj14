@@ -1,9 +1,9 @@
 var
-	x: boolean;
+	x: string;
+	i: integer;
 begin
-	x := true;
-
-	x := NOT NOT NOT NOT x;
-
-	write(x)
+	x := 'Toto text je nejaky text text';
+	i := find(x, 'jaky');
+	
+	write(i)
 end.
