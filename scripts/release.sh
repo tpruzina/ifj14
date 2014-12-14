@@ -10,6 +10,7 @@ else
 	mkdir -p .tmp && cd .tmp || exit 1
 	cp \
 		../rozdeleni		\
+		../rozsireni		\
 		../src/Makefile		\
 		../src/ast.c		\
 		../src/ast.h		\
