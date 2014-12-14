@@ -1,15 +1,29 @@
 var
-    a : array[0..10] of integer;
-    b : array[1..2] of string;
-    message : string;
-    i : integer;
-    
+	x: array[0..10] of string;
+	id: integer;
+	b: boolean;
+
 begin
-    a[0] := 10 - 5;
-    a[7] := 0 - 10;
-    b[1] := 'Ahoj';
-    b[2] := ' svete!';
-    message := b[1] + b[2];
-    i := a[0] + a[7];
-    write(message, ''#10'', i, ''#10'')
+	b := true;
+
+	for id := 0 to 10 do
+	begin
+		if b then
+		begin
+			x[id] := '^'
+		end
+		else
+		begin
+			x[id] := 'v'
+		end;
+		{ schvalne jestli tohle projde }
+		b := NOT b		
+	end;
+
+	id := 0;
+	while id <= 10 do
+	begin
+		write(x[id]);
+		id := id + 1		
+	end
 end.
