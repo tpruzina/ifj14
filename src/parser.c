@@ -2753,7 +2753,7 @@ struct astNode* arrayAssignStatement(struct toc** cur, struct String* name){
 	}
 
 	node->left->data.str = name;
-	printString(node->left->data.str);
+	//printString(node->left->data.str);
 	return node;
 }
 

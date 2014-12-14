@@ -1,0 +1,11 @@
+var
+	x : integer;
+	a : integer;
+
+begin
+	a := 10;
+	
+	for x := a - 5 to 10 do begin
+		write(x)
+	end
+end.
