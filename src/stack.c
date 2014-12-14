@@ -21,6 +21,7 @@
 
 /**
  * Vytvori novou strukturu zasobniku. S vynulovanym vrcholem a nulovou delkou.
+ * ------------------------------------------------------------------
  */
 struct stack* makeNewStack(){
 	// alokace nove polozky
@@ -38,6 +39,9 @@ struct stack* makeNewStack(){
 
 /**
  * Vlozi na vrchol zasobniku novy uzel.
+ * ------------------------------------------------------------------
+ * @param stack: odkaz na strukturu zasobniku, do ktereho chceme ukladat
+ * @param val: odkaz na to co chceme pridat
  */
 int stackPush(struct stack* stack, void* val){
 	// kontroly na parametr se zasobnikem
@@ -61,6 +65,8 @@ int stackPush(struct stack* stack, void* val){
 
 /**
  * Odstrani a vrati vrchol zasobniku.
+ * ------------------------------------------------------------------
+ * @param stack: odkaz na strukturu zasobniku
  */
 void* stackPop(struct stack* stack){
 	// kontroly na parametr se zasobnikem
@@ -89,6 +95,8 @@ void* stackPop(struct stack* stack){
 }
 /**
  * Vrati vrchol zasobniku, bez toho aby jej odstranil.
+ * ------------------------------------------------------------------
+ * @param stack: odkaz na strukturu zasobniku
  */
 void* stackTop(struct stack* stack){
 	// kontroly na parametr se zasobnikem
@@ -108,6 +116,8 @@ void* stackTop(struct stack* stack){
 }
 /**
  * Kontrola jen na prazdnost zasobniku.
+ * ------------------------------------------------------------------
+ * @param stack: odkaz na strukturu zasobniku
  */
 int stackEmpty(struct stack* stack){
 	// kontroly na parametr se zasobnikem
@@ -121,7 +131,7 @@ int stackEmpty(struct stack* stack){
 
 /**
  * Vytvari novou instanci fronty
- * --------------------
+ * ------------------------------------------------------------------
  */
 struct queue* makeNewQueue(){
 	struct queue* que = (struct queue*)gcMalloc(sizeof(struct queue));
@@ -137,9 +147,9 @@ struct queue* makeNewQueue(){
 }
 /**
  * Vklada do fronty nakonec prvek
- * --------------------
- * que: fronta, do ktere ma byt prvek vlozen
- * value: hodnota, ktera ma byt vlozena
+ * ------------------------------------------------------------------
+ * @param que: fronta, do ktere ma byt prvek vlozen
+ * @param value: hodnota, ktera ma byt vlozena
  */
 int queuePush(struct queue* que, void* value){
 	if(que == NULL)
@@ -163,8 +173,8 @@ int queuePush(struct queue* que, void* value){
 }
 /**
  * Odstrani z vrcholu prvek a vrati jeho hodnotu
- * --------------------
- * que: fronta na odstraneni prvku
+ * ------------------------------------------------------------------
+ * @param que: fronta na odstraneni prvku
  */
 void* queuePop(struct queue* que){
 	if(que == NULL)
@@ -183,8 +193,8 @@ void* queuePop(struct queue* que){
 }
 /**
  * Vraci hodnotu na vrcholu fronty, bez toho aby ho odstranila
- * --------------------
- * que: fronta
+ * ------------------------------------------------------------------
+ * @param que: fronta
  */
 void* queueTop(struct queue* que){
 	if(que == NULL)	
@@ -194,8 +204,8 @@ void* queueTop(struct queue* que){
 }
 /**
  * Vraci True v pripade, ze se prvni i posledni prvek rovnaji a jsou NULL
- * --------------------
- * que: fronta pro zjisteni
+ * ------------------------------------------------------------------
+ * @param que: fronta pro zjisteni
  */
 int queueEmpty(struct queue* que){
 	if(que == NULL)
