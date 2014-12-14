@@ -143,7 +143,7 @@ operace kontroloval, zda-li datový typ vrcholových uzlů synovských uzlů odp
 sémantickým pravidlům zpracovávání výrazů. Což nám poskytuje možnost pouze jediného průchodu, který tak stačí na zpracování.
 
 Toto řešení ovšem není tak přínosné jak se zdálo, jelikož při tvorbě výrazů je nutné kontrolovat spoustu aspektů validního výrazu. To jsou
-například datové typy jednotlivých operandů v případě binárních operací. Více v  \ref{sya_popis}.
+například datové typy jednotlivých operandů v případě binárních operací. Více v podsekci \ref{sya_popis}.
 
 \subsection{Interpret} \label{interpret}
 
@@ -216,15 +216,15 @@ prvku se sebou samým, takže jsme provedli drobnou úpravu, která tomuto zabr�
 \subsection{Funkce \texttt{find}}
 Pro funkci find jsme dle zadání použili KMP (Knuth-Morris-Prattův algoritmus).
 Jedná se o algoritmus využívající konečný automat. Tento konečný automat využívá
-hrany ANO/NE. Nejprve bylo nutné vytvořit si pole \verb|FAIL|, do kterého se
+hrany ANO/NE. Nejprve bylo nutné vytvořit pole \verb|FAIL|, do kterého se
 uloží zjištěné hodnoty posunů. Poté přijde na řadu samotné vyhledávání řetězce.
 Nejprve zarovnáme podřetězec a řetězec na první index. Pak se jen porovnávají znaky,
 pokud jsou shodné, zvyšuje se index o 1 v podřetězci, který hledáme (\verb|pattern|)
 a zároveň i v řetězci, ve kterém vyhledáváme (\verb|text|). Pokud nikoliv, tak se
-vracím po hraně "N" (NE hrana) neboli \verb|FAIL| vektor. Je-li pak hodnota indexu
-v hledaném řetězci rovna délce hledaného podřetězce, tak byl nalezen vzorek na
-indexu $TInd - PL$, kde $TInd$ je index řetězce a $PL$ je délka hledaného podřetězce,
-jinak nic nenašel a vrací se 0.
+algoritmus vrací po hraně "N" (NE hrana) neboli \verb|FAIL| vektoru. Je-li pak hodnota indexu
+v hledaném řetězci rovna délce hledaného podřetězce, byl nalezen vzorek na
+indexu $TInd - PL$, kde $TInd$ je index řetězce a $PL$ je délka hledaného podřetězce.
+Jinak nic nenašel a vrací se 0.
 
 Algoritmus byl převzán a přepsán do jazyka C z přednášek předmětu Algoritmy (IAL2014
 \cite{honzik2} -- 11. přednáška 18. slide).
@@ -233,22 +233,37 @@ Algoritmus byl převzán a přepsán do jazyka C z přednášek předmětu Algor
 algoritmu z přednášek, kde byl vracen poslední dosažený index, tedy délka řetězce.
 
 \subsection{Funkce \texttt{copy}}
-Umožňuje kopírovat hodnotu ze zadaného stringu, do nového. K vytvoření nového stringu složí funkce \verb|makeNewString|, která je podrobně popsána v knihovně \verb|string.c|, který zajišťuje práci s řetězci. Avšak před samotným uložením se provedou sady kontrol. Jako například zda předávaná hodnota či celá struktura nejsou nulové, jestli počáteční index odpovídá hodnotě 0 tedy standardu C-like a v poslední řadě, zda délka není menší či rovna 0. Po samotné alokaci paměti pro daný string se upraví indexování, aby odpovídalo C-like standardu. Jelikož, je použit implementační jazyk C, který neumí pracovat se stringy je zde string interpretován jako posloupnost za sebou jdoucích znaků typu char uložených do pole.
+Umožňuje kopírovat hodnotu ze zadaného stringu, do nového. K vytvoření nového stringu složí funkce \verb|makeNewString|, která je podrobně popsána v knihovně \verb|string.c|, která zajišťuje práci s řetězci. Avšak před samotným uložením se provedou sady kontrol. %Jako například zda předávaná hodnota či celá struktura nejsou nulové, jestli počáteční index odpovídá hodnotě 0 tedy standardu C-like a v poslední řadě, zda délka není menší či rovna 0.
+Po samotné alokaci paměti pro daný string se upraví indexování, aby odpovídalo C-like indexování. Jelikož, je použit implementační jazyk C, který neumí pracovat se stringy je zde string interpretován jako posloupnost za sebou jdoucích znaků typu char uložených do pole.
 
 \subsection{Shunting-yard algoritmus}\label{sya_popis}
-Jak už bylo výše zmíněno algoritmus funguje na bázi priority, kde v našem případě jsou priority stanoveny takto(bráno od nejvyšší po nejnižší, je zda zahrnuto i rozšíření):[not], [Logický and, násobení, dělení], [sčítání, odčítání, or, xor], [porovnávací operátory] pokud se zde objeví něco jiného je nahlášena chyba. Konkrétně je algoritmus implementován jako funkce \verb|parseExpression| v \verb|parser.c|. Obsahuje jeden nekonečný cyklus, který se ukončí pouze v případě chyby či ukončení výrazu. Zpracování obsluhuje jeden obsáhlý switch, který se snaží pokrýt všechny možné situace, poté provede příslušené úkony dle toho jaká část výrazu právě zpracovává. Největší problémem zde bylo odchytáváním specifických chyb. Např.: \verb|(3(+8))|, která je řešena tak, že pokud načteme levou závorku, uschováme si ji a pokud za ní následuje operátor je vypsána příslušná chyba.
+Jak už bylo výše zmíněno algoritmus funguje na bázi priority, kde v našem případě jsou priority stanoveny takto:
+
+\begin{figure}[h!]
+\centering
+\begin{tabular}{| c | c |}
+	\hline
+	\textbf{Priority} & \textbf{Operátory} \\ \hline \hline
+    4 (nejvyšší) & \texttt{NOT}  \\ \hline
+    3 & \texttt{* / AND} \\ \hline
+    2 & \texttt{+ - OR XOR}  \\ \hline
+    1 & \texttt{< > <= >= <> =}  \\ \hline
+\end{tabular}
+\end{figure}
+
+Pokud je načten jiný token je nahlášena chyba. Konkrétně je algoritmus implementován jako funkce \verb|parseExpression| v \verb|parser.c|. Obsahuje jeden while cyklus, který se ukončí v případě ukončení výrazu, chyby nebo ukončení souboru. Zpracování obsluhuje jeden obsáhlý switch, který se snaží pokrýt všechny možné situace, poté provede příslušené úkony dle toho jaká část výrazu právě zpracovává. Největší problémem zde bylo odchytáváním specifických chyb. Např.: \verb|(3(+8))|, která je řešena tak, že pokud načteme levou závorku, uschováme si ji a pokud za ní následuje operátor je vypsána příslušná chyba.
 
 \subsection{Rozšíření}
 \subsubsection{Array}
-Díky tomu, že je potřebné, vždy předdefinovat pole bude se nejdřív tato definice ukládat do stromu, kde se vytvoří uzel \verb|AST_ARR| a jeho synovské uzly budou prázdné (tedy budou sloužit k provázání stromu) a datová struktura bude obsahovat jméno dané proměnné. Do položky other se uloží \verb|dataTypeArray| struktura, ve které jsou uloženy informace o rozsahu pole. Strukturu potom zkopírujeme odkazem i do indexovacího uzlu, který má v levém synovském uzlu \verb|AST_ID| a v pravem \verb|AST_INT|, protože indexovat se může pouze celočíselným literálem.
+Díky tomu, že je potřebné, vždy předdefinovat pole bude se nejdřív tato definice ukládat do stromu, kde se vytvoří uzel \verb|AST_ARR| a jeho synovské uzly budou prázdné (tedy budou sloužit k provázání stromu) a datová struktura bude obsahovat jméno dané proměnné. Do položky other se uloží \verb|dataTypeArray| struktura, ve které jsou uloženy informace o rozsahu pole. Strukturu potom zkopírujeme odkazem i do indexovacího uzlu, který má v levém synovském uzlu \verb|AST_ID| a v pravém výraz s vrcholem datového typu integer, protože indexovat se může pouze celým číslem.
 \subsubsection{Repeat}
-Pro interpretaci Repeatu jsme použili už vytvořenou funkci pro parsování While ovšem s tou změnou, že jsme obrátili parsováním, tedy nejdřív musíme zpracovat tělo a poté až podmínku. Jelikož v zadání stojí, že Repeat nemusí disponovat tělem, tedy nemusí obsahovat begin a end, museli jsme udělat další změnu a mohli jsme tedy vypustit podmínku, která obsahovala klíčová slova begin a end.
+Pro interpretaci Repeat-until cyklu jsme použili jako šablonu už vytvořenou funkci pro parsování cyklu while ovšem s tou změnou, že jsme obrátili postup, tedy nejdřív musíme zpracovat tělo a poté až podmínku. Jelikož v zadání stojí, že Repeat-until nemusí obsahovat begin a end, načítáme tedy jen příkazy bez klíčových slov begin a end.
 \subsubsection{ElseIf}
 K zhotovení tohoto rozšíření stačilo pouze více rozvést funkci na zpracování podmínky IF a zahrnout do ní možnosti, které pokrývá toto rozšíření.
-\subsubsection{BoolOp}
-Jelikož se Boolovské operátory využívají ve výrazech, byla nutná změna především Shunting-yard algoritmu, do kterého jsme museli implementovat nové priority. Přesněji jsme museli přidat prvek s nejvyšší prioritou čímž je NOT, další priority jsou pak na stejné úrovni jako v původním Shunting-yard algoritmu.
+\subsubsection{Boolop}
+Jelikož se boolovské operátory využívají ve výrazech, byla nutná změna především Shunting-yard algoritmu, do kterého jsme museli implementovat nové priority. Přesněji jsme museli přidat prvek s nejvyšší prioritou čímž je NOT, další priority jsou pak na stejné úrovni jako v původním Shunting-yard algoritmu.
 \subsubsection{For}
-For umožňuje dvě možnosti interpretace a to inkrementální a dekrementační, což přináší jisté komplikace. Tělo cyklu bude v levém poduzlu typu \verb|AST_FOR|, v pravém poduzlu bude podmínka. Pokud bude, cyklus for v inkrementační verzi uloží se typ vrcholu jako \verb|AST_FOR_TO| v opačném případě se tam vloží typ \verb|AST_FOR_DOWNTO|.
+Cyklus for umožňuje dvě možnosti interpretace a to inkrementální a dekrementační, což přináší jisté komplikace. Tělo cyklu bude v levém poduzlu typu \verb|AST_FOR|, v pravém poduzlu bude podmínka. Pokud bude, cyklus for v inkrementační verzi uloží se typ vrcholu jako \verb|AST_FOR_TO| v opačném případě se tam vloží typ \verb|AST_FOR_DOWNTO|.
 
 \section{LL-tabulka} \label{lltabulka}
 Uvedená LL - tabulka je zpracována pouze pro zakladní zadaní bez rozšíření.
@@ -331,7 +346,7 @@ EXPR            -> vyraz
 \pagebreak
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Závěr} \label{zaver}
-Jelikož většina lidí z týmu projekt opakuje, snažili jsme se vše zhotovit s předstihem a s co nejvíce možnými rozšířeními. Ovšem opět nás zaskočila časová náročnost projektu a také hlavně jeho rozsáhlost. Občas jsme měli i problémy s rozdílností interpretovaných jazyků a museli jsme náš původní návrh, který vznikal ještě na samém začátku semestru a z poznatků z minulého roku, mnohokrát upravovat. Avšak díky velké sadě testovacích skriptů jsme byli schopni otestovat většinu možných situací a podchytit tak dost chyb.
+Jelikož většina lidí z týmu projekt opakuje, snažili jsme se vše zhotovit s předstihem a s co nejvíce možnými rozšířeními. Ovšem opět nás zaskočila časová náročnost projektu a také hlavně jeho rozsáhlost. Občas jsme měli i problémy s rozdílností interpretovaných jazyků a museli jsme náš původní návrh, který vznikal ještě na samém začátku semestru a z poznatků z minulého roku, mnohokrát upravovat. Avšak díky velké sadě testovacích skriptů jsme byli schopni otestovat většinu možných situací a podchytit tak dostatek chyb.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \appendix
