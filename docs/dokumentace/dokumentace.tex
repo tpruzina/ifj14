@@ -63,12 +63,14 @@ průchodu, následné kontroly sémantiky probíhají až za běhu.
 
 Jelikož je projekt založen na týmové spolupráci, rozhodli jsme se využít možnosti používat verzovacího systému, jmenovitě \verb|bitbucket|. Vzhledem k tomu, že práce byla rozdělena mezi jednotlivé členy a probíhaly kontroly v době schůzek, jevil se tento systém jako nejlepší, do jisté míry totiž umožňuje porovnávání verzí a tím se dá kontrolovat, zdali daný člen splnil svou část úkolu či nikoliv.
 
-Práce v týmu byla rozdělena následovně: \textbf{Martin Juřík} měl na starost zpracování lexikálního analyzátoru a jeho funkční otestování. Dále pak parser a tedy syntaktickou a sémantickou část projektu vytvářel \textbf{Antonín Marko}. Návrh a vytvoření interpretu dostal na starosti \textbf{Tomáš Pružina}. Celkové testování, zpracování LL gramatiky a dokumentaci měl na starosti \textbf{Martin Kubíček}. \textbf{Petr David} úprava knihovních funkcí a vestavěné funkce do předmětu \verb|Algoritmy|.
+Práce v týmu byla rozdělena následovně: \textbf{Martin Juřík} měl na starost zpracování lexikálního analyzátoru a jeho funkční otestování. Dále pak parser a tedy syntaktickou a sémantickou část projektu vytvářel \textbf{Antonín Marko}. Návrh a vytvoření interpretu obstarával \textbf{Tomáš Pružina}. Celkové testování, zpracování LL gramatiky a dokumentaci měl na starosti \textbf{Martin Kubíček}. Úprava knihovních funkcí a vestavěné funkce do předmětu \verb|Algoritmy| zpracoval \textbf{Petr David}.
 
-Za účelem testování a ověření plné funkčnosti projektu byla napsána sada testů, obsahující i vlastní testovací skript, čítající zhruba \textbf{8} odvětví s celkovým počtem \textbf{362} testů. Úkolem testování, bylo především schopnost odchytávat všechny možné chyby, které by mohly nastat a vracení správného chybového kódu. Ovšem ne vždy bylo určení správného chybového kódu jednoduché, jelikož jsme narazili na pár sporných momentů, které jsme se snažili vyřešit důkladnějším studiem dokumentace k projektu nebo společnou debatou v týmu. Dále jsme testy ověřovaly do jaké míry, jsme schopni správně interpretovat validní data.
+Za účelem testování a ověření plné funkčnosti projektu byla napsána sada testů, obsahující i vlastní testovací skript, čítající zhruba \textbf{8} odvětví s celkovým počtem \textbf{362} testů. Úkolem testování, bylo především schopnost odchytávat všechny možné chyby, které by mohly nastat a vracení správného chybového kódu. Ovšem ne vždy bylo určení správného chybového kódu jednoduché, jelikož jsme narazili na pár sporných momentů, které jsme se snažili vyřešit důkladnějším studiem dokumentace k projektu nebo společnou debatou v týmu. Dále jsme testy ověřovaly do jaké míry, jsme schopni správně interpretovat validní data. Také jsme využili poskytutých konzultací a hodně se dotazovali na fóru.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Moduly interpretu jazyka} \label{moduly_interpretu}
+
+V této sekci se představíme jednotlivé části projektu a detailně je popíšeme.
 %=============================================================================
 \subsection{Lexikální analyzátor} \label{lexikalni_analyzator}
 
@@ -82,7 +84,7 @@ Pro úspěšné rozlišení typu lexému se v naší implementaci používá kon
 automat, jehož struktura je znázorněna na obrázku (\ref{lex_ka}).
 
 Jestliže se konečný automat v době zpracovávání řetězce zdrojového souboru
-dokument do chybového stavu \verb|lexerrref|, řetězec je nepřijatý a jedná se
+přejde do chybového stavu \verb|err|, řetězec je nepřijatý a jedná se
 o lexikální chybu. Samotná implementace lexikálního analyzátoru patří k
 jednodušším částem projektu, avšak jeho návrh a testování zabralo nemálo času.
 
@@ -104,18 +106,16 @@ Jazyk IFJ14 je staticky typovaný jazyk, tedy typové kontroly probíhají běhe
 překladu, v našem případě právě při průchodu syntaktickým analyzátorem. Je tedy
 nutné zachytávat chybové vstupy a přímo ukončovat průchod a tím i celou aplikaci.
 
-Jako vnitřní kód programu jsme si zvolili AST, tedy binární strom a rozšířili jsme
+Jako vnitřní kód programu jsme si zvolili právě AST, tedy binární strom a rozšířili jsme
 jeho strukturu o potřebné položky pro práci interpretu. Jak již bylo zmíněno výše,
 jedná se o binární strom, má tedy dva synovské uzly. Avšak pro určité typy uzlů
-je mít nemusí. Například uzel pro operaci \verb|NOT| má pouze levý synovský podstrom.
+je mít nemusí naplněné. Například uzel pro operaci \verb|NOT| má pouze levý synovský podstrom.
 
 Pro převod příkazů obsahujících tělo na AST uzly byla v týmu domluvena konvence,
 že primárním uzlem pro tělo bude levý podstrom. Tedy například cyklus \verb|while|
 má svoje tělo uložené v levém podstromu. Zde je potřeba zmínit, že příkaz \verb|if|
 má v podstatě dvě sekvence příkazů a to pravdivou a nepravdivou. Je tedy potřeba
-zajistit, aby se obě uchovaly v jednom uzlu AST.
-
-Řešení je jednoduché a více než samozřejmé, uložení pravdivé sekce do levého
+zajistit, aby se obě uchovaly v jednom uzlu AST. Řešení je jednoduché a více než samozřejmé, uložení pravdivé sekce do levého
 poduzlu stromu a nepravdivou sekci do uzlu pravého. U příkazů s podmíněným
 chováním (if, while, repeat-until, atp.) bylo nutné uchovat podmínku, tedy výraz,
 který určuje, jestli je příkaz proveditelný či není. Primárně pro tento účel
@@ -341,9 +341,9 @@ Jelikož většina lidí z týmu projekt opakuje, snažili jsme se vše zhotovit
 \section{Metriky kódu} \label{metriky}
 Počet všech zdrojových souborů: 21
 
-celkový počet řádků: 
+celkový počet řádků: 6762
 
-Velikost spustitelného programu (bez debugovacích informací, Gento 64bit): bytů
+Velikost spustitelného programu (bez debugovacích informací, Gento 64bit): 69 kb
 
 Velikost spustitelného programu (bez debugovacích informací, Ubuntu 64bit): bytů
 
