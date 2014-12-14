@@ -17,7 +17,10 @@
 #include "gc.h"
 #include "structs.h"
 #include "log.h"
-
+/**
+ * Hlavni funkce pro vytvareni noveho uzlu AST
+ * ------------------------------------------------------------------
+ */
 struct astNode* makeNewAST(){
 	struct astNode* ast = (struct astNode*)gcMalloc(sizeof(struct astNode));
 	if(ast == NULL){
@@ -37,6 +40,13 @@ struct astNode* makeNewAST(){
 	return ast;
 }
 
+/**
+ * Pomocna funkce pro tist AST stromu.
+ * ------------------------------------------------------------------
+ * @param nd: odkaz na uzel AST
+ * @param lvl: uroven odsazeni
+ * @param str: odkaz na pole nazvu uzlu
+ */
 void prtAst(struct astNode* nd, int lvl, char** str){
 	if(nd->right != NULL)
 		prtAst(nd->right, lvl+1, str);
@@ -111,6 +121,11 @@ void prtAst(struct astNode* nd, int lvl, char** str){
 	if(nd->left != NULL)
 		prtAst(nd->left, lvl+1, str);
 }
+/**
+ * Volana funkce, obsahujici strukturu nazvu.
+ * ------------------------------------------------------------------
+ * @param ast: odkaz na strukturu stromu
+ */
 void printAst(struct astNode* ast){
 	if(!PRT) return;
 
