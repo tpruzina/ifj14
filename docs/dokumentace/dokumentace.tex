@@ -1,3 +1,7 @@
+%######################################## TODO #################################
+%############################# Tabulka priorit u SYA ###########################
+%################################# Metriky kodu ################################
+%################################# Celkova kontrola ############################
 \documentclass[12pt,a4paper,titlepage,final]{article}
 
 % cestina a fonty
@@ -59,9 +63,9 @@ průchodu, následné kontroly sémantiky probíhají až za běhu.
 
 Jelikož je projekt založen na týmové spolupráci, rozhodli jsme se využít možnosti používat verzovacího systému, jmenovitě \verb|bitbucket|. Vzhledem k tomu, že práce byla rozdělena mezi jednotlivé členy a probíhaly kontroly v době schůzek, jevil se tento systém jako nejlepší, do jisté míry totiž umožňuje porovnávání verzí a tím se dá kontrolovat, zdali daný člen splnil svou část úkolu či nikoliv.
 
-Práce v teamu byla rozdělena následovně: Interpret dostal na starosti \textbf{Tomáš Pružina}. Parser a tedy syntaktickou a sémantickou část projektu vytvářel \textbf{Antonín Marko}.\textbf{Martin Juřík}, měl na starost zpracování lexikálního analyzátoru a jeho funkční otestování. Celkové testování, zpracování LL gramatiky a dokumentaci měl na starosti \textbf{Martin Kubíček}. \textbf{Petr David} úprava knihovních funkcí a vestavěné funkce do předmětu \verb|Algoritmy|.
+Práce v týmu byla rozdělena následovně: \textbf{Martin Juřík} měl na starost zpracování lexikálního analyzátoru a jeho funkční otestování. Dále pak parser a tedy syntaktickou a sémantickou část projektu vytvářel \textbf{Antonín Marko}. Návrh a vytvoření interpretu dostal na starosti \textbf{Tomáš Pružina}. Celkové testování, zpracování LL gramatiky a dokumentaci měl na starosti \textbf{Martin Kubíček}. \textbf{Petr David} úprava knihovních funkcí a vestavěné funkce do předmětu \verb|Algoritmy|.
 
-Za účelem testování a ověření plné funkčnosti projektu byla napsána sada testů, obsahující i vlastní testovací skript, čítající zhruba \textbf{X} odvětví s celkovým počtem \textbf{XXX} testů. Úkolem testování, bylo především schopnost odchytávat všechny možné chyby, které by mohly nastat a vracení správného chybového kódu. Ovšem ne vždy bylo určení správného chybového kódu jednoduché, jelikož jsme narazili na pár sporných momentů, které jsme se snažili vyřešit důkladnějším studiem dokumentace k projektu nebo společnou debatou v týmu. Dále jsme testy ověřovaly do jaké míry, jsme schopni správně interpretovat validní data.
+Za účelem testování a ověření plné funkčnosti projektu byla napsána sada testů, obsahující i vlastní testovací skript, čítající zhruba \textbf{8} odvětví s celkovým počtem \textbf{362} testů. Úkolem testování, bylo především schopnost odchytávat všechny možné chyby, které by mohly nastat a vracení správného chybového kódu. Ovšem ne vždy bylo určení správného chybového kódu jednoduché, jelikož jsme narazili na pár sporných momentů, které jsme se snažili vyřešit důkladnějším studiem dokumentace k projektu nebo společnou debatou v týmu. Dále jsme testy ověřovaly do jaké míry, jsme schopni správně interpretovat validní data.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Moduly interpretu jazyka} \label{moduly_interpretu}
@@ -236,7 +240,20 @@ Umožňuje kopírovat hodnotu ze zadaného stringu, do nového. K vytvoření no
 \subsection{\texttt{Shunting-yard algoritmus}}
 Jak už bylo výše zmíněno algoritmus funguje na bázi priority, kde v našem případě jsou priority stanoveny takto(bráno od nejvyšší po nejnižší, je zda zahrnuto i rozšíření):[not], [Logický and, násobení, dělení], [sčítání, odčítání, or, xor], [porovnávací operátory] pokud se zde objeví něco jiného je nahlášena chyba. Konkrétně je algoritmus implementován jako funkce \verb|parseExpression| v \verb|parser.c|. Obsahuje jeden nekonečný cyklus, který se ukončí pouze v případě chyby či ukončení výrazu. Zpracování obsluhuje jeden obsáhlý switch, který se snaží pokrýt všechny možné situace, poté provede příslušené úkony dle toho jaká část výrazu právě zpracovává. Největší problémem zde bylo odchytáváním specifických chyb. Např.: \verb|(3(+8))|, která je řešena tak, že pokud načteme levou závorku, uschováme si ji a pokud za ní následuje operátor je vypsána příslušná chyba.
 
+\subsection{Rozšíření}
+\subsubsection{Array}
+Díky tomu, že je potřebné, vždy předdefinovat pole bude se nejdřív tato definice ukládat do stromu, kde se vytvoří uzel \verb|AST_ARR| a jeho synovské uzly budou prázdné (tedy budou sloužit k provázání stromu) a datová struktura bude obsahovat jméno dané proměnné. Do položky other se uloží \verb|dataTypeArray| struktura, ve které jsou uloženy informace o rozsahu pole. Strukturu potom zkopírujeme odkazem i do indexovacího uzlu, který má v levém synovském uzlu \verb|AST_ID| a v pravem \verb|AST_INT|, protože indexovat se může pouze celočíselným literálem.
+\subsubsection{Repeat}
+Pro interpretaci Repeatu jsme použili už vytvořenou funkci pro parsování While ovšem s tou změnou, že jsme obrátili parsováním, tedy nejdřív musíme zpracovat tělo a poté až podmínku. Jelikož v zadání stojí, že Repeat nemusí disponovat tělem, tedy nemusí obsahovat begin a end, museli jsme udělat další změnu a mohli jsme tedy vypustit podmínku, která obsahovala klíčová slova begin a end.
+\subsubsection{ElseIf}
+K zhotovení tohoto rozšíření stačilo pouze více rozvést funkci na zpracování podmínky IF a zahrnout do ní možnosti, které pokrývá toto rozšíření.
+\subsubsection{BoolOp}
+Jelikož se Boolovské operátory využívají ve výrazech, byla nutná změna především Shunting-yard algoritmu, do kterého jsme museli implementovat nové priority. Přesněji jsme museli přidat prvek s nejvyšší prioritou čímž je NOT, další priority jsou pak na stejné úrovni jako v původním Shunting-yard algoritmu.
+\subsubsection{For}
+For umožňuje dvě možnosti interpretace a to inkrementální a dekrementační, což přináší jisté komplikace. Tělo cyklu bude v levém poduzlu typu \verb|AST_FOR|, v pravém poduzlu bude podmínka. Pokud bude, cyklus for v inkrementační verzi uloží se typ vrcholu jako \verb|AST_FOR_TO| v opačném případě se tam vloží typ \verb|AST_FOR_DOWNTO|.
+
 \section{LL-tabulka} \label{lltabulka}
+Uvedená LL - tabulka je zpracována pouze pro zakladní zadaní bez rozšíření.
 \begin{verbatim}
 PROGRAM         -> VARS FUNC begin CMD_LIST enddot
 
@@ -316,18 +333,19 @@ EXPR            -> vyraz
 \pagebreak
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Závěr} \label{zaver}
+Jelikož většina lidí z týmu projekt opakuje, snažili jsme se vše zhotovit s předstihem a s co nejvíce možnými rozšířeními. Ovšem opět nás zaskočila časová náročnost projektu a také hlavně jeho rozsáhlost. Občas jsme měli i problémy s rozdílností interpretovaných jazyků a museli jsme náš původní návrh, který vznikal ještě na samém začátku semestru a z poznatků z minulého roku, mnohokrát upravovat. Avšak díky velké sadě testovacích skriptů jsme byli schopni otestovat většinu možných situací a podchytit tak dost chyb.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \appendix
 
 \section{Metriky kódu} \label{metriky}
-Počet všech zdrojových souborů: 
+Počet všech zdrojových souborů: 21
 
 celkový počet řádků: 
 
-Velikost spustitelného programu (bez debugovacích informací, Linux 64bit): bytů
+Velikost spustitelného programu (bez debugovacích informací, Gento 64bit): bytů
 
-Velikost spustitelného programu (bez debugovacích informací, Windows 64bit): bytů
+Velikost spustitelného programu (bez debugovacích informací, Ubuntu 64bit): bytů
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
