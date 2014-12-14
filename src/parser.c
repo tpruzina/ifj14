@@ -545,17 +545,21 @@ int valid(struct astNode* left, struct astNode* right, int op){
 	exit(sem_komp);
 }
 
-struct astNode* makeNodeFromToken(struct toc* toc){
+struct astNode* makeNodeFromToken(struct toc** toc){
 	struct astNode* node = makeNewAST();
 
 	struct symbolTableNode* var;
 
-	switch(toc->type){
+	switch((*toc)->type){
 		case T_ID:
-			var = searchOnTop(toc->data.str);
+			var = searchOnTop((*toc)->data.str);
 			node->type = AST_ID;
 			node->dataType = var->dataType;
 			copyString(var->name, &(node->data.str));
+
+			if(node->dataType == DT_ARR){
+				node->other = var->other;
+			}
 
 			return node;
 		case T_EQV:
@@ -2633,9 +2637,7 @@ struct astNode* copyStatement(struct toc** cur){
 struct astNode* assignStatement(struct toc** cur){
 	// levy uzel je T_ID -- z parse command
 	// pravy uzel je expression
-	struct astNode* left = makeNewAST();				
-	left->type = AST_ID;
-	copyString((*cur)->data.str, &(left->data.str));
+	struct astNode* left = makeNodeFromToken(cur);	
 		
 	// skopirovani informaci z tabulky symbolu
 	struct symbolTableNode* nd = searchOnTop(left->data.str);				
@@ -2647,6 +2649,15 @@ struct astNode* assignStatement(struct toc** cur){
 		datatypes(left->dataType, right->dataType);
 		E("cmd: Semantic error - L-value has not same value as R-value");
 		exit(sem_komp);
+	}
+	if(left->dataType == DT_ARR){
+		struct dataTypeArray* dtaL = (struct dataTypeArray*)left->other;
+		struct dataTypeArray* dtaR = (struct dataTypeArray*)right->other;
+
+		if(dtaL->type != dtaR->type){
+			E("Semantic error - expected same data types in array copy");
+			exit(sem_komp);
+		}
 	}
 								
 	// vytvorit uzel prirazeni a vratit jej
@@ -2692,7 +2703,7 @@ struct astNode* arrayIndex(struct toc** cur, struct String* name){
 	if((*cur)->type == T_ID){
 		// index byla promenna - ziskat typ
 		// a nastavit odkaz do other
-		node->right = makeNodeFromToken(*cur);
+		node->right = makeNodeFromToken(cur);
 		if(node->right->dataType != DT_INT){
 			E("Semantic error - index must be integer");
 			exit(sem_else);
@@ -2978,7 +2989,7 @@ struct astNode* parseExpression(struct toc** cur){
 
 				// v pripade ze dalsi token nebyla zavorka
 				// z ID udelat promennou
-				node = makeNodeFromToken(*cur);
+				node = makeNodeFromToken(cur);
 				stackPush(aststack, node);
 				// jelikoz mame nacteny dalsi token
 				readNew = false;

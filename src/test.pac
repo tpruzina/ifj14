@@ -1,11 +1,11 @@
 var
-   x: string;
-   len: integer;
+   x: array[0..1] of integer;
+   y: array[0..1] of integer;
+   
 begin
-	x := '';
-	repeat
-		x := x + 'x';
-		len := length(x)
-	until true;
-	write(x)
+	x[0] := 0;
+	x[1] := 1;
+	
+	y := x;
+	write(y[0], y[1])
 end.
