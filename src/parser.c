@@ -630,7 +630,7 @@ void makeAstFromToken(struct toc* token, struct stack** aststack){
 	struct astNode* node = makeNewAST();
 	// vytazeny operator
 	int prio = getPriority(token);
-	if(prio > 0 && prio < 10){
+	if(prio >= 1 && prio <= 3){
 		// operatory bez NOT
 		node->type = convertTokenToNode(token);
 		if((int)node->type == -1){
@@ -666,9 +666,10 @@ void makeAstFromToken(struct toc* token, struct stack** aststack){
 				exit(sem_komp);
 		}
 	}
-	else if(prio == 0){
+	else if(prio == 4){
 		// not
 		node->type = AST_NOT;
+		node->dataType = DT_BOOL;
 		node->left = (struct astNode*)stackPop(*aststack);
 		if(!node->left){
 			E("maft: Semantic error - stack is empty, no operand for NOT");

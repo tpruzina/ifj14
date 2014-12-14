@@ -1,12 +1,29 @@
 var
-	s1: string;
-	s2: string;
-	sres: string;
-	
-begin
-	s1 := 'Ahoj ';
-	s2 := 'svete';
+	x: array[0..10] of string;
+	id: integer;
+	b: boolean;
 
-	sres := s1 + s2;
-	write(sres)	
+begin
+	b := true;
+
+	for id := 0 to 10 do
+	begin
+		if b then
+		begin
+			x[id] := '^'
+		end
+		else
+		begin
+			x[id] := 'v'
+		end;
+		{ schvalne jestli tohle projde }
+		b := NOT b		
+	end;
+
+	id := 0;
+	while id <= 10 do
+	begin
+		write(x[id]);
+		id := id + 1		
+	end
 end.
