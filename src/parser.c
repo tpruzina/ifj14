@@ -196,7 +196,7 @@ void printTokenType(struct toc* token){
 
 int expect(struct toc* cur, int type, int exitcode){
 	if((int)cur->type != type){
-		char str[50];
+		char str[100];
 		char toctype[50];
 		char exptype[50];
 		
