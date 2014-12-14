@@ -564,11 +564,16 @@ struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTab
 			else
 				insertDataReal(&tmp, (left->data.real_data + right->data.real_data));
 		}
-		else //if(type == DT_STR)
+		else if(type == DT_STR)
 		{
-			// konkatenace
-			exit(intern);
+			struct String *tmp_str = makeNewString();
+			copyString(left->data.str_data,&tmp_str);
+			for(int i=0; i < (strlen(right->data.str_data->Value)); i++)
+				addChar(tmp_str, right->data.str_data->Value[i]);
+			insertDataString(&tmp,tmp_str);
 		}
+		else
+			exit(intern);
 		break;
 
 	case AST_SUB:

@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 #include "gc.h"
 #include "structs.h"
 #include "log.h"
