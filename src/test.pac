@@ -3,7 +3,7 @@ var
 begin
 	x := true;
 
-	x := NOT x;
+	x := NOT NOT NOT NOT x;
 
 	write(x)
 end.

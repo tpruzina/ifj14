@@ -3096,6 +3096,14 @@ struct astNode* parseExpression(struct toc** cur){
 						// vytvori ASTnode z tokenu
 						makeAstFromToken(top, &aststack);
 					}
+					else {
+						if(top->type == T_NOT){
+							// odstranit z vrcholu
+							top = (struct toc*)stackPop(stack);
+							// vytvori ASTnode z tokenu
+							makeAstFromToken(top, &aststack);
+						}
+					}
 					
 					// na promennou za vrchol ulozi top prvek
 					top = (struct toc*)stackTop(stack);		
