@@ -754,6 +754,13 @@ void writeNode(struct astNode *p)
 		printf("%g",p->data.real);
 	else if(AST_INT == p->type)
 		printf("%d",p->data.integer);
+	else if(AST_BOOL)
+	{
+		if(p->data.boolean)
+			printf("TRUE");
+		else
+			printf("FALSE");
+	}
 	else
 		ASSERT(false);
 }
