@@ -1,10 +1,11 @@
 var
-	x: boolean;
-	y: boolean;
+	bol : boolean;
 	
+function prt(): boolean;
 begin
-	x := true;
-	y := NOT NOT NOT x;
+	bol := true
+end;
 
-	write(x, y)
-end.
+begin
+	bol := prt()
+end. 
