@@ -447,28 +447,20 @@ bool compare(struct symbolTableNode *left,struct symbolTableNode *right,int op)
 	}
 	else if(left->dataType == DT_REAL)
 	{
-		// vychcane porovnavanie voci nule, teoreticky obchadza problem floatu ktory je jeho
-		// sirka
-
-		double difference = left->data.real_data - right->data.real_data;
-		if(difference < (double)0)
-			difference = -difference;
-		bool equal = ((float)difference < (double)1e-14 ) ? true : false;
-
 		switch(op)
 		{
 		case AST_GRT:
 			return (left->data.real_data > right->data.real_data) ? true : false;
 		case AST_GEQV:
-			return (left->data.real_data >= right->data.real_data || equal) ? true : false;
+			return (left->data.real_data >= right->data.real_data) ? true : false;
 		case AST_LSS:
 			return (left->data.real_data < right->data.real_data) ? true : false;
 		case AST_LEQV:
-			return (left->data.real_data <= right->data.real_data || equal) ? true : false;
+			return (left->data.real_data <= right->data.real_data) ? true : false;
 		case AST_EQV:
-			return (equal) ? true : false;
+			return (left->data.real_data == right->data.real_data) ? true : false;
 		case AST_NEQV:
-			return (!equal) ? true : false;
+			return (left->data.real_data != right->data.real_data) ? true : false;
 		default:
 			exit(intern);
 		}
