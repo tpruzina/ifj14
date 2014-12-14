@@ -279,6 +279,7 @@ struct dataTypeArray {
 	int high;
 	int type;
 	struct String* id;
+	struct symbolTableNode **data;
 };
 
 // struktura potrebna na reverzny string z token typu

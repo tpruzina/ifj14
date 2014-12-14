@@ -70,6 +70,44 @@ void for_to_downto(struct astNode *curr)
 	*iterator = boundary;
 }
 
+void initArray(struct symbolTableNode *arr)
+{
+	// DT_INT, DT_REAL, DT_BOOL, DT_STR, DT_ARR
+	struct dataTypeArray *tmp_arr = arr->other;
+
+	size_t size = (tmp_arr->high - tmp_arr->low + 1);
+
+	struct symbolTableNode template = {0};
+	template.dataType = tmp_arr->type;
+	template.init = true;
+
+	tmp_arr->data = gcMalloc(size * sizeof(struct symbolTableNode *));
+	if(!tmp_arr->data)
+		exit(intern);
+
+	for(unsigned i=0; i < size; i++)
+	{
+		tmp_arr->data[i] = makeNewSymbolTable();
+		memcpy(tmp_arr->data[i], &template, sizeof(template));
+	}
+
+	arr->init = true;
+}
+
+struct symbolTableNode *getArrayIndex(struct symbolTableNode *tmp, int index)
+{
+	if(!tmp)
+		exit(intern);
+	struct dataTypeArray *dta = tmp->other;
+
+	if(index < dta->low || index > dta->high)
+		exit(intern);
+
+	int real_index = abs(dta->low - index);
+
+	return dta->data[real_index];
+}
+
 void *runTree(struct astNode *curr)
 {
 	if(!curr)
@@ -104,10 +142,7 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_ASGN:	// <command>: <assign>
-		ASSERT(curr->left &&
-				curr->left->type == AST_ID &&
-				curr->right
-		);
+		ASSERT(curr->left && curr->right);
 
 		left = runTree(curr->left);	// x :=
 		right = runTree(curr->right);			//ocekavame symtabnode (tmp premenna...)
@@ -359,9 +394,30 @@ void *runTree(struct astNode *curr)
 		return tmp;
 
 	case AST_ARR:
-		// AST_ARR má v položce other uloženou strukturu dataTypeArray,
-		// která obsahuje hlavní informace o poli - meze, datový typ a jméno pole.
-		tmp = makeNewSymbolTable();
+/*
+ * Pokazde je pouzit uzel AST_ARR, u definice jsou synovske uzly prazdne (NULL) a data.str
+ * obsahuje jmeno promenne. V polozce other se nachazi dataTypeArray struktura,
+ * ve ktere jsou informace o rozsahu pole, atd.
+ *
+ * Tato struktura se kopiruje odkazem i do indexovaciho uzlu.
+ * Ten ma v levem synovskem uzlu AST_ID a v pravem AST_INT (nebo AST_ID ale s datovym typem INT),
+ * protoze indexovat se muze pouze celociselnym literalem.
+ *
+ * Datovy typ dataType je v tabulce symbolu DT_ARR, ale v astNode je urcen datovym typem obsahu,
+ * takze pokud je obsah typu int, AST_ARR ma datovy typ DT_INT.
+ */
+		tmp = searchST(&top,curr->left->data.str);
+
+		if(!tmp->init)
+			initArray(tmp);
+
+		//index [ID,INT]
+		right = runTree(curr->right);
+		if(right->dataType != DT_INT)
+			exit(intern);
+
+		return getArrayIndex(tmp, right->data.int_data);
+
 		break;
 
 	case AST_WRITE:
@@ -568,7 +624,7 @@ struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTab
 		{
 			struct String *tmp_str = makeNewString();
 			copyString(left->data.str_data,&tmp_str);
-			for(int i=0; i < (strlen(right->data.str_data->Value)); i++)
+			for(unsigned i=0; i < (strlen(right->data.str_data->Value)); i++)
 				addChar(tmp_str, right->data.str_data->Value[i]);
 			insertDataString(&tmp,tmp_str);
 		}
@@ -650,10 +706,13 @@ void writeNode(struct astNode *p)
 
 	// ak dostaneme ID tak odpalime search a vratime lokalnu verziu premennej
 	// kedze nedostavame symtab ale ast tak robime cely tento shit .... fuck
-	if(AST_ID == p->type)
+	if(AST_ID == p->type || p->type == AST_ARR)
 	{
-		struct symbolTableNode *top = stackTop(global.symTable);
-		id = searchST(&top,p->data.str);
+//		struct symbolTableNode *top = stackTop(global.symTable);
+//		id = searchST(&top,p->data.str);
+
+		id = runTree(p);
+
 		// nedefinovana premenna???
 		if(!id || !id->init)
 			exit(run_ninit);

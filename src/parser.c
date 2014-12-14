@@ -947,6 +947,7 @@ struct astNode* getArrayDef(struct toc** cur, struct String* name){
 	if(!dta)
 		return NULL;
 	dta->id = name;
+	dta->data = NULL;
 	// ulozi se jmeno
 	node->data.str = name;
 
