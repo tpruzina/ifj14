@@ -240,9 +240,9 @@ void *runTree(struct astNode *curr)
 		else if(curr->right)	// vyhodnocena false a mame v branchi else
 			runTree(curr->right);
 
-		ASSERT(tmp->name && tmp->name->Length == 0);
-//		if(tmp->name && tmp->name->Length == 0)
-		deleteTable(&tmp);
+
+		if(tmp->name && tmp->name->Length == 0)
+			deleteTable(&tmp);
 
 		break;
 
