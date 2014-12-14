@@ -185,6 +185,8 @@ void *runTree(struct astNode *curr)
 				deleteTable(&tmp);
 			runTree(curr->left);	// ak true, tak bezime telo
 		}
+		if(tmp)
+			deleteTable(&tmp);
 		break;
 
 	case AST_REPEAT:
@@ -205,11 +207,6 @@ void *runTree(struct astNode *curr)
 
 		return NULL;
 
-	case AST_FOR_DOWNTO:
-	case AST_SWITCH:
-		exit(intern);	// todo
-		break;
-
 // porovnavanie =,!=,<,<=,>,>=
 	case AST_EQV:
 	case AST_NEQV:
@@ -222,7 +219,7 @@ void *runTree(struct astNode *curr)
 		// ziskame levu & pravu stranu porovnania
 		left = runTree(curr->left);
 		right = runTree(curr->right);
-
+	
 		if(!left->init || !right->init)
 			exit(run_ninit);
 
@@ -233,6 +230,11 @@ void *runTree(struct astNode *curr)
 				&tmp,
 				compare(left,right,curr->type)	//porovnavame a (op) b
 		);
+
+		if(right->name && right->name->Length == 0)
+			deleteTable(&right);
+		if(left->name && left->name->Length == 0)
+			deleteTable(&left);
 		return tmp;
 
 // aritmeticke operace +,-,/,*
@@ -250,7 +252,15 @@ void *runTree(struct astNode *curr)
 
 		// spravime aritmeticku operaciu
 		// vraci tmp premennu v symtab node
-		return arithmetic(left,right,curr->type);
+		tmp = arithmetic(left,right,curr->type);
+
+		if(right->name && right->name->Length == 0)
+			deleteTable(&right);
+		if(left->name && left->name->Length == 0)
+			deleteTable(&left);
+
+		return tmp;
+
 
 // logicke operace
 	// tieto su binarne
@@ -273,6 +283,12 @@ void *runTree(struct astNode *curr)
 				(curr->type == AST_OR)	? (left->data.bool_data || right->data.bool_data):
 				(curr->type == AST_XOR) ? (left->data.bool_data ^ right->data.bool_data): false
 		);
+		
+		if(right->name && right->name->Length == 0)
+			deleteTable(&right);
+		if(left->name && left->name->Length == 0)
+			deleteTable(&left);
+
 		return tmp;
 
 	// not je unarna operacia
@@ -287,6 +303,10 @@ void *runTree(struct astNode *curr)
 		tmp = makeNewSymbolTable();
 		ASSERT(tmp);
 		insertDataBoolean(&tmp,	!(left->data.bool_data));
+		
+		if(left->name && left->name->Length == 0)
+			deleteTable(&left);
+	
 		return tmp;
 
 // unarne operacie, vracaju 'tokeny' ast (premenne, int, bool,real...)
@@ -345,9 +365,12 @@ void *runTree(struct astNode *curr)
 		right = runTree(curr->right);
 		if(right->dataType != DT_INT)
 			exit(intern);
+		
+		tmp = getArrayIndex(tmp, right->data.int_data);
+		if(right->name && right->name->Length == 0)
+			deleteTable(&right);
 
-		return getArrayIndex(tmp, right->data.int_data);
-
+		return tmp;
 		break;
 
 	case AST_WRITE:
