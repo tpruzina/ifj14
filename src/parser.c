@@ -1942,7 +1942,7 @@ struct astNode* getCaseElement(struct toc** cur, int dt){
 			}
 			nd->right->type = AST_STR;
 			nd->right->dataType = dt;			
-			copyString(nd->right->data.str, &((*cur)->data.str));
+			copyString((*cur)->data.str, &(nd->right->data.str));
 			break;
 		case T_KW_ELSE:
 			nd->right->type = AST_NONE;
@@ -2103,7 +2103,7 @@ struct astNode* writeStatement(struct toc** cur){
 				// novy uzel
 				nd->type = AST_STR;
 				nd->dataType = DT_STR;
-				copyString(nd->data.str, &((*cur)->data.str));
+				copyString((*cur)->data.str, &(nd->data.str));
 				
 				break;
 			case T_BOOL: 						
@@ -2546,6 +2546,9 @@ struct astNode* copyStatement(struct toc** cur){
 	if(readNew)
 		*cur = getToc();
 	expect((*cur), T_COM, synt);
+
+	// dycky nutno nastavit
+	readNew = true;
 	
 	// ocekavat 2x int
 	for(int i = 0; i < 2; i++){
@@ -2559,7 +2562,6 @@ struct astNode* copyStatement(struct toc** cur){
 					E("Semantic error - expected integer");
 					exit(sem_komp);
 				}
-				readNew = false;
 			}
 			else {
 				struct symbolTableNode* var = searchOnTop((*cur)->data.str);
@@ -2575,6 +2577,9 @@ struct astNode* copyStatement(struct toc** cur){
 				nid->dataType = var->dataType;			
 				// kopie jmena
 				copyString((*cur)->data.str, &(nid->data.str));
+
+				readNew = false;
+				*cur = next;
 			}
 			// push prvniho parametru
 			queuePush(vp->pars, nid);		
@@ -3013,7 +3018,7 @@ struct astNode* parseExpression(struct toc** cur){
 				else if((*cur)->type == T_STR){
 					node->type = AST_STR;						
 					node->dataType = DT_STR;
-					copyString(node->data.str, &((*cur)->data.str));
+					copyString((*cur)->data.str, &(node->data.str));
 					D("expr: making STR");
 				}
 				else if((*cur)->type == T_KW_TRUE){
