@@ -1,4 +1,4 @@
-CFLAGS=-std=c99 -g -O3 -mtune=native -march=core2 -Wall -pedantic -Wextra -Wno-switch
+CFLAGS=-std=c99 -g -Wall -pedantic -Wextra -Wno-switch
 SOURCES=ial.c gc.c log.c string.c stack.c ast.c scanner.c parser.c
 
 ALL: all
