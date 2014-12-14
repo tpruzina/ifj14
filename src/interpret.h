@@ -52,5 +52,11 @@ struct symbolTableNode *pushVarsParsIntoTable(
 		struct queue *function_params,
 		struct queue *function_vars
 );
+// pomocna funkcia pre for cykly
+void for_to_downto(struct astNode *curr);
+//pomocna funkcia pre inicializaciu pola
+void initArray(struct symbolTableNode *arr);
+// pomocna funkcia pre ziskanie prvku pola indexovaneho indexom
+struct symbolTableNode *getArrayIndex(struct symbolTableNode *tmp, int index);
 
 #endif

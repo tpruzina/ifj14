@@ -14,6 +14,7 @@
 
 #include "interpret.h"
 
+// hlavna funkcia interpretu - rekurzivne spusti program startujuci na AST_START
 void interpret()
 {
 	ASSERT(global.program);
@@ -33,89 +34,8 @@ void interpret()
 		exit(intern);
 }
 
-void for_to_downto(struct astNode *curr)
-{
-	struct astNode *body = curr->left;
-	struct astNode *cond = curr->right;
-
-	struct astNode *asgn = cond->left;
-	struct symbolTableNode *id = runTree(asgn->left);
-
-	struct symbolTableNode *value = runTree(asgn->right);
-	struct symbolTableNode *literal = runTree(cond->right);
-
-	if((cond->type == AST_FOR_DOWNTO && value->data.int_data < literal->data.int_data) ||
-			(cond->type == AST_FOR_TO && value->data.int_data > literal->data.int_data))
-	{
-		insertDataInteger(&id, 0);
-		return;
-	}
-	else
-		insertDataInteger(&id,value->data.int_data);
-
-	int boundary = literal->data.int_data;
-	int *iterator = &(id->data.int_data);
-
-	if(cond->type == AST_FOR_TO)
-	{
-		while(*iterator <= boundary)
-		{
-			runTree(body);
-			(*iterator)++;
-		}
-	}
-	else if(cond->type == AST_FOR_DOWNTO)
-	{
-		while(*iterator >= boundary)
-		{
-			runTree(body);
-			(*iterator)--;
-		}
-	}
-	else
-		exit(intern);
-	*iterator = boundary;
-}
-
-void initArray(struct symbolTableNode *arr)
-{
-	// DT_INT, DT_REAL, DT_BOOL, DT_STR, DT_ARR
-	struct dataTypeArray *tmp_arr = arr->other;
-
-	size_t size = (tmp_arr->high - tmp_arr->low + 1);
-
-	struct symbolTableNode template;
-	memset(&template,0,sizeof(struct symbolTableNode));
-	template.dataType = tmp_arr->type;
-	template.init = true;
-
-	tmp_arr->data = gcMalloc(size * sizeof(struct symbolTableNode *));
-	if(!tmp_arr->data)
-		exit(intern);
-
-	for(unsigned i=0; i < size; i++)
-	{
-		tmp_arr->data[i] = makeNewSymbolTable();
-		memcpy(tmp_arr->data[i], &template, sizeof(template));
-	}
-
-	arr->init = true;
-}
-
-struct symbolTableNode *getArrayIndex(struct symbolTableNode *tmp, int index)
-{
-	if(!tmp)
-		exit(intern);
-	struct dataTypeArray *dta = tmp->other;
-
-	if(index < dta->low || index > dta->high)
-		exit(intern);
-
-	int real_index = abs(dta->low - index);
-
-	return dta->data[real_index];
-}
-
+// funkcia na rekurzivny prechod jednotlivymi elementami AST
+// vracia typicky (vzdy?) symtabNode* s vysledkom operacie alebo NULL
 void *runTree(struct astNode *curr)
 {
 	if(!curr)
@@ -128,9 +48,7 @@ void *runTree(struct astNode *curr)
 	struct varspars *tmp_vp = NULL;
 	struct astNode	*tmp_asp = NULL;
 
-//	struct symbolTableNode* top = stackTop(global.symTable);
 	struct symbolTableNode* top = global.symTable->Top->Value;
-//#define TOP (global.symTable->Top->Value
 
 	switch(curr->type)
 	{
@@ -227,6 +145,9 @@ void *runTree(struct astNode *curr)
 
 		// zavolame funkciu (body)
 		tmp = runTree(tmp->other);
+
+		if(!tmp->init)
+			exit(run_ninit);
 
 		// navratime povodnu tabulku symbolov
 		stackPop(global.symTable);
@@ -441,12 +362,9 @@ void *runTree(struct astNode *curr)
 	case AST_READLN:	// readln(a);
 		ASSERT(curr->right && curr->right->type == AST_NONE);
 
-		// ignorovat hate nizsie, vznikol po 3 hodinach debugovania @4AM
-		tmp_vp = curr->right->other;			// vyrvem si varspars
-		tmp_asp = tmp_vp->pars->start->value;	// vyrvem z toho ast node
-		// a z vyjebaneho ast_node->other vyjebem dojebany string ktory este vyhladam v tabulke
+		tmp_vp = curr->right->other;
+		tmp_asp = tmp_vp->pars->start->value;
 		tmp = searchST(&top, tmp_asp->data.str);
-		// a po tomto celom bullshite este zavolam funkciu ktora zapise do premennej
 		readNode(tmp);
 		break;
 
@@ -695,10 +613,7 @@ struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTab
 	return tmp;
 }
 
-/*
- * Pomocna funkcia AST_WRITE, dostane symtab node a vypise ho
- */
-
+// Pomocna funkcia AST_WRITE, dostane symtab node a vypise ho
 void writeNode(struct astNode *p)
 {
 	ASSERT(p);
@@ -709,9 +624,6 @@ void writeNode(struct astNode *p)
 	// kedze nedostavame symtab ale ast tak robime cely tento shit .... fuck
 	if(AST_ID == p->type || p->type == AST_ARR)
 	{
-//		struct symbolTableNode *top = stackTop(global.symTable);
-//		id = searchST(&top,p->data.str);
-
 		id = runTree(p);
 
 		// nedefinovana premenna???
@@ -765,8 +677,7 @@ void writeNode(struct astNode *p)
 		ASSERT(false);
 }
 
-// citame zo vstupu (cosi) a potom to ulozime do
-// TODO: kontroly korektnosti vstupu
+// readln: citame zo vstupu a potom to ulozime do nodu tabulky symbolov
 void readNode(struct symbolTableNode *p)
 {
 	struct String *tmp = makeNewString();
@@ -850,7 +761,7 @@ void readNode(struct symbolTableNode *p)
 		ASSERT(false);
 }
 
-// konvertuje astNode na sTN (typicke pouzitie v stringovych literaloch a AST_ID)
+// konvertuje astNode na STN (typicke pouzitie v stringovych literaloch a AST_ID)
 struct symbolTableNode convertAST2STN(struct astNode *ast)
 {
 	struct symbolTableNode tmp = {0};
@@ -972,6 +883,7 @@ struct symbolTableNode *pushVarsParsIntoTable(
 	return table;
 }
 
+// pomocna funkcia builtin funkcie Copy
 struct symbolTableNode *btnCopy(struct queue *pars)
 {
 	struct symbolTableNode *res = makeNewSymbolTable();
@@ -1030,3 +942,87 @@ struct symbolTableNode *btnLength(struct queue *pars)
 	insertDataInteger(&res,length(p0node.data.str_data));
 	return res;
 }
+
+void for_to_downto(struct astNode *curr)
+{
+	struct astNode *body = curr->left;
+	struct astNode *cond = curr->right;
+
+	struct astNode *asgn = cond->left;
+	struct symbolTableNode *id = runTree(asgn->left);
+
+	struct symbolTableNode *value = runTree(asgn->right);
+	struct symbolTableNode *literal = runTree(cond->right);
+
+	if((cond->type == AST_FOR_DOWNTO && value->data.int_data < literal->data.int_data) ||
+			(cond->type == AST_FOR_TO && value->data.int_data > literal->data.int_data))
+	{
+		insertDataInteger(&id, 0);
+		return;
+	}
+	else
+		insertDataInteger(&id,value->data.int_data);
+
+	int boundary = literal->data.int_data;
+	int *iterator = &(id->data.int_data);
+
+	if(cond->type == AST_FOR_TO)
+	{
+		while(*iterator <= boundary)
+		{
+			runTree(body);
+			(*iterator)++;
+		}
+	}
+	else if(cond->type == AST_FOR_DOWNTO)
+	{
+		while(*iterator >= boundary)
+		{
+			runTree(body);
+			(*iterator)--;
+		}
+	}
+	else
+		exit(intern);
+	*iterator = boundary;
+}
+
+void initArray(struct symbolTableNode *arr)
+{
+	// DT_INT, DT_REAL, DT_BOOL, DT_STR, DT_ARR
+	struct dataTypeArray *tmp_arr = arr->other;
+
+	size_t size = (tmp_arr->high - tmp_arr->low + 1);
+
+	struct symbolTableNode template;
+	memset(&template,0,sizeof(struct symbolTableNode));
+	template.dataType = tmp_arr->type;
+	template.init = true;
+
+	tmp_arr->data = gcMalloc(size * sizeof(struct symbolTableNode *));
+	if(!tmp_arr->data)
+		exit(intern);
+
+	for(unsigned i=0; i < size; i++)
+	{
+		tmp_arr->data[i] = makeNewSymbolTable();
+		memcpy(tmp_arr->data[i], &template, sizeof(template));
+	}
+
+	arr->init = true;
+}
+
+struct symbolTableNode *getArrayIndex(struct symbolTableNode *tmp, int index)
+{
+	if(!tmp)
+		exit(intern);
+	struct dataTypeArray *dta = tmp->other;
+
+	if(index < dta->low || index > dta->high)
+		exit(intern);
+
+	int real_index = abs(dta->low - index);
+
+	return dta->data[real_index];
+}
+
