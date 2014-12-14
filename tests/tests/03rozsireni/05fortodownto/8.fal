@@ -1,0 +1,16 @@
+var
+	x : integer;
+	y : integer;
+
+begin
+	for x := 0 to 10 do begin
+		for y := 10 downto x do begin
+			write('x')
+		end;
+		
+		for y := 10 - x to 10 do begin
+			write('o')
+		end;
+		write(''#10'')
+	end
+end.
