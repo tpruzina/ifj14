@@ -41,12 +41,12 @@ void for_to_downto(struct astNode *curr)
 	struct astNode *asgn = cond->left;
 	struct symbolTableNode *id = runTree(asgn->left);
 
-	struct symbolTableNode value = convertAST2STN(asgn->right);
-	struct symbolTableNode literal = convertAST2STN(cond->right);
+	struct symbolTableNode *value = runTree(asgn->right);
+	struct symbolTableNode *literal = runTree(cond->right);
 
-	insertDataInteger(&id,value.data.int_data);
+	insertDataInteger(&id,value->data.int_data);
 
-	int boundary = literal.data.int_data;
+	int boundary = literal->data.int_data;
 	int *iterator = &(id->data.int_data);
 
 	if(cond->type == AST_FOR_TO)
