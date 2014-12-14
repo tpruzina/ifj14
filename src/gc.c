@@ -111,36 +111,6 @@ int gcFree(void* ptr){
 	return False;
 }
 
-void gcPrintState(){
-	printf("Garbage collector state:\n");
-	printf("\tReserved: %d\n", global.gc->listLength);
-
-	struct gcItem* item = global.gc->list;
-	/*
-	int i = 0;
-	while(item != NULL){
-		printf("\t%d,\t%p\n", i++, item->ptr);
-		item = item->next;		
-	}
-	printf("end\n");
-	*/
-	int id = 0;
-	while(item != NULL){
-		fprintf(stderr, "%p", item->ptr);
-		id++;
-		
-		if(id < 5){
-			fprintf(stderr, "\t");		
-		}
-		else if(id == 5){
-			fprintf(stderr, "\n");
-			id = 0;
-		}
-		item = item->next;
-	}
-	fprintf(stderr, "\n");
-}
-
 void gcFreeAll(){
 	struct gcItem* item = global.gc->list;
 
