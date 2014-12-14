@@ -671,7 +671,7 @@ struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTab
 				exit(run_div);
 
 			if(left->dataType == DT_INT) // (int / int)
-				insertDataReal(&tmp, ((double)left->data.int_data / (double) right->data.real_data));
+				insertDataReal(&tmp, ((double)left->data.int_data / (double) right->data.int_data));
 			else	// (real/int)
 				insertDataReal(&tmp, (left->data.real_data / (double)right->data.int_data));
 		}
