@@ -381,6 +381,21 @@ int valid(struct astNode* left, struct astNode* right, int op){
 			left->dataType = id->dataType;
 		}
 	}
+	else if(left->type == AST_ARR){
+		struct astNode* idnode = NULL;
+		if(left->left != NULL)
+			idnode = left->left;
+		else {
+			E("Internal error - wrong structure of nodes");
+			exit(intern);
+		}
+		struct symbolTableNode* arr = searchOnTop(idnode->data.str);
+		struct dataTypeArray* dta = (struct dataTypeArray*)arr->other;
+		
+		if(left->dataType != dta->type){
+			left->dataType = dta->type;
+		}		
+	}
 	else if(left->type == AST_FUNC){
 		struct symbolTableNode* func = search(&global.funcTable, left->data.str);
 		if(func == NULL){
@@ -405,6 +420,20 @@ int valid(struct astNode* left, struct astNode* right, int op){
 		if(right->dataType != id->dataType){
 			W("valid: data types are not same");
 			exit(sem_komp);
+		}
+	}
+	else if(right->type == AST_ARR){
+		struct astNode* idnode = NULL;
+		if(right->left != NULL)
+			idnode = right->left;
+		else {
+			E("Internal error - wrong structure of nodes");
+			exit(intern);
+		}
+		struct symbolTableNode* arr = searchOnTop(idnode->data.str);
+		struct dataTypeArray* dta = (struct dataTypeArray*)arr->other;
+		if(right->dataType != dta->type){
+			right->dataType = dta->type;
 		}
 	}
 	else if(right->type == AST_FUNC){
@@ -446,6 +475,7 @@ int valid(struct astNode* left, struct astNode* right, int op){
 			} 
 			else {
 				E("valid: Arithmetic operator needs INT or REAL data");
+				datatypes(left->dataType, right->dataType);
 				exit(sem_komp);			
 			}
 			break;
@@ -906,18 +936,19 @@ struct astNode* parseBody(struct toc** cur, bool empty, int endtype){
 }
 
 struct astNode* getArrayDef(struct toc** cur, struct String* name){
-	struct astNode* var = makeNewAST();
+	struct astNode* node = makeNewAST();
 	struct dataTypeArray* dta = NULL;
 	
 	// typ pole
-	var->type = AST_ID;
-	var->dataType = DT_ARR;
+	node->type = AST_ARR;
+	node->dataType = DT_ARR;
 
 	dta = (struct dataTypeArray*)gcMalloc(sizeof(struct dataTypeArray));
 	if(!dta)
 		return NULL;
 	dta->id = name;
-	var->data.str = name;
+	// ulozi se jmeno
+	node->data.str = name;
 
 	(*cur) = getToc();
 	expect((*cur), T_LBRC, synt);
@@ -952,9 +983,9 @@ struct astNode* getArrayDef(struct toc** cur, struct String* name){
 	}
 	
 	// ulozeni odkazu na strukturu dat
-	var->other = dta;		
+	node->other = dta;		
 								
-	return var;
+	return node;
 }
 
 /**
@@ -1010,7 +1041,7 @@ struct queue* parseVars(struct toc** cur){
 	while((*cur)->type == T_ID){
 		// nacteni definice
 		var = getVarDef(cur);
-		if(var->dataType == DT_ARR){
+		if(var->type == AST_ARR){
 			dta = (struct dataTypeArray*)var->other;
 		}	
 		
@@ -1021,7 +1052,7 @@ struct queue* parseVars(struct toc** cur){
 		}
 		else {
 			struct symbolTableNode* inserted = insertValue(&top, var->data.str, var->dataType);
-			if(var->dataType == DT_ARR && dta != NULL){
+			if(var->type == AST_ARR && dta != NULL){
 				inserted->other = dta;	
 			}
 		}
@@ -1355,22 +1386,39 @@ struct queue* parseCallParams(struct toc** cur){
 	W("parseCallParams");
 	// prochazi podel parametru a vytvari doleva jdouci strom z parametru
 	struct queue* pars = makeNewQueue();
-	
+	struct toc* next = NULL;
+	bool readNew = true;
+
 	(*cur) = getToc();
 	while((*cur)->type != T_RPAR){
+		readNew = true;
 		struct astNode* nd = makeNewAST();
 		printTokenType(*cur);
 		struct symbolTableNode* id = NULL;
 		switch((*cur)->type){
 			case T_ID:
 				// predana promenna
+				next = getToc();
+				if(next->type == T_LBRC){
+					// array index
+					nd = arrayIndex(cur, (*cur)->data.str);
+					break;
+				}
 				
+				// vyhledani promenne v tabulkach
 				id = searchOnTop((*cur)->data.str);
+				// nastaveni typu
 				nd->type = AST_ID;
+				// kopie jmena promenne
 				copyString((*cur)->data.str, &(nd->data.str));
+				// kopie datoveho typu
 				nd->dataType = id->dataType;
 				datatypes(nd->dataType, id->dataType);
+				// pokud se nejednalo o [
 				
+				// prenastavit tokeny
+				readNew = false;
+				*cur = next;
 				break;
 			case T_INT: 
 				// predany parametr je typu INT
@@ -1411,7 +1459,8 @@ struct queue* parseCallParams(struct toc** cur){
 		}
 		
 		// nacteni oddelovace
-		(*cur) = getToc();
+		if(readNew)
+			(*cur) = getToc();
 		if((*cur)->type == T_COM){
 			// nacetl carku - v poradku pokud nenasleduje T_RPAR
 			(*cur) = getToc();
@@ -1765,17 +1814,48 @@ struct astNode* forStatement(struct toc** cur){
 	forCond->type = AST_ASGN;
 	
 	// ocekavat pravou stranu prirazeni
-	*cur = getToc();
-	expect(*cur, T_INT, synt);
+	//*cur = getToc();
+	/*
+	if((*cur)->type == T_INT){
+		forCond->right = makeNewAST();
+		// nastaveni prave casti foru
+		forCond->right->type = AST_INT;
+		forCond->right->dataType = DT_INT;
+		forCond->right->data.integer = (*cur)->data.integer;
+	}
+	else if((*cur)->type == T_ID){
+		struct toc* next = getToc();
+		if(next->type == T_LBRC){
+			// nactena [
+			forCond->right = arrayIndex(cur, (*cur)->data.str);
 
-	forCond->right = makeNewAST();
-	// nastaveni prave casti foru
-	forCond->right->type = AST_INT;
-	forCond->right->dataType = DT_INT;
-	forCond->right->data.integer = (*cur)->data.integer;
+			// byl zpracovan index 
+			*cur = getToc();
+		}
+		else {
+			// nebyla nalezena - jedna se o ID
+			struct symbolTableNode* var = searchOnTop((*cur)->data.str);
+			if(var->dataType != DT_INT){
+				E("Semantic error - starting low must be integer");
+				exit(sem_else);
+			}
+			
+			forCond->right = makeNewAST();
+			forCond->right->type = AST_ID;
+			forCond->right->dataType = DT_INT;
+			copyString(var->name, &(forCond->right->data.str));
+
+			*cur = next;		
+		}
+	}*/
+	// nacist pravou stranu jako vyraz
+	forCond->right = parseExpression(cur);
+	if(forCond->right->dataType != DT_INT){
+		E("Semantic error - expected integer as right side of assign in for");
+		exit(sem_komp);
+	}
 	
-	// ocekavat TO/DOWNTO
-	*cur = getToc();
+	// nacitat podminku - vyraz vraci posledni nacteny
 	if((*cur)->type == T_KW_TO){
 		// nacteny TO keyword
 		forNode->right = makeNewAST();
@@ -1796,29 +1876,20 @@ struct astNode* forStatement(struct toc** cur){
 	forNode->right->left = forCond;
 	
 	// nacitat literal
-	*cur = getToc();
-	forNode->right->right = makeNewAST();
-	// koncovy clen
-	if((*cur)->type == T_INT){
-			forNode->right->right->type = AST_INT;
-			forNode->right->right->dataType = DT_INT;
-			forNode->right->right->data.integer = (*cur)->data.integer;
-	}
-	else {
-		E("Syntax error - expected int literal after TO/DOWNTO keyword");
-		exit(synt);
+	//*cur = getToc();
+	forNode->right->right = parseExpression(cur);
+	if(forNode->right->right->dataType != DT_INT){
+		E("Semantic error - expected integer");
+		exit(sem_komp);
 	}
 	
 	// nacteni DO za definici
-	*cur = getToc();
 	expect(*cur, T_KW_DO, synt);
 
-	D("@@ BEFORE BODY @@");
 	*cur = getToc();
 	expect(*cur, T_KW_BEGIN, synt);
 	// ocekavani tela
 	forNode->left = parseBody(cur, true, T_KW_END);
-	D("@@ TELO FOR @@");
 	printAst(forNode->left);
 	
 	// posledni token -> za prikazem
@@ -1967,6 +2038,8 @@ struct astNode* caseStatement(struct toc** cur){
 
 // INLINE FUNKCE
 struct astNode* writeStatement(struct toc** cur){
+	struct toc* next = NULL;
+	bool readNew = true;
 	struct astNode* node = makeNewAST();
 	node->type = AST_WRITE;
 
@@ -1985,12 +2058,22 @@ struct astNode* writeStatement(struct toc** cur){
 	
 	// nacitat parametry
 	while((*cur)->type != T_RPAR){
+		readNew = true;
+		
 		// ocekavat cokoliv
 		struct astNode* nd = makeNewAST();
 		struct symbolTableNode* var = NULL;
 		
 		switch((*cur)->type){
 			case T_ID:
+				next = getToc();
+				if(next->type == T_LBRC){
+					// arrayIndex
+
+					nd = arrayIndex(cur, (*cur)->data.str);
+					break;
+				}
+				
 				var = searchOnTop((*cur)->data.str);
 				// vytvorit novy uzel
 				nd->type = AST_ID;				
@@ -1999,6 +2082,10 @@ struct astNode* writeStatement(struct toc** cur){
 				// datovy typ promenne
 				nd->dataType = var->dataType;
 				
+				// nenacitat dalsi token, uz sme nacetli
+				readNew = false;
+				*cur = next;
+							
 				break;
 			case T_INT: 
 				// novy uzel
@@ -2039,7 +2126,8 @@ struct astNode* writeStatement(struct toc** cur){
 		queuePush(vp->pars, nd);						
 				
 		// dalsi token + dopredu
-		*cur = getToc();
+		if(readNew)
+			*cur = getToc();
 		// oddelene carkou -> kdyz za carkou bude RPAR chyba				
 		if((*cur)->type == T_COM){
 			// nactena carka
@@ -2104,8 +2192,8 @@ struct astNode* readlnStatement(struct toc** cur){
 	vp->pars = makeNewQueue();
 	
 	struct symbolTableNode* var = searchOnTop((*cur)->data.str);
-	if(var->dataType == DT_BOOL){
-		E("Semantic error - readln parameter cannot be BOOL");
+	if(var->dataType == DT_BOOL || var->dataType == DT_ARR){
+		E("Semantic error - readln parameter cannot be BOOL or ARRAY");
 		exit(sem_komp);
 	}
 
@@ -2130,6 +2218,8 @@ struct astNode* readlnStatement(struct toc** cur){
 }
 struct astNode* findStatement(struct toc** cur){
 	struct astNode* find = makeNewAST();
+	struct astNode* nd = NULL;
+	struct toc* next = NULL;
  	find->type = AST_FIND;
 	find->dataType = DT_INT;
 
@@ -2141,26 +2231,42 @@ struct astNode* findStatement(struct toc** cur){
 	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
 	vp->vars = makeNewQueue();
 	vp->pars = makeNewQueue();
-			
+
+	bool readNew = true;
 	for(int i = 0; i < 2; i++){
+		readNew = true;
 		// iterace, ocekavam dva stejny parametry		
 		*cur = getToc();
 		if((*cur)->type == T_ID){
-			// nacitani z promenne -> tabulka symbolu
-			struct symbolTableNode* var = searchOnTop((*cur)->data.str);
-		
-			if(var->dataType != DT_STR){
-				E("Semantic error - INLINE find expected STRING as parameter");
-				exit(sem_komp);
+			next = getToc();
+			if(next->type == T_LBRC){
+				// nactena [
+				nd = arrayIndex(cur, (*cur)->data.str);
+				
+				if(nd->dataType != DT_STR){
+					E("Semantic error - INLINE find expected STRING as parameter");
+					exit(sem_komp);
+				}
 			}
-		
-			struct astNode* first = makeNewAST();
-			first->type = AST_ID;
-			first->dataType = DT_STR;
-			copyString((*cur)->data.str, &(first->data.str));
+			else {
+				// nacitani z promenne -> tabulka symbolu
+				struct symbolTableNode* var = searchOnTop((*cur)->data.str);
+			
+				if(var->dataType != DT_STR){
+					E("Semantic error - INLINE find expected STRING as parameter");
+					exit(sem_komp);
+				}
+			
+				nd = makeNewAST();
+				nd->type = AST_ID;
+				nd->dataType = DT_STR;
+				copyString((*cur)->data.str, &(nd->data.str));
 
+				readNew = false;
+				*cur = next;
+			}
 			// novy parametr
-			queuePush(vp->pars, first);
+			queuePush(vp->pars, nd);
 		}
 		else if((*cur)->type == T_STR){
 			// nacitani literalu
@@ -2189,7 +2295,8 @@ struct astNode* findStatement(struct toc** cur){
 		}
 			
 		// oddelovac nebo prava zavorka
-		*cur = getToc();
+		if(readNew)
+			*cur = getToc();
 		if(i == 0){
 			// ocekavam carku
 			expect((*cur), T_COM, synt);
@@ -2213,6 +2320,9 @@ struct astNode* findStatement(struct toc** cur){
 }
 struct astNode* sortStatement(struct toc** cur){
 	struct astNode* node = makeNewAST();
+	struct astNode* nd = NULL;
+	struct toc* next = NULL;
+	bool readNew = true;
 	node->type = AST_SORT;
 	node->dataType = DT_STR;
 	
@@ -2226,21 +2336,36 @@ struct astNode* sortStatement(struct toc** cur){
 		
 	*cur = getToc();
 	if((*cur)->type == T_ID){
-		struct symbolTableNode* var = searchOnTop((*cur)->data.str);
+		next = getToc();
+		if(next->type == T_LBRC){
+			// array index
+			nd = arrayIndex(cur, (*cur)->data.str);
+			if(nd->dataType != DT_STR){
+				E("Semantic error - expected string");
+				exit(sem_komp);
+			}
+		}
+		else {
+			// obyc promenna
+			struct symbolTableNode* var = searchOnTop((*cur)->data.str);
 
-		if(var->dataType != DT_STR){
-			E("Semantic error - expected string as parameter data type");
-			exit(sem_komp);
+			if(var->dataType != DT_STR){
+				E("Semantic error - expected string as parameter data type");
+				exit(sem_komp);
+			}
+			
+			// uzel pro promennou
+			nd = makeNewAST();
+			nd->type = AST_ID;
+			nd->dataType = DT_STR;
+		
+			// jmeno promenne
+			copyString(var->name, &(nd->data.str));
+
+			readNew = false;
+			*cur = next;
 		}
 		
-		// uzel pro promennou
-		struct astNode* nd = makeNewAST();
-		nd->type = AST_ID;
-		nd->dataType = DT_STR;
-	
-		// jmeno promenne
-		copyString(var->name, &(nd->data.str));
-
 		// ulozit do seznamu
 		queuePush(vp->pars, nd);
 	}
@@ -2264,7 +2389,8 @@ struct astNode* sortStatement(struct toc** cur){
 	}
 
 	// konec parametru
-	*cur = getToc();
+	if(readNew)
+		*cur = getToc();
 	expect((*cur), T_RPAR, synt);
 	
 	// nacteni dalsiho tokenu
@@ -2280,6 +2406,8 @@ struct astNode* lengthStatement(struct toc** cur){
 	struct astNode* node = makeNewAST();
 	node->type = AST_LENGTH;
 	node->dataType = DT_INT;
+	bool readNew = true;
+	struct toc* next = NULL;
 	
 	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
 	vp->vars = makeNewQueue();
@@ -2292,20 +2420,33 @@ struct astNode* lengthStatement(struct toc** cur){
 	// parametr
 	*cur = getToc();
 	if((*cur)->type == T_ID){
-		struct symbolTableNode* var = searchOnTop((*cur)->data.str);
-
-		if(var->dataType != DT_STR){
-			E("Semantic error - expected string as parameter data type");
-			exit(sem_komp);
-		}
+		struct astNode* nd = NULL;
 		
-		// uzel pro promennou
-		struct astNode* nd = makeNewAST();
-		nd->type = AST_ID;
-		nd->dataType = DT_STR;	
-		// jmeno promenne
-		copyString(var->name, &(nd->data.str));
-	
+		next = getToc();
+		if(next->type == T_LBRC){
+			nd = arrayIndex(cur, (*cur)->data.str);
+			if(nd->dataType != DT_STR){
+ 				E("Semantic error - expected string");
+ 				exit(sem_komp);
+			}
+		}
+		else {
+			struct symbolTableNode* var = searchOnTop((*cur)->data.str);
+			if(var->dataType != DT_STR){
+				E("Semantic error - expected string as parameter data type");
+				exit(sem_komp);
+			}
+			
+			// uzel pro promennou
+			nd = makeNewAST();
+			nd->type = AST_ID;
+			nd->dataType = DT_STR;	
+			// jmeno promenne
+			copyString(var->name, &(nd->data.str));
+
+			readNew = false;
+			*cur = next;
+		}
 		queuePush(vp->pars, nd);
 	}
 	else if((*cur)->type == T_STR){
@@ -2322,8 +2463,9 @@ struct astNode* lengthStatement(struct toc** cur){
 		E("Semantic error - expected string as parameter data type");
 		exit(sem_komp);
 	}
-	
-	*cur = getToc();
+
+	if(readNew)
+		*cur = getToc();
 	expect((*cur), T_RPAR, synt);
 	
 	// nacteni dalsiho tokenu
@@ -2338,6 +2480,8 @@ struct astNode* copyStatement(struct toc** cur){
 	struct astNode* copy = makeNewAST();
 	copy->type = AST_COPY;
 	copy->dataType = DT_STR;
+	bool readNew = true;
+	struct toc* next = NULL;
 	
 	struct varspars* vp = (struct varspars*)gcMalloc(sizeof(struct varspars));
 	vp->vars = makeNewQueue();
@@ -2346,17 +2490,35 @@ struct astNode* copyStatement(struct toc** cur){
 	*cur = getToc();
 	expect((*cur), T_LPAR, synt);
 
+	struct astNode* nid = NULL;
 	*cur = getToc();
 	if((*cur)->type == T_ID){
-		// najit v tabulce symbolu
-		struct symbolTableNode* var = searchOnTop((*cur)->data.str);
-		
-		// novy uzel
-		struct astNode* nid = makeNewAST();
-		nid->type = AST_ID;
-		nid->dataType = var->dataType;		
-		// kopie jmena
-		copyString((*cur)->data.str, &(nid->data.str));
+		next = getToc();
+		if(next->type == T_LBRC){
+			nid = arrayIndex(cur, (*cur)->data.str);
+			if(nid->dataType != DT_STR){
+ 				E("Semantic error - expected string");
+ 				exit(sem_komp);
+			}
+		}
+		else {			
+			// najit v tabulce symbolu
+			struct symbolTableNode* var = searchOnTop((*cur)->data.str);
+			if(var->dataType != DT_STR){
+				E("Semantic error - expected string");
+				exit(sem_komp);
+			}
+			
+			// novy uzel
+			nid = makeNewAST();
+			nid->type = AST_ID;
+			nid->dataType = var->dataType;		
+			// kopie jmena
+			copyString((*cur)->data.str, &(nid->data.str));
+
+			readNew = false;
+			*cur = next;
+		}
 		
 		// push prvniho parametru
 		queuePush(vp->pars, nid);				
@@ -2380,8 +2542,9 @@ struct astNode* copyStatement(struct toc** cur){
 		E("Semantic error - expected STRING data type of parameter");
 		exit(sem_komp);
 	}
-	
-	*cur = getToc();
+
+	if(readNew)
+		*cur = getToc();
 	expect((*cur), T_COM, synt);
 	
 	// ocekavat 2x int
@@ -2389,21 +2552,30 @@ struct astNode* copyStatement(struct toc** cur){
 		*cur = getToc();
 
 		if((*cur)->type == T_ID){
-			struct symbolTableNode* var = searchOnTop((*cur)->data.str);
-			
-			// kontrola typu - oba musis byt INT
-			if(var->dataType != DT_INT){
-				E("Semantic error - variable of parameter has wrong type");
-				exit(sem_komp);
+			next = getToc();
+			if(next->type == T_LBRC){
+				nid = arrayIndex(cur, (*cur)->data.str);
+				if(nid->dataType != DT_INT){
+					E("Semantic error - expected integer");
+					exit(sem_komp);
+				}
+				readNew = false;
 			}
-					
-			// novy uzel
-			struct astNode* nid = makeNewAST();
-			nid->type = AST_ID;
-			nid->dataType = var->dataType;			
-			// kopie jmena
-			copyString((*cur)->data.str, &(nid->data.str));
-			
+			else {
+				struct symbolTableNode* var = searchOnTop((*cur)->data.str);
+				// kontrola typu - oba musis byt INT
+				if(var->dataType != DT_INT){
+					E("Semantic error - variable of parameter has wrong type");
+					exit(sem_komp);
+				}
+						
+				// novy uzel
+				struct astNode* nid = makeNewAST();
+				nid->type = AST_ID;
+				nid->dataType = var->dataType;			
+				// kopie jmena
+				copyString((*cur)->data.str, &(nid->data.str));
+			}
 			// push prvniho parametru
 			queuePush(vp->pars, nid);		
 		}
@@ -2422,8 +2594,8 @@ struct astNode* copyStatement(struct toc** cur){
 			exit(sem_komp);
 		}
 		
-		
-		*cur = getToc();
+		if(readNew)
+			*cur = getToc();
 		if(i == 0)
 			expect((*cur), T_COM, synt);
 		else{
@@ -2488,35 +2660,47 @@ struct astNode* arrayIndex(struct toc** cur, struct String* name){
 	struct symbolTableNode* var = searchOnTop(name);
 	if(var->dataType != DT_ARR){
 		E("Semantic error - L-value is not ARRAY");
+		printf("type: %d\n", var->dataType);
 		exit(sem_komp); 
 	}
 	// ziskani potrebne struktury
 	struct dataTypeArray* dta = (struct dataTypeArray*)var->other;
-	
-	// POLE INDEX				
+
+	// hlavni node 
 	node = makeNewAST();
 	node->type = AST_ARR;
+	// nastavi se datovy typ pro obsah
 	node->dataType = dta->type;
-	// kopie jmena
-	node->data.str = name;
+	node->other = dta;
 	
+	// do leveho stromu ulozit promennou
+	node->left = makeNewAST();
+	node->left->type = AST_ID;
+	node->left->dataType = dta->type;
+	node->left->data.str = name;
+
+	D("Left node done");
 	// ocekavat INT jako index (nebo ID!!)
 	*cur = getToc();
 	if((*cur)->type == T_ID){
 		// index byla promenna - ziskat typ
 		// a nastavit odkaz do other
-		struct astNode* nd = makeNodeFromToken(*cur);
-		if(nd->dataType != DT_INT){
+		node->right = makeNodeFromToken(*cur);
+		if(node->right->dataType != DT_INT){
 			E("Semantic error - index must be integer");
 			exit(sem_else);
 		}
-		node->left->other = nd;
 	}
 	else if((*cur)->type == T_INT){
 		// v pripade ze index byl literal
-		if(dta->low <= (*cur)->data.integer && (*cur)->data.integer <= dta->high)					
-			node->data.integer = (*cur)->data.integer;
-		else{
+		int value = (*cur)->data.integer;
+		if(dta->low <= value && value <= dta->high) {
+			node->right = makeNewAST();
+			node->right->type = AST_INT;
+			node->right->dataType = DT_INT;
+			node->right->data.integer = value;
+		}
+		else {
 			E("Semantic error - index out of range");
 			exit(sem_else);		
 		}					
@@ -2528,11 +2712,14 @@ struct astNode* arrayIndex(struct toc** cur, struct String* name){
 	}
 	else // exit
 		expect(*cur, T_INT, sem_else);			
+	D("Right node done");
 
 	// ocekavat konec zavorek
 	*cur = getToc();
 	expect(*cur, T_RBRC, synt);
-
+	
+	printAst(node);
+	D("Print done");
 	return node;
 }
 /**
