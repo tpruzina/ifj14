@@ -907,6 +907,7 @@ struct symbolTableNode *btnCopy(struct queue *pars)
 	return res;
 }
 
+// pomocna funkcia k builtin sortu, vrati vysledok ako node tabulky symbolov
 struct symbolTableNode *btnSort(struct queue *pars)
 {
 	struct symbolTableNode *res = makeNewSymbolTable();
@@ -918,6 +919,7 @@ struct symbolTableNode *btnSort(struct queue *pars)
 	return res;
 }
 
+// pomocna funkcia k builtin findu, vrati vysledok ako node tabulky symbolov
 struct symbolTableNode *btnFind(struct queue *pars)
 {
 	struct astNode *p0 = pars->start->value;
@@ -932,6 +934,7 @@ struct symbolTableNode *btnFind(struct queue *pars)
 	return res;
 }
 
+// pomocna funkcia k builtin length, vrati vysledok ako node tabulky symbolov
 struct symbolTableNode *btnLength(struct queue *pars)
 {
 	struct symbolTableNode *res = makeNewSymbolTable();
@@ -943,6 +946,7 @@ struct symbolTableNode *btnLength(struct queue *pars)
 	return res;
 }
 
+// pomocna funkcia for cyklov, exekuuje strom podla specifikacie (bez navratoveho kodu)
 void for_to_downto(struct astNode *curr)
 {
 	struct astNode *body = curr->left;
@@ -987,6 +991,7 @@ void for_to_downto(struct astNode *curr)
 	*iterator = boundary;
 }
 
+// pomocna funkcia ktora inicializuje pole v arr->data
 void initArray(struct symbolTableNode *arr)
 {
 	// DT_INT, DT_REAL, DT_BOOL, DT_STR, DT_ARR
@@ -1012,6 +1017,7 @@ void initArray(struct symbolTableNode *arr)
 	arr->init = true;
 }
 
+// pomocna funkcia ktora vrati pointer na prvok pola z tmp indekovaneho premennou indexom
 struct symbolTableNode *getArrayIndex(struct symbolTableNode *tmp, int index)
 {
 	if(!tmp)
