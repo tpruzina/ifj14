@@ -1,0 +1,10 @@
+
+var
+  BADjoke  : real;
+  GOODjoke : string;
+
+begin
+  BADjoke  := 1.0;
+  GOODjoke := 'one';
+  write(GOODjoke - BADjoke)
+end.

@@ -1,0 +1,6 @@
+begin
+  if(false) then
+    write();
+  else
+    begin end
+end.

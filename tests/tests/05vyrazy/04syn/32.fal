@@ -1,0 +1,6 @@
+var
+  air : integer;
+  bag : integer;
+begin
+  readln(air bag)
+end.

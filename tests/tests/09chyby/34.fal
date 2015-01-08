@@ -1,9 +1,0 @@
-{ test na orezavani copy }
-var 
-	out: string;
-begin
-	out := copy('Ahoj', 2, 5);
-
-	{mel by vratit hoj}
-	write(out)
-end.

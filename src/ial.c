@@ -27,10 +27,10 @@
 
 /**
  * INLINE funkce pro substring
- * --------------------
- * str: string pro ziskani dat
- * i:	pocatecni index
- * n:	delka vyrezavaneho retezce
+ * ------------------------------------------------------------------
+ * @param str: text, ze ktereho chceme ziskat vyrez
+ * @param i: pocatecni index vyrezu
+ * @param n: delka vyrezu
  */
 struct String* copy(struct String *str, int i, int n){
 	if(str == NULL){
@@ -75,15 +75,23 @@ struct String* copy(struct String *str, int i, int n){
 
 /**
  * INLINE funkce pro vraceni delky textu
- * --------------------
- * str: predany text
+ * ------------------------------------------------------------------
+ * @param str: odkaz na promennou typu string ze ktere chceme zjistil delku
  */
 int length(struct String* str){
 	return strlen(str->Value);
 }
 
-void partition (struct String *str, int left, int right, int* i_, int* j_)
-{
+/**
+ * Rozdelovaci funkce pro pole.
+ * ------------------------------------------------------------------
+ * @param str: postupne razeny text
+ * @param left: leva mez
+ * @param right: prava mez
+ * @param i_: mezivypocty
+ * @para, j_: mezivypocty
+ */
+void partition (struct String *str, int left, int right, int* i_, int* j_){
 	int i = *i_;
 	int j = *j_;
 
@@ -118,8 +126,14 @@ void partition (struct String *str, int left, int right, int* i_, int* j_)
 	return;
 }
 
-void quicksort (struct String *str, int left, int right)
-{
+/**
+ * Hlavni funkce quicksortu - obsahuje rekurzivni volani
+ * ------------------------------------------------------------------
+ * @param str: zdroj pro vyhledavani
+ * @param left: leva mez
+ * @param right: prava mez
+ */
+void quicksort (struct String *str, int left, int right){
 	int i = 0;
 	int j = 0;
 
@@ -129,11 +143,12 @@ void quicksort (struct String *str, int left, int right)
 
 	return;
 }
-
-void sortString (struct String *str)
-{
-	// printf ("sortuju\n");
-
+/**
+ * Funkce pro spusteni quickSortu nad stringem.
+ * ------------------------------------------------------------------
+ * @param table: odkaz na uzel!! tabulky symbolu
+ */
+void sortString (struct String *str) {
 	// provedu pocatecni nastaveni
 	int left = 0;
 	int right = strlen(str->Value) -1;
@@ -144,68 +159,10 @@ void sortString (struct String *str)
 	return;
 }
 
-///**
-// * Doprovodna funkce pro pocitani QuickSortu
-// * --------------------
-// * *A: pole hodnot
-// * left: 	leva mez
-// * right:	prava mez
-// * *i: 		posuvne indexy
-// * *j:		posuvne indexy
-// */
-//void partition(int *A, int left, int right, int *i, int *j){
-//	int PM;
-//	*i = left;
-//	*j = right;
-//
-//	PM = A[(*i + *j)/2]; // pseudomedián
-//
-//	while(1){
-//		while(A[*i] < PM){	// nic co je menší než PM mě nezajímá
-//			*i+=1;
-//		}
-//		while(A[*j] > PM){	// tady mě nezajímá nic většího než PM
-//			*j-=1;
-//		}
-//
-//		// pokud se indexy nepřekřížili, prohodím prvky, na které ukazují
-//		if(*i<*j){
-//			// v přednáškách je i<=j, ale nemá cenu přehazovat prvek
-//			// se sebou samým
-//			int tmp = A[*i];
-//			A[*i] = A[*j];
-//			A[*j] = tmp;
-//			*i+=1;
-//			*j-=1;
-//		}else{				// jinak skončím cyklus (repeat ... until(i>j)) v přednáškách until(i>=j),
-//			break;			// ale nemá cenu přehazovat prvek se sebou samým
-//		}
-//	}
-//}
-//
-///**
-// * Funkce QuickSort
-// * --------------------
-// * *A: 		Pole na serazeni
-// * left:	Leva mez
-// * right:	Prava mez
-// */
-//void quickSort(int *A, int left, int right){
-//	int i,j;
-//	partition(A,left,right,&i,&j);	// rozdělím na dvě části
-//
-//	if(left<j){
-//		quickSort(A,left,j);		// sortnu levou část
-//	}
-//
-//	if(right>i){
-//		quickSort(A,i,right);		// sortnu pravou část
-//	}
-//}
 /**
  * INLINE funkce pro razeni retezcu
- * --------------------
- * str: string pro serazeni
+ * ------------------------------------------------------------------
+ * @param src: string ktery ma byt serazeny
  */
 struct String* sort(struct String* src){
 	if(src == NULL){
@@ -215,7 +172,7 @@ struct String* sort(struct String* src){
 
 	// udelat kopii
 	struct String *res = makeNewString();
-	copyString(src,&res);
+	copyString(src, &res);
 
 	sortString(res);
 
@@ -224,65 +181,66 @@ struct String* sort(struct String* src){
 
 /**
  * INLINE funkce pro vyhledavani v retezcich
- * --------------------
- * text: 		podkladovy text pro vyhledavani
- * pattern: 	sablona textu, ktery se ma vyhledat
+ * ------------------------------------------------------------------
+ * @param text: podkladovy text pro vyhledavani
+ * @param pattern: sablona textu, ktery se ma vyhledat
  */
 int find(struct String* text, struct String* pattern){
 	int result; // pozice, prvniho nalezu
-      	
-	int len_pattern = strlen(pattern->Value);
-	int len_text = strlen(text->Value);
+      
+	int len_pattern = strlen(pattern->Value);   //delka hledaneho podretezce
+	int len_text = strlen(text->Value);         //delka retezce ve kterem hledame
 	
-	// vektor fail
-    int* fail = (int*)gcMalloc(sizeof(int) * len_pattern);
-    // index hledaneho podretezce, index v retezci, dalsi pozice
-    int pattern_inx, text_inx, next; 
-
+  
+	int* fail = (int*)gcMalloc(sizeof(int) * len_pattern);  // vektor fail
+	int pattern_ind, text_ind, r;  // index v hledanem podretezci, index v retezci, dalsi pozice
 
 	fail[0] = -1;
-
-
-	//prochazim slovo - KMP graf
-	for(int k = 1; k < len_pattern; k++){
-		next = fail[k-1];
-
-		while(next > -1 && (pattern->Value[next] != pattern->Value[k-1])){
-			next = fail[next];
+  
+	//*****FAIL vektor, zjistovani hodnot posunu*******
+	for(int k=1; k<len_pattern; k++) {
+		r = fail[k-1];
+    
+		while((r > -1) && (pattern->Value[r] != pattern->Value[k-1])){
+			r = fail[r];
 		}
-		fail[k] = next+1;
-    }
+		fail[k] = r+1;
+	}
 
-	//hledani podretezce
-	text_inx = 0;
-	pattern_inx = 0;
+	// *****Hledani podretezce*****
+  
+	//zarovnani indexu
+	text_ind = 0;     
+	pattern_ind = 0;  
 
-	while((text_inx < len_text) && (pattern_inx < len_pattern)){
-		if(pattern_inx == -1 || (text->Value[text_inx] == pattern->Value[pattern_inx])){
-			text_inx++;
-			pattern_inx++;
+	while((text_ind < len_text) && (pattern_ind < len_pattern)){
+		if((pattern_ind == -1) || (text->Value[text_ind] == pattern->Value[pattern_ind])){
+			//nasel shodu tak inkrementuju oba indexy
+			text_ind++;         
+			pattern_ind++;
 		}
-		else{
-			//pujde podle pole fail
-			pattern_inx=fail[pattern_inx];   
+		else {
+			//nenasel tak pujde podle pole Fail
+			pattern_ind = fail[pattern_ind];   
 		}
 	}
 
-	if(pattern_inx == len_pattern){
-		result = text_inx - len_pattern + 1;
+    //hodnota indexu podretezce se rovna delce podretezce
+	if(pattern_ind == len_pattern){
+		result = text_ind - len_pattern + 1;   //chci prvni prvek, nikoliv nulty
 	}
-	else{
-		result = text_inx;
+	else {
+		result = 0; //nic jsem nenasel tak vracim 0
 	}
 
-	return result;
+	return result;  
 }
-
 
 //// SYMBOL TABLE
 
 /**
  * Vytvori cisty uzel do tabulky. Bez jmena vyplneneho.
+ * ----------------------------------------------------
  */
 struct symbolTableNode* makeNewSymbolTable(){	
 	// alokace tabulky
@@ -296,18 +254,20 @@ struct symbolTableNode* makeNewSymbolTable(){
 	
 	table->dataType = DT_NONE;
 
-//	table->data.str_data = NULL;
-//	table->data.int_data = 0;
-//	table->data.real_data = 0;
-//	table->data.bool_data = False;
-//
-//	table->left = NULL;
-//	table->right = NULL;
+	table->data.str_data = NULL;
+	table->data.int_data = 0;
+	table->data.real_data = 0;
+	table->data.bool_data = False;
+
+	table->left = NULL;
+	table->right = NULL;
 	
 	return table;
 }
 /**
  * Vytvori uzel pro zaznam do tabulky uz s definovanym jmenem.
+ * ------------------------------------------------------------
+ * @param name: jmeno pro novy uzel. Urceno pro rychle vytvareni nodu
  */
 struct symbolTableNode* makeNewNamedNode(struct String* name){
 	struct symbolTableNode* stn = makeNewSymbolTable();
@@ -324,7 +284,12 @@ struct symbolTableNode* makeNewNamedNode(struct String* name){
 	
 	return stn;
 }
-
+/**
+ * Vyhledava v predane tabulce symbolu uzel s jmenem name.
+ * ------------------------------------------------------------------
+ * @param table: odkaz na tabulku symbolu
+ * @param name: jmeno uzlu promenne/funkce
+ */
 struct symbolTableNode* search(struct symbolTableNode** table, struct String* name){
 	if(!(*table))
 		return NULL;
@@ -346,7 +311,11 @@ struct symbolTableNode* search(struct symbolTableNode** table, struct String* na
 
 /**
  * Vklada polozku do tabulky symbolu.
- * Rekurzivnim zpusobem se zanori az na potrebne misto a vytvori novy uzel
+ * Rekurzivnim zpusobem se zanori az na potrebne misto a vytvori novy uzel.
+ * ------------------------------------------------------------------
+ * @param table: odkaz na tabulku symbolu
+ * @param name: jmeno uzlu promenne/funkce
+ * @param dtype: datovy typ, ktery se ma do uzlu ulozit
  */
 struct symbolTableNode* insertValue(struct symbolTableNode** table, struct String* name, int dtype){
 	if((*table) == NULL){
@@ -399,7 +368,10 @@ struct symbolTableNode* insertValue(struct symbolTableNode** table, struct Strin
 
 /**
  * Vklada do vytvoreneho uzlu data na prislusnou polozku do unionu.
- * Kopiruje data do integeru
+ * Kopiruje data do integeru.
+ * ------------------------------------------------------------------
+ * @param table: odkaz na uzel!! tabulky symbolu
+ * @param value: celociselna hodnota
  */
 int insertDataInteger(struct symbolTableNode** table, int value){
 	if((*table) == NULL)
@@ -412,7 +384,10 @@ int insertDataInteger(struct symbolTableNode** table, int value){
 }
 /**
  * Vklada do vytvoreneho uzlu data na prislusnou polozku do unionu.
- * Kopiruje data do realu
+ * Kopiruje data do realu.
+ * ------------------------------------------------------------------
+ * @param table: odkaz na uzel!! tabulky symbolu
+ * @param value: realna hodnota
  */
 int insertDataReal(struct symbolTableNode** table, double value){
 	if((*table) == NULL)
@@ -426,6 +401,9 @@ int insertDataReal(struct symbolTableNode** table, double value){
 /**
  * Vklada do vytvoreneho uzlu data na prislusnou polozku do unionu.
  * Kopiruje data do boolu
+ * ------------------------------------------------------------------
+ * @param table: odkaz na uzel!! tabulky symbolu
+ * @param value: logicka hodnota
  */
 int insertDataBoolean(struct symbolTableNode** table, bool value){
 	if((*table) == NULL)
@@ -439,6 +417,9 @@ int insertDataBoolean(struct symbolTableNode** table, bool value){
 /**
  * Vklada do vytvoreneho uzlu data na prislusnou polozku do unionu.
  * Kopiruje data do stringu
+ * ------------------------------------------------------------------
+ * @param table: odkaz na uzel!! tabulky symbolu
+ * @param value: stringova hodnota
  */
 int insertDataString(struct symbolTableNode** table, struct String* value){
 	if((*table) == NULL)
@@ -457,6 +438,9 @@ int insertDataString(struct symbolTableNode** table, struct String* value){
 /**
  * Kopiruje celou tabulku z src do dest parametru. Rekurzivnim zpusobem.
  * Predpokladane pouziti v TOP vrstve zasobniku tabulek symbolu.
+ * ------------------------------------------------------------------
+ * @param src: zdrojova tabulka 
+ * @param dest: cilova tabulka
  */
 int copyTable(struct symbolTableNode* src, struct symbolTableNode** dest){
 	if(src != NULL){
@@ -499,15 +483,19 @@ int copyTable(struct symbolTableNode* src, struct symbolTableNode** dest){
 }
 /**
  * Interni funkce jen pro tento soubor, maze jeden uzel tabulky.
+ * ------------------------------------------------------------------
+ * @param name: jmeno mazaneho prvku
  */
 int delete(struct symbolTableNode* node){
 	if(node == NULL){
 		Log("delete: Cannot free NULL", WARNING, IAL);
 		return False;
 	}
-	
+
+	// uvolni string
 	if(node->name != NULL)
 		gcFree(node->name);
+	// uvolni uzel
 	gcFree(node);
 	
 	return True;
@@ -515,6 +503,8 @@ int delete(struct symbolTableNode* node){
 
 /**
  * Maze celou tabulku, rekurzivnim zpusobem, postfixovym postupem.
+ * ------------------------------------------------------------------
+ * @param table: odkaz tabulky symbolu
  */
 int deleteTable(struct symbolTableNode** table){
 	// kontrola na neprazdnost 
@@ -535,6 +525,9 @@ int deleteTable(struct symbolTableNode** table){
 
 /**
  * Vytiskne graficky vzhled tabulky symbolu.
+ * ------------------------------------------------------------------
+ * @param table: odkaz na tabulky symbolu
+ * @param lvl: uroven zanoreni
  */
 void printSymbolTable(struct symbolTableNode* table, int lvl){
 	if(!PRT) return;

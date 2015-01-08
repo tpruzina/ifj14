@@ -1,0 +1,7 @@
+
+var
+  BADjoke : integer;
+
+begin
+  BADjoke := 00.7
+end.

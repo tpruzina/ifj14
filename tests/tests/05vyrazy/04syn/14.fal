@@ -1,0 +1,4 @@
+begin
+  write(50, 50)
+  sort('fifty : fifty')
+end.

@@ -1,0 +1,10 @@
+
+var
+  magic : integer;
+  value : integer;
+
+begin
+  readln(value);
+  magic := 17 / (value - value)
+end.
+

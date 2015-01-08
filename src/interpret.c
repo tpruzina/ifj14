@@ -14,6 +14,7 @@
 
 #include "interpret.h"
 
+// hlavna funkcia interpretu - rekurzivne spusti program startujuci na AST_START
 void interpret()
 {
 	ASSERT(global.program);
@@ -23,6 +24,9 @@ void interpret()
 	// tabulka symbolov z parsru pouzita ako globalna tabulka - zalohovat pointer
 	global.globalTable = stackTop(global.symTable);
 
+	if(!global.globalTable)
+		stackPush(global.symTable, makeNewSymbolTable());
+
 	// v roote by mal byt AST_START
 	if(curr->type == AST_START)
 		runTree(curr);
@@ -30,36 +34,8 @@ void interpret()
 		exit(intern);
 }
 
-void for_to_downto(struct astNode *curr)
-{
-	struct astNode *body = curr->left;
-	struct astNode *cond = curr->right;
-
-	struct astNode *asgn = cond->left;
-	struct symbolTableNode *id = runTree(asgn->left);
-
-	struct symbolTableNode value = convertAST2STN(asgn->right);
-	struct symbolTableNode literal = convertAST2STN(cond->right);
-
-	insertDataInteger(&id,value.data.int_data);
-
-	int boundary = literal.data.int_data;
-	int *iterator = &(id->data.int_data);
-
-	if(cond->type == AST_FOR_TO)
-	{
-		while(*iterator <= boundary)
-			runTree(body);
-	}
-	else if(cond->type == AST_FOR_DOWNTO)
-	{
-		while(*iterator >= boundary)
-			runTree(body);
-	}
-	else
-		exit(intern);
-}
-
+// funkcia na rekurzivny prechod jednotlivymi elementami AST
+// vracia typicky (vzdy?) symtabNode* s vysledkom operacie alebo NULL
 void *runTree(struct astNode *curr)
 {
 	if(!curr)
@@ -72,7 +48,7 @@ void *runTree(struct astNode *curr)
 	struct varspars *tmp_vp = NULL;
 	struct astNode	*tmp_asp = NULL;
 
-	struct symbolTableNode* top = stackTop(global.symTable);
+	struct symbolTableNode* top = global.symTable->Top->Value;
 
 	switch(curr->type)
 	{
@@ -92,10 +68,7 @@ void *runTree(struct astNode *curr)
 		break;
 
 	case AST_ASGN:	// <command>: <assign>
-		ASSERT(curr->left &&
-				curr->left->type == AST_ID &&
-				curr->right
-		);
+		ASSERT(curr->left && curr->right);
 
 		left = runTree(curr->left);	// x :=
 		right = runTree(curr->right);			//ocekavame symtabnode (tmp premenna...)
@@ -173,6 +146,9 @@ void *runTree(struct astNode *curr)
 		// zavolame funkciu (body)
 		tmp = runTree(tmp->other);
 
+		if(!tmp->init)
+			exit(run_ninit);
+
 		// navratime povodnu tabulku symbolov
 		stackPop(global.symTable);
 
@@ -192,9 +168,9 @@ void *runTree(struct astNode *curr)
 		else if(curr->right)	// vyhodnocena false a mame v branchi else
 			runTree(curr->right);
 
-		ASSERT(tmp->name && tmp->name->Length == 0);
-//		if(tmp->name && tmp->name->Length == 0)
-		deleteTable(&tmp);
+
+		if(tmp->name && tmp->name->Length == 0)
+			deleteTable(&tmp);
 
 		break;
 
@@ -205,17 +181,24 @@ void *runTree(struct astNode *curr)
 			tmp = runTree(curr->other);	// evaluujeme podmienku
 			if(!tmp->data.bool_data)
 				break;
+			else
+				deleteTable(&tmp);
 			runTree(curr->left);	// ak true, tak bezime telo
 		}
+		if(tmp)
+			deleteTable(&tmp);
 		break;
 
 	case AST_REPEAT:
 		ASSERT(curr->left && curr->other);
 		do
 		{
+			if(tmp)
+				deleteTable(&tmp);
 			runTree(curr->left);	// telo
 			tmp = runTree(curr->other);	//podmienka
-		} while(tmp->data.bool_data);
+		} while(!tmp->data.bool_data);
+		deleteTable(&tmp);
 		break;
 
 	case AST_FOR:
@@ -223,11 +206,6 @@ void *runTree(struct astNode *curr)
 		for_to_downto(curr);
 
 		return NULL;
-
-	case AST_FOR_DOWNTO:
-	case AST_SWITCH:
-		exit(intern);	// todo
-		break;
 
 // porovnavanie =,!=,<,<=,>,>=
 	case AST_EQV:
@@ -241,7 +219,7 @@ void *runTree(struct astNode *curr)
 		// ziskame levu & pravu stranu porovnania
 		left = runTree(curr->left);
 		right = runTree(curr->right);
-
+	
 		if(!left->init || !right->init)
 			exit(run_ninit);
 
@@ -252,6 +230,11 @@ void *runTree(struct astNode *curr)
 				&tmp,
 				compare(left,right,curr->type)	//porovnavame a (op) b
 		);
+
+		if(right->name && right->name->Length == 0)
+			deleteTable(&right);
+		if(left->name && left->name->Length == 0)
+			deleteTable(&left);
 		return tmp;
 
 // aritmeticke operace +,-,/,*
@@ -269,7 +252,15 @@ void *runTree(struct astNode *curr)
 
 		// spravime aritmeticku operaciu
 		// vraci tmp premennu v symtab node
-		return arithmetic(left,right,curr->type);
+		tmp = arithmetic(left,right,curr->type);
+
+		if(right->name && right->name->Length == 0)
+			deleteTable(&right);
+		if(left->name && left->name->Length == 0)
+			deleteTable(&left);
+
+		return tmp;
+
 
 // logicke operace
 	// tieto su binarne
@@ -292,6 +283,12 @@ void *runTree(struct astNode *curr)
 				(curr->type == AST_OR)	? (left->data.bool_data || right->data.bool_data):
 				(curr->type == AST_XOR) ? (left->data.bool_data ^ right->data.bool_data): false
 		);
+		
+		if(right->name && right->name->Length == 0)
+			deleteTable(&right);
+		if(left->name && left->name->Length == 0)
+			deleteTable(&left);
+
 		return tmp;
 
 	// not je unarna operacia
@@ -306,6 +303,10 @@ void *runTree(struct astNode *curr)
 		tmp = makeNewSymbolTable();
 		ASSERT(tmp);
 		insertDataBoolean(&tmp,	!(left->data.bool_data));
+		
+		if(left->name && left->name->Length == 0)
+			deleteTable(&left);
+	
 		return tmp;
 
 // unarne operacie, vracaju 'tokeny' ast (premenne, int, bool,real...)
@@ -343,9 +344,33 @@ void *runTree(struct astNode *curr)
 		return tmp;
 
 	case AST_ARR:
-		// AST_ARR má v položce other uloženou strukturu dataTypeArray,
-		// která obsahuje hlavní informace o poli - meze, datový typ a jméno pole.
-		tmp = makeNewSymbolTable();
+/*
+ * Pokazde je pouzit uzel AST_ARR, u definice jsou synovske uzly prazdne (NULL) a data.str
+ * obsahuje jmeno promenne. V polozce other se nachazi dataTypeArray struktura,
+ * ve ktere jsou informace o rozsahu pole, atd.
+ *
+ * Tato struktura se kopiruje odkazem i do indexovaciho uzlu.
+ * Ten ma v levem synovskem uzlu AST_ID a v pravem AST_INT (nebo AST_ID ale s datovym typem INT),
+ * protoze indexovat se muze pouze celociselnym literalem.
+ *
+ * Datovy typ dataType je v tabulce symbolu DT_ARR, ale v astNode je urcen datovym typem obsahu,
+ * takze pokud je obsah typu int, AST_ARR ma datovy typ DT_INT.
+ */
+		tmp = searchST(&top,curr->left->data.str);
+
+		if(!tmp->init)
+			initArray(tmp);
+
+		//index [ID,INT]
+		right = runTree(curr->right);
+		if(right->dataType != DT_INT)
+			exit(intern);
+		
+		tmp = getArrayIndex(tmp, right->data.int_data);
+		if(right->name && right->name->Length == 0)
+			deleteTable(&right);
+
+		return tmp;
 		break;
 
 	case AST_WRITE:
@@ -360,12 +385,9 @@ void *runTree(struct astNode *curr)
 	case AST_READLN:	// readln(a);
 		ASSERT(curr->right && curr->right->type == AST_NONE);
 
-		// ignorovat hate nizsie, vznikol po 3 hodinach debugovania @4AM
-		tmp_vp = curr->right->other;			// vyrvem si varspars
-		tmp_asp = tmp_vp->pars->start->value;	// vyrvem z toho ast node
-		// a z vyjebaneho ast_node->other vyjebem dojebany string ktory este vyhladam v tabulke
+		tmp_vp = curr->right->other;
+		tmp_asp = tmp_vp->pars->start->value;
 		tmp = searchST(&top, tmp_asp->data.str);
-		// a po tomto celom bullshite este zavolam funkciu ktora zapise do premennej
 		readNode(tmp);
 		break;
 
@@ -448,28 +470,20 @@ bool compare(struct symbolTableNode *left,struct symbolTableNode *right,int op)
 	}
 	else if(left->dataType == DT_REAL)
 	{
-		// vychcane porovnavanie voci nule, teoreticky obchadza problem floatu ktory je jeho
-		// sirka
-
-		double difference = left->data.real_data - right->data.real_data;
-		if(difference < (double)0)
-			difference = -difference;
-		bool equal = ((float)difference < (double)1e-14 ) ? true : false;
-
 		switch(op)
 		{
 		case AST_GRT:
 			return (left->data.real_data > right->data.real_data) ? true : false;
 		case AST_GEQV:
-			return (left->data.real_data >= right->data.real_data || equal) ? true : false;
+			return (left->data.real_data >= right->data.real_data) ? true : false;
 		case AST_LSS:
 			return (left->data.real_data < right->data.real_data) ? true : false;
 		case AST_LEQV:
-			return (left->data.real_data <= right->data.real_data || equal) ? true : false;
+			return (left->data.real_data <= right->data.real_data) ? true : false;
 		case AST_EQV:
-			return (equal) ? true : false;
+			return (left->data.real_data == right->data.real_data) ? true : false;
 		case AST_NEQV:
-			return (!equal) ? true : false;
+			return (left->data.real_data != right->data.real_data) ? true : false;
 		default:
 			exit(intern);
 		}
@@ -548,11 +562,16 @@ struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTab
 			else
 				insertDataReal(&tmp, (left->data.real_data + right->data.real_data));
 		}
-		else //if(type == DT_STR)
+		else if(type == DT_STR)
 		{
-			// konkatenace
-			exit(intern);
+			struct String *tmp_str = makeNewString();
+			copyString(left->data.str_data,&tmp_str);
+			for(unsigned i=0; i < (strlen(right->data.str_data->Value)); i++)
+				addChar(tmp_str, right->data.str_data->Value[i]);
+			insertDataString(&tmp,tmp_str);
 		}
+		else
+			exit(intern);
 		break;
 
 	case AST_SUB:
@@ -594,7 +613,7 @@ struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTab
 				exit(run_div);
 
 			if(left->dataType == DT_INT) // (int / int)
-				insertDataReal(&tmp, ((double)left->data.int_data / (double) right->data.real_data));
+				insertDataReal(&tmp, ((double)left->data.int_data / (double) right->data.int_data));
 			else	// (real/int)
 				insertDataReal(&tmp, (left->data.real_data / (double)right->data.int_data));
 		}
@@ -617,10 +636,7 @@ struct symbolTableNode *arithmetic(struct symbolTableNode *left,struct symbolTab
 	return tmp;
 }
 
-/*
- * Pomocna funkcia AST_WRITE, dostane symtab node a vypise ho
- */
-
+// Pomocna funkcia AST_WRITE, dostane symtab node a vypise ho
 void writeNode(struct astNode *p)
 {
 	ASSERT(p);
@@ -629,10 +645,10 @@ void writeNode(struct astNode *p)
 
 	// ak dostaneme ID tak odpalime search a vratime lokalnu verziu premennej
 	// kedze nedostavame symtab ale ast tak robime cely tento shit .... fuck
-	if(AST_ID == p->type)
+	if(AST_ID == p->type || p->type == AST_ARR)
 	{
-		struct symbolTableNode *top = stackTop(global.symTable);
-		id = searchST(&top,p->data.str);
+		id = runTree(p);
+
 		// nedefinovana premenna???
 		if(!id || !id->init)
 			exit(run_ninit);
@@ -673,12 +689,18 @@ void writeNode(struct astNode *p)
 		printf("%g",p->data.real);
 	else if(AST_INT == p->type)
 		printf("%d",p->data.integer);
+	else if(AST_BOOL)
+	{
+		if(p->data.boolean)
+			printf("true");
+		else
+			printf("false");
+	}
 	else
 		ASSERT(false);
 }
 
-// citame zo vstupu (cosi) a potom to ulozime do
-// TODO: kontroly korektnosti vstupu
+// readln: citame zo vstupu a potom to ulozime do nodu tabulky symbolov
 void readNode(struct symbolTableNode *p)
 {
 	struct String *tmp = makeNewString();
@@ -762,14 +784,14 @@ void readNode(struct symbolTableNode *p)
 		ASSERT(false);
 }
 
-// konvertuje astNode na sTN (typicke pouzitie v stringovych literaloch a AST_ID)
+// konvertuje astNode na STN (typicke pouzitie v stringovych literaloch a AST_ID)
 struct symbolTableNode convertAST2STN(struct astNode *ast)
 {
 	struct symbolTableNode tmp = {0};
 
 	tmp.init = true;
 
-	if(ast->type == AST_ID)
+	if(ast->type == AST_ID || ast->type == AST_ARR)
 	{
 		struct symbolTableNode *p = runTree(ast);
 
@@ -884,6 +906,7 @@ struct symbolTableNode *pushVarsParsIntoTable(
 	return table;
 }
 
+// pomocna funkcia builtin funkcie Copy
 struct symbolTableNode *btnCopy(struct queue *pars)
 {
 	struct symbolTableNode *res = makeNewSymbolTable();
@@ -907,6 +930,7 @@ struct symbolTableNode *btnCopy(struct queue *pars)
 	return res;
 }
 
+// pomocna funkcia k builtin sortu, vrati vysledok ako node tabulky symbolov
 struct symbolTableNode *btnSort(struct queue *pars)
 {
 	struct symbolTableNode *res = makeNewSymbolTable();
@@ -918,6 +942,7 @@ struct symbolTableNode *btnSort(struct queue *pars)
 	return res;
 }
 
+// pomocna funkcia k builtin findu, vrati vysledok ako node tabulky symbolov
 struct symbolTableNode *btnFind(struct queue *pars)
 {
 	struct astNode *p0 = pars->start->value;
@@ -932,6 +957,7 @@ struct symbolTableNode *btnFind(struct queue *pars)
 	return res;
 }
 
+// pomocna funkcia k builtin length, vrati vysledok ako node tabulky symbolov
 struct symbolTableNode *btnLength(struct queue *pars)
 {
 	struct symbolTableNode *res = makeNewSymbolTable();
@@ -942,3 +968,90 @@ struct symbolTableNode *btnLength(struct queue *pars)
 	insertDataInteger(&res,length(p0node.data.str_data));
 	return res;
 }
+
+// pomocna funkcia for cyklov, exekuuje strom podla specifikacie (bez navratoveho kodu)
+void for_to_downto(struct astNode *curr)
+{
+	struct astNode *body = curr->left;
+	struct astNode *cond = curr->right;
+
+	struct astNode *asgn = cond->left;
+	struct symbolTableNode *id = runTree(asgn->left);
+
+	struct symbolTableNode *value = runTree(asgn->right);
+	struct symbolTableNode *literal = runTree(cond->right);
+
+	if((cond->type == AST_FOR_DOWNTO && value->data.int_data < literal->data.int_data) ||
+			(cond->type == AST_FOR_TO && value->data.int_data > literal->data.int_data))
+	{
+		insertDataInteger(&id, 0);
+		return;
+	}
+	else
+		insertDataInteger(&id,value->data.int_data);
+
+	int boundary = literal->data.int_data;
+	int *iterator = &(id->data.int_data);
+
+	if(cond->type == AST_FOR_TO)
+	{
+		while(*iterator <= boundary)
+		{
+			runTree(body);
+			(*iterator)++;
+		}
+	}
+	else if(cond->type == AST_FOR_DOWNTO)
+	{
+		while(*iterator >= boundary)
+		{
+			runTree(body);
+			(*iterator)--;
+		}
+	}
+	else
+		exit(intern);
+	*iterator = boundary;
+}
+
+// pomocna funkcia ktora inicializuje pole v arr->data
+void initArray(struct symbolTableNode *arr)
+{
+	// DT_INT, DT_REAL, DT_BOOL, DT_STR, DT_ARR
+	struct dataTypeArray *tmp_arr = arr->other;
+
+	size_t size = (tmp_arr->high - tmp_arr->low + 1);
+
+	struct symbolTableNode template;
+	memset(&template,0,sizeof(struct symbolTableNode));
+	template.dataType = tmp_arr->type;
+	template.init = true;
+
+	tmp_arr->data = gcMalloc(size * sizeof(struct symbolTableNode *));
+	if(!tmp_arr->data)
+		exit(intern);
+
+	for(unsigned i=0; i < size; i++)
+	{
+		tmp_arr->data[i] = makeNewSymbolTable();
+		memcpy(tmp_arr->data[i], &template, sizeof(template));
+	}
+
+	arr->init = true;
+}
+
+// pomocna funkcia ktora vrati pointer na prvok pola z tmp indekovaneho premennou indexom
+struct symbolTableNode *getArrayIndex(struct symbolTableNode *tmp, int index)
+{
+	if(!tmp)
+		exit(intern);
+	struct dataTypeArray *dta = tmp->other;
+
+	if(index < dta->low || index > dta->high)
+		exit(intern);
+
+	int real_index = abs(dta->low - index);
+
+	return dta->data[real_index];
+}
+

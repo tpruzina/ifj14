@@ -1,0 +1,23 @@
+var
+	x: array[0..3] of string;
+	y: array[0..1] of integer;
+	fdest: integer;
+
+begin
+	x[0] := 'Ahoj';
+	x[1] := 'svete';
+
+	{ vrati Ahjo }
+	x[0] := sort(x[0]);
+	{ vrati sv }
+	x[1] := copy(x[1], 1, 2);
+	{ vrati Ahjo sv }
+	x[2] := x[0] + ' ' + x[1];
+	{ vrati 7 }
+	y[0] := length(x[2]);
+	{ vrati 2 }
+	y[1] := find(x[2], 'h');
+
+	{ melo by vypsat AhjosvAhjo sv72 }
+	write(x[0], x[1], x[2], y[0], y[1])	
+end.

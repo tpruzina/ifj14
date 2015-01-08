@@ -1,0 +1,13 @@
+var 
+	x : array[0..1] of integer;
+	id : integer;
+begin
+	{index literalem}
+	x[0] := 0;
+
+	{index idckem}
+	id := 1;
+	x[id] := 1;
+
+	write(x[0], x[id])
+end.

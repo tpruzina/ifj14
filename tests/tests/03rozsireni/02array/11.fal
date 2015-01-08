@@ -1,0 +1,7 @@
+var 
+	x: array[0..1] of integer;
+
+begin
+	x[0] := 1;
+	x[1] := 0
+end.

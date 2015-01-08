@@ -1,8 +1,11 @@
-program test;
-
 var
-	1i : real;
+	bol : boolean;
+	
+function prt(): boolean;
+begin
+	bol := true
+end;
 
-BEGIN
-	i := 1 * 1.000 + 1
-END.
+begin
+	bol := prt()
+end. 

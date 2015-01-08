@@ -1,7 +1,0 @@
-{ test na spatny if }
-begin
-	if 1.0 + 1.5 then
-	begin
-		write('True')
-	end
-end.

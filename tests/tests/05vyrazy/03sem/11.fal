@@ -1,0 +1,7 @@
+
+var
+  NotSoString : real;
+
+begin
+  NotSoString := 'I am so string...'
+end.

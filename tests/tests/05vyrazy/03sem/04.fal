@@ -1,0 +1,7 @@
+
+var
+  result : integer;
+
+begin
+  result := random + 1
+end.

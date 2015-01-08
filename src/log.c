@@ -19,6 +19,10 @@
 
 /**
  * Pise chybovou zpravu, cervene
+ * ------------------------------------------------------------------
+ * @param msg: zprava, kterou ma vypsat
+ * @param type: typ zpravy
+ * @param frm: odkud zprava pochazi
  */
 void Log(char* msg, int type, int frm){
 	if(type != ERROR)

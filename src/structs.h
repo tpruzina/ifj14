@@ -57,7 +57,7 @@ enum tokenType {
 	T_KW_CASE,
 	// neni v zadani ako klucove slovo - ??? 
 	T_KW_RPT,	// repeat
-	T_UNTIL,	// until
+	T_KW_UNTIL,	// until
 	T_ID,	// cokoliv odpovidajici identifikatoru
 	T_TEXT,	// cokoliv odpovidajici stringu
 	T_NMB,	// cokoliv odpovidajici cislu
@@ -66,7 +66,8 @@ enum tokenType {
 	T_REAL,		// real
 	T_STR,		// string
 	T_BOOL,
-	T_ARR,		// array
+	T_KW_ARRAY,		// array
+	T_KW_DDOT,	//..
 	// obecne
 	T_OF,		// of
 	T_KW_SWITCH,
@@ -278,6 +279,7 @@ struct dataTypeArray {
 	int high;
 	int type;
 	struct String* id;
+	struct symbolTableNode **data;
 };
 
 // struktura potrebna na reverzny string z token typu

@@ -1,0 +1,8 @@
+
+var
+  where : real;
+
+begin
+  where := 7.8;
+  where := find(where, 'w')
+end.

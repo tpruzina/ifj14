@@ -1,0 +1,10 @@
+var
+	x: boolean;
+	y: boolean;
+	
+begin
+	x := true;
+	x := NOT x;
+
+	write(x, y)
+end.

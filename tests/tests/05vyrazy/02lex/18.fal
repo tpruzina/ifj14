@@ -1,0 +1,8 @@
+
+var
+  bubble : real;
+
+begin
+  bubble := 69e+79230601004
+end.
+

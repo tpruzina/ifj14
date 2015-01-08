@@ -1,0 +1,35 @@
+var
+	bol : boolean;
+
+function prt(): boolean;
+var
+	x: integer;
+	y: integer;
+	b: boolean;
+begin
+	b := true;
+
+	for y := 0 to 10 do begin
+		for x := 0 to 10 do begin
+			{ vykreslovat blbosti }
+			if b then begin
+				write('X')
+			end else begin
+				write(' ')
+			end;
+
+
+			if (x + y) / 2 >= 5.0 then begin
+				b := NOT b
+			end
+		end;
+		write(''#10'')
+	end;
+
+	prt := true
+end;
+
+	
+begin
+	bol := prt()
+end.

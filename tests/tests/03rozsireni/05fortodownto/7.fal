@@ -1,0 +1,9 @@
+var
+	x : integer;
+
+begin
+	for x := 10 downto 20 do begin
+		write(x)
+	end;
+	write(x)
+end.

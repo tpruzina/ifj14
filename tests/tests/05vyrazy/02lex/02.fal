@@ -1,0 +1,10 @@
+
+var
+  what : string;
+  ever : integer;
+
+begin
+  while(what ! ever) do
+    write('f')
+end.
+

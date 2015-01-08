@@ -1,0 +1,7 @@
+
+var
+  NotSoInteger : real;
+
+begin
+  NotSoInteger := 56
+end.

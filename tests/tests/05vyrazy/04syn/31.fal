@@ -1,0 +1,3 @@
+begin
+  readln(5)
+end.

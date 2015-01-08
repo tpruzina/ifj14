@@ -1,0 +1,5 @@
+var
+  BigMole : real;
+begin
+  BigMole := (3.0 +) 7.0
+end.

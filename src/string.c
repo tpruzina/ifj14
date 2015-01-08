@@ -20,10 +20,14 @@
 #include "gc.h"
 #include "structs.h"
 
+/**
+ *	Konstanta pro snadny prevod UPPERCASE do lowercase
+ */
 const int TOLOWER = (int)('a' - 'A');
 
 /**
  * Vytvari novou strukturu a vraci ji.
+ * ------------------------------------------------------------------
  */
 struct String* makeNewString(){
 	struct String* str = (struct String*)gcMalloc(sizeof(struct String));
@@ -43,12 +47,13 @@ struct String* makeNewString(){
 
 /**
  * Pridava na konec stringu znak, zvetsi pole a ulozi.
+ * ------------------------------------------------------------------
+ * @param s: odkaz na string, do ktereho chceme pridavat znak
+ * @param c: znak pro pridani
  */
 int addChar(struct String* s, char c){
 	if(s == NULL){
-		// v pripade, ze dostane prazdny string -> zalozi novy a prida znak
-		s = makeNewString();
-		Log("String: addChar: novy string", DEBUG, STRING);
+		exit(intern);
 	}
 	
 	if(s->Value == NULL){
@@ -84,6 +89,8 @@ int addChar(struct String* s, char c){
 
 /**
  * Vycisti string, vynuluje obsah.
+ * ------------------------------------------------------------------
+ * @param str: odkaz na string, ktery chceme vycistit
  */
 int emptyString(struct String* str){
 	if(str == NULL){
@@ -100,24 +107,10 @@ int emptyString(struct String* str){
 }
 
 /**
- * Tiskne obsah struktury Stringu
- */
-void printString(struct String* s){
-	if(s == NULL){
-		return;
-	}
-	
-#ifdef _DEBUG
-	fprintf(stderr, "String:\n");
-	fprintf(stderr, "   Value:    \t\"%s\"\n", s->Value);
-	fprintf(stderr, "   Length:   \t%d\n", s->Length);
-	fprintf(stderr, "   Allocated:\t%d\n", s->Allocated);
-#endif
-}
-
-/**
  * Uvolni vytvoreny string, vcetne odepsani z GC.
  * Kontroly na spravne predany string.
+ * ------------------------------------------------------------------
+ * @param s: odkaz na strukturu, kterou chceme smazat
  */
 int freeString(struct String* s){
 	if(s == NULL){
@@ -129,50 +122,29 @@ int freeString(struct String* s){
 	return True;
 }
 /**
- * Zastupuje strcmp
- */
-int compareCharArrays(char* s1, char* s2){
-	return strcmp(s1, s2);
-}
-/**
  * Porovna string s charovym polem
+ * ------------------------------------------------------------------
+ * @param s: prvni structura stringu
+ * @param s2: druhe pole znaku
  */
 int compareString(struct String* s, char* s2){
 	return strcmp(s->Value,s2);
 }
 /**
  * Porovnava obsahy dvou Stringovych struktur.
+ * ------------------------------------------------------------------
+ * @param s1: odkaz na strukturu stringu kterou chceme porovnat
+ * @param s2: odkaz na strukturu stringu druhou
  */
 int compareStrings(struct String* s1, struct String* s2){
 	return strcmp(s1->Value, s2->Value);
 }
 
 /**
- * Vraci delku pole charu, pro pocitani delky.
- */
-int getCharArrayLength(char* array){
-	int i = 0;
-
-	while(array[i] != '\0')
-		i++;
-
-	return i;
-}
-
-/**
- * Posune vsechny uppercase znaky do lowercase
- */
-int toLower(struct String* str){
-	for(int i = 0; i < str->Length; i++){
-		if(str->Value[i] >= 'A' && str->Value[i] <= 'Z')
-			str->Value[i] += TOLOWER;
-	}
-	
-	return True;
-}
-
-/**
  * Skopiruje data ze stringu do druheho
+ * ------------------------------------------------------------------
+ * @param src: odkaz na strukturu stringu odkud bude kopirovat
+ * @param dest: odkaz na strukturu, kam bude obsah kopirovat
  */
 int copyString(struct String* src, struct String** dest){
 	if(src == NULL){
@@ -199,29 +171,3 @@ int copyString(struct String* src, struct String** dest){
 	return True;
 }
 
-/**
- * Skopiruje data z src pole do struktury dest
- */
-int copyFromArray(char* src, struct String** dest){
-	if(src == NULL){
-		Log("Src string == empty", ERROR, STRING);
-		exit(intern);	
-	}
-	if((*dest) == NULL && ((*dest) = makeNewString()) == NULL)
-		return False;
-	else {
-		if(!emptyString(*dest)){
-			Log("Clearing failed", ERROR, STRING);
-			exit(intern);
-		}
-	}
-		
-	char c = ' ';
-	int i = 0;
-	while((c = src[i++]) != '\0'){
-		if(!addChar((*dest), c))
-			return False;
-	}
-	
-	return True;
-}

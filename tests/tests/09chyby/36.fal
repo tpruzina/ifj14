@@ -1,7 +1,0 @@
-{ test na sort }
-var
-	out: string;
-begin
-	out := sort('beadcf');
-	write(out)
-end.

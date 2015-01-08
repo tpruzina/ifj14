@@ -1,0 +1,8 @@
+
+var
+  value : double;
+
+begin
+  readln(value)
+end.
+

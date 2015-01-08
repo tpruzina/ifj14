@@ -1,0 +1,12 @@
+AndTest: true and true == true
+OrTest: true or true == true
+XorTest: true xor true == false
+AndTest: true and false == false
+OrTest: true or false == true
+XorTest: true xor false == true
+AndTest: false and true == false
+OrTest: false or true == true
+XorTest: false xor true == true
+AndTest: false and false == false
+OrTest: false or false == false
+XorTest: false xor false == false

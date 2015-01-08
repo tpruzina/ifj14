@@ -1,0 +1,6 @@
+
+begin
+  write('str
+  ing')
+end.
+

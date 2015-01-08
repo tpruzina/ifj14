@@ -74,34 +74,34 @@ void quit(){
 
 int main(int argc, char** argv)
 {
-	if(argc == 2)
-	{
-		if(init(argv[1]) != True){
-			Log("main: main_all struct dont allocated garbage collector..", ERROR, MAIN);
-			exit(intern);
-		}
-		atexit(quit);
+	if(argc != 2)
+		return intern;
+		
+	if(init(argv[1]) != True){
+		Log("main: main_all struct dont allocated garbage collector..", ERROR, MAIN);
+		exit(intern);
+	}
+	atexit(quit);
 		// pokud vse probehlo OK, tak zobrazit strom
-		if(parser())
-		{
+	if(parser())
+	{
 #ifdef _DEBUG
-			Log("Printing PROGRAM",DEBUG,MAIN);
-			printAst(global.program);
-			fflush(stderr);
-			fflush(stdout);
-			Log("Printing PROGRAM",DEBUG,MAIN);
+		Log("Printing PROGRAM",DEBUG,MAIN);
+		printAst(global.program);
+		fflush(stderr);
+		fflush(stdout);
+		Log("Printing PROGRAM",DEBUG,MAIN);
 
-			Log("Printing symbol table top layer", DEBUG, MAIN);
-			struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
-			printSymbolTable(top, 0);
-			Log("Printing function table", DEBUG, MAIN);
-			printSymbolTable(global.funcTable, 0);
+		Log("Printing symbol table top layer", DEBUG, MAIN);
+		struct symbolTableNode* top = (struct symbolTableNode*)stackTop(global.symTable);
+		printSymbolTable(top, 0);
+		Log("Printing function table", DEBUG, MAIN);
+		printSymbolTable(global.funcTable, 0);
 #endif
-			interpret();
+		interpret();
 #ifdef _DEBUG
-			printSymbolTable(top, 0);
+		printSymbolTable(top, 0);
 #endif
-		}
 	}
 	return global.errno;
 }

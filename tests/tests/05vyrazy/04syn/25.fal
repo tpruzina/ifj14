@@ -1,0 +1,3 @@
+begin
+  sort('f', 'double f')
+end.

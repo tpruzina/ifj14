@@ -1,8 +1,0 @@
-{ test pro desetinnou carku }
-
-var
-	x: real;
-begin
-	x := 1,2;
-	write(x)
-end.

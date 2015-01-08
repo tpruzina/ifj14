@@ -1,6 +1,0 @@
-
-	var
-		res: real;
-begin
-	res := 10 / 0
-end.

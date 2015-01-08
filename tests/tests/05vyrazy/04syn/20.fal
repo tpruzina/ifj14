@@ -1,0 +1,4 @@
+begin
+  while(false) do
+    write();
+end.

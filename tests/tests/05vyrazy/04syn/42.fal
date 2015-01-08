@@ -1,0 +1,5 @@
+var
+  BigMole : real;
+begin
+  BigMole := ()
+end.

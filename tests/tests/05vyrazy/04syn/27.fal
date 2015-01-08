@@ -1,0 +1,3 @@
+begin
+  find('f', 'double f', 'triple f')
+end.

@@ -42,11 +42,17 @@ getToc()
 	ASSERT(toc);
 	ASSERT(global.src);
 
+	static bool bol_dot_dot = false;
+	if(bol_dot_dot)
+	{
+		bol_dot_dot = false;
+		toc->type = T_DDOT;
+		return toc;
+	}
+
 	state = KA_START;
 
-	str = makeNewString();
-	ASSERT(str);
-
+	str = NULL;
 	skipWSandComments();
 
 	while (true)
@@ -61,11 +67,13 @@ getToc()
 		case KA_START:
 			if(isalpha(c) || '_' == c) // asi identifikator
 			{
+				str = makeNewString();
 				addChar(str,c);
 				state = KA_IDENT;
 			}
 			else if(isdigit(c))
 			{
+				str = makeNewString();
 				addChar(str,c);
 				state = KA_INTEGER;
 			}
@@ -202,6 +210,7 @@ getToc()
 // STRINGOVE LITERALY + ESCAPE SEQ #
 // vid konecny automat z ktoreho sa tento shit da pochopit
 		case KA_STR_LIT:	//mame '
+			str = makeNewString();
 			if('\'' == c)	//mame prazdny literal - go STR_LIT_DONE
 				state = KA_STR_LIT_DONE;
 			else if(ascii(c))	//mame znak v tele literalu 31-127 minus {#,'}
@@ -272,6 +281,14 @@ getToc()
 			{
 				addChar(str,c);
 				state = KA_REAL;
+			}
+			else if(c == '.')	//mame X..
+			{
+				bol_dot_dot = true;
+				toc->type = T_INT;
+				toc->data.integer = atoi(str->Value);
+				freeString(str);
+				return toc;
 			}
 			else
 				state = KA_ERR;
@@ -376,6 +393,8 @@ getToc()
 					toc->type = T_KW_TRUE;
 				else if (!compareString(str,"var"))
 					toc->type = T_KW_VAR;
+				else if(!compareString(str, "until"))
+					toc->type = T_KW_UNTIL;
 				else if (!compareString(str,"uses"))
 					toc->type = T_KW_USES;
 				else if (!compareString(str,"while"))
@@ -394,6 +413,8 @@ getToc()
 					toc->type = T_OF;
 				else if(!compareString(str,"and"))
 					toc->type = T_AND;
+				else if(!compareString(str, "xor"))
+					toc->type = T_XOR;
 				else if(!compareString(str,"not"))
 					toc->type = T_NOT;
 				else if(!compareString(str,"mod"))
@@ -412,6 +433,8 @@ getToc()
 					toc->type = T_KW_COPY;
 				else if(!compareString(str, "length"))
 					toc->type = T_KW_LENGTH;
+				else if(!compareString(str, "array"))
+					toc->type = T_KW_ARRAY;
 				else
 				{
 					toc->type = T_ID;

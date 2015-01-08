@@ -1,0 +1,9 @@
+
+var
+  magic : integer;
+  value : integer;
+
+begin
+  readln(magic, value)
+end.
+

@@ -1,0 +1,4 @@
+begin
+  while do
+    sort('Sort me!')
+end.
