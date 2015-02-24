@@ -34,7 +34,7 @@ struct astNode* ifStatement(struct toc**);
 struct astNode* whileStatement(struct toc**);
 struct astNode* repeatStatement(struct toc**);
 
-struct astNode* parseCommand();
+struct astNode* parseCommand(struct toc** cur);
 struct astNode* parseExpression(struct toc**);
 
 void controlCallParams(struct queue*, struct queue*);
